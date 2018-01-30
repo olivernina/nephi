@@ -4,6 +4,7 @@ Convolutional Recurrent Neural Network for HTR
 First create a conda enviroment
 
 ``conda create --name nephi``
+
 ``source activate nephi``
 
 
