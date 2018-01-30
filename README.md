@@ -3,8 +3,8 @@ Convolutional Recurrent Neural Network for HTR
 
 First create a conda enviroment
 
-conda create --name nephi
-source activate nephi
+``conda create --name nephi``
+``source activate nephi``
 
 
 This software is clone implementation of the Convolutional Recurrent Neural Network (CRNN) in pytorch found [here](https://github.com/meijieru/crnn.pytorch)
