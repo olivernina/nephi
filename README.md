@@ -2,9 +2,7 @@ Installation
 ======================================
 
 1. Create a conda enviroment
-
 ``conda create --name nephi``
-
 ``source activate nephi``
 
 2. Install Pytorch
@@ -12,7 +10,6 @@ Installation
 3. Install lmdb
 
 4. Install WarpCTC as follows (Taken from https://github.com/pytorch/pytorch#installation).
-
 `WARP_CTC_PATH` should be set to the location of a built WarpCTC
 (i.e. `libwarpctc.so`).  This defaults to `../build`, so from within a
 new warp-ctc clone you could build WarpCTC like this:
