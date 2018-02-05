@@ -131,17 +131,18 @@ def crnn_dataset():
 if __name__ == '__main__':
     imagePathList = []
     labelList = []
-    image_dir = 'data/htr/Images/'
-    labels_dir = 'data/htr/page/'
-    files = os.listdir(image_dir)
-    outputPath = 'data/dataset/lmdb/val'
+    data_dir = '/Users/oliver/projects/datasets/htr'
+    # image_dir = data_dir+'/Images/'
+    # labels_dir = data_dir+'/page/'
+    # files = os.listdir(image_dir)
+    outputPath = 'data/lmdb/val'
 
 
-    data_folder = 'data/htr-small/'#sys.argv[1]
-    # save_file = sys.argv[2]
+    # data_folder = 'data/htr-small/'#sys.argv[1]
+    # # save_file = sys.argv[2]
 
     env = lmdb.open(outputPath, map_size=1099511627776)
-    images = import_images(data_folder)
+    images = import_images(data_dir)
     print images
 
     cache = {}
