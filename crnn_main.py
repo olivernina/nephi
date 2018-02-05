@@ -17,7 +17,7 @@ import models.crnn as crnn
 parser = argparse.ArgumentParser()
 parser.add_argument('--trainroot', required=True, help='path to dataset')
 parser.add_argument('--valroot', required=True, help='path to dataset')
-parser.add_argument('--workers', type=int, help='number of data loading workers', default=2)
+parser.add_argument('--workers', type=int, help='number of data loading workers', default=1)
 parser.add_argument('--batchSize', type=int, default=64, help='input batch size')
 parser.add_argument('--imgH', type=int, default=32, help='the height of the input image to network')
 parser.add_argument('--imgW', type=int, default=100, help='the width of the input image to network')
@@ -30,7 +30,7 @@ parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--crnn', default='', help="path to crnn (to continue training)")
 parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz')
 parser.add_argument('--experiment', default=None, help='Where to store samples and models')
-parser.add_argument('--displayInterval', type=int, default=500, help='Interval to be displayed')
+parser.add_argument('--displayInterval', type=int, default=1, help='Interval to be displayed')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display when test')
 parser.add_argument('--valInterval', type=int, default=500, help='Interval to be displayed')
 parser.add_argument('--saveInterval', type=int, default=500, help='Interval to be displayed')
@@ -63,12 +63,20 @@ if not opt.random_sample:
 else:
     sampler = None
 train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=opt.batchSize,
-    shuffle=True, sampler=sampler,
+    train_dataset, batch_size=opt.batchSize, sampler=sampler,
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 test_dataset = dataset.lmdbDataset(
     root=opt.valroot, transform=dataset.resizeNormalize((100, 32)))
+
+if os.path.exists('alphabet.txt'):
+    alphabet = ''
+    with open('alphabet.txt', 'r') as myfile:
+        alphabet = myfile.read()
+
+    if len(alphabet)>1:
+        opt.alphabet = alphabet
+
 
 nclass = len(opt.alphabet) + 1
 nc = 1
