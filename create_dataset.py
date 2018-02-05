@@ -128,20 +128,10 @@ def crnn_dataset():
     # createDataset("data/dataset/lmdb/train",imagePathList, labelList)
     createDataset("data/dataset/lmdb/train", imagePathList, labelList)
 
-if __name__ == '__main__':
-    imagePathList = []
-    labelList = []
-    data_dir = '/Users/oliver/projects/datasets/htr'
-    # image_dir = data_dir+'/Images/'
-    # labels_dir = data_dir+'/page/'
-    # files = os.listdir(image_dir)
-    outputPath = 'data/lmdb/val'
 
+def read_dataset(data_dir, output_path):
 
-    # data_folder = 'data/htr-small/'#sys.argv[1]
-    # # save_file = sys.argv[2]
-
-    env = lmdb.open(outputPath, map_size=1099511627776)
+    env = lmdb.open(output_path, map_size=1099511627776)
     images = import_images(data_dir)
     print images
 
@@ -229,3 +219,14 @@ if __name__ == '__main__':
 
     with open("alphabet.txt", "w") as text_file:
         text_file.write(alpha_text)
+
+
+if __name__ == '__main__':
+    # data_dir = '/Users/oliver/projects/datasets/htr-small'
+    # output_path = 'data/lmdb/val'
+
+
+    data_dir = sys.argv[1]
+    output_path = sys.argv[2]
+
+    read_dataset(data_dir,output_path)
