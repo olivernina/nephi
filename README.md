@@ -12,7 +12,7 @@ Installation
 4. Install WarpCTC as explained [here](https://github.com/pytorch/pytorch#installation).
 Make sure to update the link to the repository in the instructions to https://github.com/SeanNaren/warp-ctc.git 
 
-This software is clone implementation of the Convolutional Recurrent Neural Network (CRNN) in pytorch found [here](https://github.com/meijieru/crnn.pytorch)
+This software is a cloned implementation of the Convolutional Recurrent Neural Network (CRNN) in pytorch found [here](https://github.com/meijieru/crnn.pytorch)
 
 
 
@@ -24,5 +24,5 @@ Dependencies
 
 Train a new model
 -----------------
-1. Construct dataset following origin guide. For training with variable length, please sort the image according to the text length.
+1. Construct dataset following original guide. For training with variable length, please sort the image according to the text length.
 2. ``python crnn_main.py [--param val]``. Explore ``crnn_main.py`` for details.
