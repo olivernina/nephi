@@ -7,15 +7,20 @@ from PIL import Image
 import models.crnn as crnn
 
 
-model_path = './data/crnn.pth'
-img_path = './data/demo.png'
-alphabet = '0123456789abcdefghijklmnopqrstuvwxyz'
+model_path = './data/netCRNN_1429_100.pth'
+img_path = './data/strips/image-000000005.png'
+# alphabet = '0123456789abcdefghijklmnopqrstuvwxyz'
 
-model = crnn.CRNN(32, 1, 37, 256)
+with open('./data/alphabet.txt', 'r') as myfile:
+    alphabet = myfile.read()
+
+nclass = len(alphabet) + 1
+
+model = crnn.CRNN(32, 1, nclass, 256)
 if torch.cuda.is_available():
     model = model.cuda()
 print('loading pretrained model from %s' % model_path)
-model.load_state_dict(torch.load(model_path))
+model.load_state_dict(torch.load(model_path), strict=False)
 
 converter = utils.strLabelConverter(alphabet)
 
