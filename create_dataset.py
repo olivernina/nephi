@@ -129,7 +129,7 @@ def crnn_dataset():
     createDataset("data/dataset/lmdb/train", imagePathList, labelList)
 
 
-def read_dataset(data_dir, output_path):
+def lmdb_dataset_read(data_dir, output_path):
 
     env = lmdb.open(output_path, map_size=1099511627776)
     images = import_images(data_dir)
@@ -221,12 +221,66 @@ def read_dataset(data_dir, output_path):
         text_file.write(alpha_text)
 
 
+def extract_strips(data_dir, output_path):
+
+    # env = lmdb.open(output_path, map_size=1099511627776)
+    images = import_images(data_dir)
+    print images
+
+    cache = {}
+    cnt = 1
+
+    alpha_text = '0123456789abcdefghijklmnopqrstuvwxyz'
+    alphabet = []
+    for c in alpha_text:
+        alphabet.append(c)
+
+
+    for image in images:
+        print image
+
+        image['data'] = cv2.imread(image['image_file'])
+        page_img = image['data']
+
+        for line in image['lines']:
+            print image['image_file']
+
+            pts = line['bounding_poly']
+            pts = np.array(pts, np.int32)
+
+            xmin = min(pts, key=lambda x: x[0])[0]
+            xmax = max(pts, key=lambda x: x[0])[0]
+
+            ymin = min(pts, key=lambda x: x[1])[1]
+            ymax = max(pts, key=lambda x: x[1])[1]
+
+            updated_pts = [(p[0]-xmin, p[1]-ymin) for p in pts]
+            line_img = page_img[ymin:ymax, xmin:xmax].copy()
+
+            #http://stackoverflow.com/a/15343106/3479446
+            mask = np.zeros(line_img.shape, dtype=np.uint8)
+            roi_corners = np.array([updated_pts], dtype=np.int32)
+
+            channel_count = 1
+            if len(line_img.shape) > 2:
+                channel_count = line_img.shape[2]
+
+            ignore_mask_color = (255,)*channel_count
+            cv2.fillPoly(mask, roi_corners, ignore_mask_color)
+            line_img[mask == 0] = 255
+            line['data'] = line_img
+
+            imageKey = 'image-%09d' % cnt
+            cv2.imwrite(os.path.join(output_path,imageKey+'.png'),line_img)
+            cnt+=1
+
 if __name__ == '__main__':
-    # data_dir = '/Users/oliver/projects/datasets/htr-small'
-    # output_path = 'data/lmdb/val'
+    data_dir = '/Users/oliver/projects/datasets/htr-small'
+    output_path = 'data/strips'
 
 
-    data_dir = sys.argv[1]
-    output_path = sys.argv[2]
+    # data_dir = sys.argv[1]
+    # output_path = sys.argv[2]
 
-    read_dataset(data_dir,output_path)
+    extract_strips(data_dir,output_path)
+    # read_lmdb_dataset(data_dir,output_path)
