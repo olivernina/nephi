@@ -1,6 +1,4 @@
-import xmltodict
 from lxml import objectify
-from collections import defaultdict
 import os
 
 
