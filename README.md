@@ -19,6 +19,7 @@ This repository is a fork from the Convolutional Recurrent Neural Network (CRNN)
 ## Dependencies
 * lmdb
 * [warp_ctc_pytorch](https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings/pytorch_binding)
+* lxml
 
 
 ## Train a new model
