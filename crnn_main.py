@@ -67,7 +67,7 @@ train_loader = torch.utils.data.DataLoader(
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 test_dataset = dataset.lmdbDataset(
-    root=opt.valroot, transform=dataset.resizeNormalize((100, 32)))
+    root=opt.valroot, transform=dataset.resizeNormalize((opt.imgW, opt.imgH)))         # RA: I changed this line to be consistent, were default heights and widths
 
 if os.path.exists('alphabet.txt'):
     alphabet = ''
