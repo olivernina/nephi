@@ -96,11 +96,8 @@ def weights_init(m):
 
 
 crnn = crnn.CRNN(opt.imgH, nc, nclass, opt.nh)
+print("Got to the weight initialization and loading pretrained model")
 crnn.apply(weights_init)
-if opt.crnn != '':
-    print('loading pretrained model from %s' % opt.crnn)
-    crnn.load_state_dict(torch.load(opt.crnn))
-print(crnn)
 
 image = torch.FloatTensor(opt.batchSize, 3, opt.imgH, opt.imgH)
 text = torch.IntTensor(opt.batchSize * 5)          # RA: I don't understand why the text has this size
@@ -112,6 +109,11 @@ if opt.cuda:
     image = image.cuda()
     criterion = criterion.cuda()
 
+if opt.crnn != '':
+    print('loading pretrained model from %s' % opt.crnn)
+    crnn.load_state_dict(torch.load(opt.crnn))
+print(crnn)
+    
 image = Variable(image)
 text = Variable(text)
 length = Variable(length)
