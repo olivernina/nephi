@@ -26,7 +26,7 @@ class strLabelConverter(object):
 
         self.dict = {}
         for i, char in enumerate(alphabet):
-            # NOTE: 0 is reserved for 'blank' required by wrap_ctc
+            # NOTE: 0 is reserved for 'blank' required by warp_ctc
             self.dict[char] = i + 1
 
     def encode(self, text):

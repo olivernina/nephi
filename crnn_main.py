@@ -103,7 +103,7 @@ if opt.crnn != '':
 print(crnn)
 
 image = torch.FloatTensor(opt.batchSize, 3, opt.imgH, opt.imgH)
-text = torch.IntTensor(opt.batchSize * 5)
+text = torch.IntTensor(opt.batchSize * 5)          # RA: I don't understand why the text has this size
 length = torch.IntTensor(opt.batchSize)
 
 if opt.cuda:
@@ -159,7 +159,12 @@ def val(net, dataset, criterion, max_iter=100):
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
         cost = criterion(preds, text, preds_size, length) / batch_size
         loss_avg.add(cost)
-
+        
+        
+        # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
+        # Also, a simple character by character accuracy is being used, not an edit distance.
+        # Case is ignored in the accuracy, which is not ideal for an actual working system
+        
         _, preds = preds.max(2)
         preds = preds.squeeze(2)
         preds = preds.transpose(1, 0).contiguous().view(-1)
