@@ -1,8 +1,8 @@
 import Levenshtein
 def cer(r, h):
-    r = u' '.join(r.split())
-    h = u' '.join(h.split())
-    steps = Levenshtein.editops(r, h)
+    r = ' '.join(r.split())
+    h = ' '.join(h.split())
+    steps = Levenshtein.editops(r.encode('latin-1'), h.encode('latin-1'))
     d = len([v for v in steps if v[0] == 'delete'])
     i = len([v for v in steps if v[0] == 'insert'])
     s = len([v for v in steps if v[0] == 'replace'])
@@ -22,7 +22,7 @@ def wer(r, h):
             word_lookup[w] = chr(current_char)
             current_char += 1
 
-    r = u"".join([word_lookup[w] for w in r])
-    h = u"".join([word_lookup[w] for w in h])
+    r = "".join([word_lookup[w] for w in r])
+    h = "".join([word_lookup[w] for w in h])
 
     return cer(r,h)
