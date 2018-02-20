@@ -14,6 +14,12 @@ import dataset
 
 import models.crnn as crnn
 
+import sys  
+stdout = sys.stdout
+reload(sys)  
+sys.setdefaultencoding('latin-1')
+from model_error import cer, wer
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--trainroot', required=True, help='path to dataset')
 parser.add_argument('--valroot', required=True, help='path to dataset')
@@ -32,8 +38,8 @@ parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopq
 parser.add_argument('--experiment', default=None, help='Where to store samples and models')
 parser.add_argument('--displayInterval', type=int, default=500, help='Interval to be displayed')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display when test')
-parser.add_argument('--valInterval', type=int, default=500, help='Interval to be displayed')
-parser.add_argument('--saveInterval', type=int, default=500, help='Interval to be displayed')
+parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
+parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save model parameters')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is rmsprop)')
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is rmsprop)')
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
@@ -66,6 +72,9 @@ train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=opt.batchSize, sampler=sampler,
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
+
+training_eval_set = dataset.lmdbDataset(
+    root=opt.trainroot, transform=dataset.resizeNormalize((opt.imgW, opt.imgH))) 
 test_dataset = dataset.lmdbDataset(
     root=opt.valroot, transform=dataset.resizeNormalize((opt.imgW, opt.imgH)))         # RA: I changed this line to be consistent, were default heights and widths
 
@@ -96,7 +105,7 @@ def weights_init(m):
 
 
 crnn = crnn.CRNN(opt.imgH, nc, nclass, opt.nh)
-print("Got to the weight initialization and loading pretrained model")
+#print("Got to the weight initialization and loading pretrained model")
 crnn.apply(weights_init)
 
 image = torch.FloatTensor(opt.batchSize, 3, opt.imgH, opt.imgH)
@@ -145,6 +154,11 @@ def val(net, dataset, criterion, max_iter=100):
     i = 0
     n_correct = 0
     loss_avg = utils.averager()
+    
+    image_count = 0
+    # Character and word error rate lists
+    char_error = []
+    w_error = []
 
     max_iter = min(max_iter, len(data_loader))
     for i in range(max_iter):
@@ -152,6 +166,7 @@ def val(net, dataset, criterion, max_iter=100):
         i += 1
         cpu_images, cpu_texts = data
         batch_size = cpu_images.size(0)
+        image_count = image_count + batch_size
         utils.loadData(image, cpu_images)
         t, l = converter.encode(cpu_texts)
         utils.loadData(text, t)
@@ -174,13 +189,26 @@ def val(net, dataset, criterion, max_iter=100):
         for pred, target in zip(sim_preds, cpu_texts):
             if pred == target.lower():
                 n_correct += 1
+            
+            # Case-insensitive character and word error rates
+            char_error.append(cer(pred, target.lower()))
+            w_error.append(wer(pred, target.lower()))
 
     raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:opt.n_test_disp]
     for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts):
         print('%-20s => %-20s, gt: %-20s' % (raw_pred, pred, gt))
-
+    
+    print("Total number of images in validation set: %8d" % image_count)
+    
     accuracy = n_correct / float(max_iter * opt.batchSize)
-    print('Test loss: %f, accuray: %f' % (loss_avg.val(), accuracy))
+    print('Test loss: %f, accuracy: %f' % (loss_avg.val(), accuracy))
+    
+    char_arr = np.array(char_error)
+    w_arr = np.array(w_error)
+    print("Character error rate mean: %4.4f; Character error rate sd: %4.4f" % (np.mean(char_arr), np.std(char_arr, ddof=1)))
+    print("Word error rate mean: %4.4f; Word error rate sd: %4.4f" % (np.mean(w_arr), np.std(w_arr, ddof=1)))
+    
+    return (char_error, w_error)
 
 
 def trainBatch(net, criterion, optimizer):
@@ -212,16 +240,19 @@ for epoch in range(opt.niter):
         cost = trainBatch(crnn, criterion, optimizer)
         loss_avg.add(cost)
         i += 1
-
+        
+        # Display the loss
         if i % opt.displayInterval == 0:
             print('[%d/%d][%d/%d] Loss: %f' %
                   (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
             loss_avg.reset()
-
-        if i % opt.valInterval == 0:
+        
+        # Evaluate performance on validation and training sets
+        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of epoch
             val(crnn, test_dataset, criterion)
+            val(crnn, training_eval_set, criterion)
 
         # do checkpointing
-        if i % opt.saveInterval == 0:
+        if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of epoch
             torch.save(
                 crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
