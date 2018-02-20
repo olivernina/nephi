@@ -2,6 +2,10 @@ import Levenshtein
 def cer(r, h):
     r = ' '.join(r.split())
     h = ' '.join(h.split())
+    if (r == None)
+        r = ''
+    if (h == None)
+        h = ''   
     steps = Levenshtein.editops(r.encode('latin-1'), h.encode('latin-1'))
     d = len([v for v in steps if v[0] == 'delete'])
     i = len([v for v in steps if v[0] == 'insert'])
