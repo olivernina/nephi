@@ -1,6 +1,15 @@
 ## Installation
-1. Create a conda enviroment:  
+1. Create a conda enviroment
+
+install conda:
+OS X:
 ```
+$ brew install anaconda
+$ echo ". /usr/local/anaconda3/etc/profile.d/conda.sh" >> ~/.bash_profile
+```
+Then
+```
+$  install conda:
 $  conda create --name nephi
 $  source activate nephi
 ```
