@@ -10,12 +10,12 @@ $ echo ". /usr/local/anaconda3/etc/profile.d/conda.sh" >> ~/.bash_profile
 Then
 ```
 $  conda create --name nephi
-$  source activate nephi
+$  conda activate nephi
 ```
 
 2. Install [PyTorch](http://pytorch.org/).
 ```
-conda install pytorch torchvision -c pytorch # if you don't need CUDA
+conda install pytorch torchvision -c pytorch # enough if you don't need CUDA
 ```
 3. Install [lmdb](https://lmdb.readthedocs.io/en/release/).
 
@@ -32,11 +32,16 @@ mkdir build
 cd build
 cmake ../
 make
+cd ../pytorch_binding
+python setup.py install
 ```
-On OS X, substitute
+On OS X, add, and substitute
 ```
 $ brew install gcc --without-multilib
 cmake ../ -DCMAKE_CXX_COMPILER=g++-7
+CC=g++-7 python setup.py install
+cd ../build
+cp libwarpctc.dylib /usr/local/anaconda3/envs/nephi/lib
 ```
 
 This repository is a fork from the Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch)
