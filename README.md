@@ -9,17 +9,35 @@ $ echo ". /usr/local/anaconda3/etc/profile.d/conda.sh" >> ~/.bash_profile
 ```
 Then
 ```
-$  install conda:
 $  conda create --name nephi
 $  source activate nephi
 ```
 
 2. Install [PyTorch](http://pytorch.org/).
-
+```
+conda install pytorch torchvision -c pytorch # if you don't need CUDA
+```
 3. Install [lmdb](https://lmdb.readthedocs.io/en/release/).
 
+```
+conda install -c conda-forge python-lmdb
+```
 4. Install WarpCTC as explained [here](https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings/pytorch_binding).
 Make sure to update the link to the repository in the instructions to https://github.com/SeanNaren/warp-ctc.git 
+
+```
+git clone https://github.com/SeanNaren/warp-ctc.git
+cd warp-ctc
+mkdir build
+cd build
+cmake ../
+make
+```
+On OS X, substitute
+```
+$ brew install gcc --without-multilib
+cmake ../ -DCMAKE_CXX_COMPILER=g++-7
+```
 
 This repository is a fork from the Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch)
 
