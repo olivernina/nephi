@@ -37,11 +37,19 @@ python setup.py install
 ```
 On OS X, add, and substitute
 ```
-$ brew install gcc --without-multilib
-cmake ../ -DCMAKE_CXX_COMPILER=g++-7
-CC=g++-7 python setup.py install
+brew install gcc --without-multilib
+
+cmake ../ -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7 
+
+CC=gcc-7 python setup.py install
+
 cd ../build
-cp libwarpctc.dylib /usr/local/anaconda3/envs/nephi/lib
+cp libwarpctc.dylib /usr/local/anaconda3/envs/nephi/lib # didn't seem to be enough
+```
+
+Test it with
+```
+from warpctc_pytorch import CTCLoss
 ```
 
 This repository is a fork from the Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch)
