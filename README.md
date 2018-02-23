@@ -2,6 +2,7 @@
 1. Create a conda enviroment
 
 install conda:
+
 OS X:
 ```
 $ brew install anaconda
@@ -35,16 +36,11 @@ make
 cd ../pytorch_binding
 python setup.py install
 ```
-On OS X, add, and substitute
+On OS X, substitute/add
 ```
-brew install gcc --without-multilib
-
-cmake ../ -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7 
-
-CC=gcc-7 python setup.py install
-
+cmake ../ -DWITH_OMP=OFF
 cd ../build
-cp libwarpctc.dylib /usr/local/anaconda3/envs/nephi/lib # didn't seem to be enough
+cp libwarpctc.dylib cp libwarpctc.dylib /usr/local/anaconda3/lib
 ```
 
 Test it with
@@ -59,7 +55,7 @@ This repository is a fork from the Convolutional Recurrent Neural Network (CRNN)
 ## Dependencies
 * lmdb
 * [warp_ctc_pytorch](https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings/pytorch_binding)
-* lxml
+* lxml (conda install lxml)
 
 
 ## Train a new model
