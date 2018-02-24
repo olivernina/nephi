@@ -108,7 +108,7 @@ class randomSequentialSampler(sampler.Sampler):
 
 class alignCollate(object):
 
-    def __init__(self, imgH=32, imgW=100, keep_ratio=False, min_ratio=1):
+    def __init__(self, imgH=80, imgW=300, keep_ratio=False, min_ratio=1):
         self.imgH = imgH
         self.imgW = imgW
         self.keep_ratio = keep_ratio
@@ -127,7 +127,9 @@ class alignCollate(object):
             ratios.sort()
             max_ratio = ratios[-1]
             imgW = int(np.floor(max_ratio * imgH))
-            imgW = max(imgH * self.min_ratio, imgW)  # assure imgH >= imgW
+            
+            #RA: I don't understand the purpose of this line, and for handwriting recognition imgW >= imgH
+            #imgW = max(imgH * self.min_ratio, imgW)  # assure imgH >= imgW
 
         transform = resizeNormalize((imgW, imgH))
         images = [transform(image) for image in images]
