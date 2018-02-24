@@ -8,18 +8,18 @@ $ echo ". /usr/local/anaconda3/etc/profile.d/conda.sh" >> ~/.bash_profile
 ```
 Then
 ```
-$  conda create --name nephi
+$  conda create --name nephi  python=2.7 
 $  conda activate nephi
 ```
 
 2. Install [PyTorch](http://pytorch.org/).
 ```
-conda install pytorch torchvision -c pytorch # good enough if you don't need CUDA
+conda install pytorch torchvision -c pytorch opencv -y # enough if you don't need CUDA, else build from source
 ```
-3. Install [lmdb](https://lmdb.readthedocs.io/en/release/).
+3. Install [lmdb](https://lmdb.readthedocs.io/en/release/), and a few more dependencies:
 
 ```
-conda install -c conda-forge python-lmdb lxml
+conda install -c conda-forge python-lmdb lxml python-levenshtein -y
 ```
 4. Install WarpCTC as explained [here](https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings/pytorch_binding).
 
@@ -33,9 +33,12 @@ make
 cd ../pytorch_binding
 python setup.py install
 ```
-On OS X, substitute/add
+On OS X, substitute
 ```
 cmake ../ -DWITH_OMP=OFF
+```
+and add
+```
 cd ../build
 cp libwarpctc.dylib cp libwarpctc.dylib /usr/local/anaconda3/lib
 ```
@@ -47,11 +50,6 @@ from warpctc_pytorch import CTCLoss
 or this [gist](https://gist.github.com/rdp/bc27be54ec883109989426a9af79ca39).
 
 This repository is a fork from the pytorch version of Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch)
-
-## Dependencies
-* lmdb
-* [warp_ctc_pytorch](https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings/pytorch_binding)
-* lxml
 
 ## Train a new model
 1. Construct dataset following original guide. For training with variable length, please sort the image according to the text length.
