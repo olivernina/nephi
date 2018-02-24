@@ -1,7 +1,5 @@
 ## Installation
-1. Create a conda enviroment
-
-install conda:
+1. Install conda (a local sandbox/install manager), create a conda enviroment
 
 OS X:
 ```
@@ -16,15 +14,14 @@ $  conda activate nephi
 
 2. Install [PyTorch](http://pytorch.org/).
 ```
-conda install pytorch torchvision -c pytorch # enough if you don't need CUDA
+conda install pytorch torchvision -c pytorch # good enough if you don't need CUDA
 ```
 3. Install [lmdb](https://lmdb.readthedocs.io/en/release/).
 
 ```
-conda install -c conda-forge python-lmdb
+conda install -c conda-forge python-lmdb lxml
 ```
 4. Install WarpCTC as explained [here](https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings/pytorch_binding).
-Make sure to update the link to the repository in the instructions to https://github.com/SeanNaren/warp-ctc.git 
 
 ```
 git clone https://github.com/SeanNaren/warp-ctc.git
@@ -47,16 +44,14 @@ Test it with
 ```
 from warpctc_pytorch import CTCLoss
 ```
+or this [gist](https://gist.github.com/rdp/bc27be54ec883109989426a9af79ca39).
 
-This repository is a fork from the Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch)
-
-
+This repository is a fork from the pytorch version of Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch)
 
 ## Dependencies
 * lmdb
 * [warp_ctc_pytorch](https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings/pytorch_binding)
-* lxml (conda install lxml)
-
+* lxml
 
 ## Train a new model
 1. Construct dataset following original guide. For training with variable length, please sort the image according to the text length.
