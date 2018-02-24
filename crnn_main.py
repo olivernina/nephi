@@ -73,10 +73,12 @@ train_loader = torch.utils.data.DataLoader(
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
-training_eval_set = dataset.lmdbDataset(
-    root=opt.trainroot, transform=dataset.resizeNormalize((opt.imgW, opt.imgH))) 
-test_dataset = dataset.lmdbDataset(
-    root=opt.valroot, transform=dataset.resizeNormalize((opt.imgW, opt.imgH)))         # RA: I changed this line to be consistent, were default heights and widths
+test_batch_size = 1
+test_dataset = dataset.lmdbDataset(root=opt.valroot)
+test_loader = torch.utils.data.DataLoader(
+    test_dataset, batch_size=opt.batchSize, sampler=dataset.randomSequentialSampler(test_dataset, opt.batchSize),
+    num_workers=int(opt.workers),
+    collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
 if os.path.exists('alphabet.txt'):
     alphabet = ''
@@ -108,7 +110,7 @@ crnn = crnn.CRNN(opt.imgH, nc, nclass, opt.nh)
 #print("Got to the weight initialization and loading pretrained model")
 crnn.apply(weights_init)
 
-image = torch.FloatTensor(opt.batchSize, 3, opt.imgH, opt.imgH)
+image = torch.FloatTensor(opt.batchSize, 3, opt.imgW, opt.imgH)   #  
 text = torch.IntTensor(opt.batchSize * 5)          # RA: I don't understand why the text has this size
 length = torch.IntTensor(opt.batchSize)
 
@@ -140,16 +142,19 @@ else:
     optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)
 
 
-def val(net, dataset, criterion, max_iter=100):
+def val(net, dataset, criterion, max_iter=2000):
     print('Start val')
 
     for p in crnn.parameters():
         p.requires_grad = False
 
     net.eval()
-    data_loader = torch.utils.data.DataLoader(
-        dataset, shuffle=True, batch_size=opt.batchSize, num_workers=int(opt.workers))
-    val_iter = iter(data_loader)
+    
+    # RA: Testing out resizing 
+    #data_loader = torch.utils.data.DataLoader(
+    #    dataset, shuffle=True, batch_size=opt.batchSize, num_workers=int(opt.workers))
+    #val_iter = iter(data_loader)
+    val_iter = iter(dataset)
 
     i = 0
     n_correct = 0
@@ -160,7 +165,7 @@ def val(net, dataset, criterion, max_iter=100):
     char_error = []
     w_error = []
 
-    max_iter = min(max_iter, len(data_loader))
+    max_iter = min(max_iter, len(dataset))
     for i in range(max_iter):
         data = val_iter.next()
         i += 1
@@ -179,7 +184,6 @@ def val(net, dataset, criterion, max_iter=100):
         
         
         # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
-        # Also, a simple character by character accuracy is being used, not an edit distance.
         # Case is ignored in the accuracy, which is not ideal for an actual working system
         
         _, preds = preds.max(2)
@@ -249,8 +253,8 @@ for epoch in range(opt.niter):
         
         # Evaluate performance on validation and training sets
         if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of epoch
-            val(crnn, test_dataset, criterion)
-            val(crnn, training_eval_set, criterion)
+            val(crnn, test_loader, criterion)
+            val(crnn, train_loader, criterion)
 
         # do checkpointing
         if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of epoch

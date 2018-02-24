@@ -24,6 +24,9 @@ class CRNN(nn.Module):
 
     def __init__(self, imgH, nc, nclass, nh, n_rnn=2, leakyRelu=False):
         super(CRNN, self).__init__()
+        
+        # RA: I see no reason why this has to be the case, and it really shouldn't for our handwriting recognition purposes.
+        # If we put max pooling across the height dimension at the end of the convolutional network, then this won't be necessary
         assert imgH % 16 == 0, 'imgH has to be a multiple of 16'
 
         ks = [3, 3, 3, 3, 3, 3, 2]
@@ -69,6 +72,10 @@ class CRNN(nn.Module):
         # conv features
         conv = self.cnn(input)
         b, c, h, w = conv.size()
+        
+        # With arbitrary resizing, the height of the convolutional block is not necessarily 1. This is where the Bluche paper did a max pooling. I think that's what we should do in the near future, and it may take some debugging.
+        # torch.max() [http://pytorch.org/docs/master/torch.html] will actually be perfect for this, along the height dimension.
+        # For now, I'll just keep heights as multiples of 16
         assert h == 1, "the height of conv must be 1"
         conv = conv.squeeze(2)
         conv = conv.permute(2, 0, 1)  # [w, b, c]
