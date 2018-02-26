@@ -70,20 +70,21 @@ def createDataset(outputPath, imagePathList, labelList, lexiconList=None, checkV
     print('Created dataset with %d samples' % nSamples)
 
 
-def crnn_dataset(): # a simple example of generating data
+def crnn_dataset(image_dir): 
+    # a simple example of generating data (does not generate an alphabet.txt file, you can do that out of band)
+    # pass an image_dir like data/dataset/images/train that contains files like
+    # 25_this is the contents.png
     imagePathList = []
     labelList = []
     image_dir = 'data/dataset/images/train'
     files = os.listdir(image_dir)
     for file in files:
         image_path = file
-        imagePathList.append(os.path.join(image_dir,image_path))
-        label = file.split('_')[1]
+        imagePathList.append(os.path.join(image_dir,image_path)) # full path
+        label = file.split('_')[1] # file like 25_victor.png
         labelList.append(label)
 
-    # createDataset("data/dataset/lmdb/train",imagePathList, labelList)
     createDataset("data/dataset/lmdb/train", imagePathList, labelList)
-
 
 # read into LMDB dataset from READ data type input
 def lmdb_dataset_read(data_dir, output_path):
@@ -191,7 +192,7 @@ def lmdb_dataset_read(data_dir, output_path):
 
 
 
-def extract_strips(data_dir, output_path):
+def extract_strips(data_dir, output_path):  # example of cutting pieces of images out (unused)
 
     # env = lmdb.open(output_path, map_size=1099511627776)
     images = page_images(data_dir)
@@ -249,10 +250,6 @@ def extract_strips(data_dir, output_path):
 
 
 if __name__ == '__main__':
-    # data_dir = '/Users/oliver/projects/datasets/htr-small'
-    # output_path = 'data/lmdb2/train'
-
-
     data_dir = sys.argv[1]
     output_path = sys.argv[2]
     lmdb_dataset_read(data_dir,output_path)
