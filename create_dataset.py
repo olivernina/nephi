@@ -16,6 +16,7 @@ def checkImageIsValid(imageBin):
     return True
 
 
+# basically "flush the cache to the actual DB"
 def writeCache(env, cache):
     with env.begin(write=True) as txn:
         for k, v in cache.iteritems():
@@ -69,8 +70,7 @@ def createDataset(outputPath, imagePathList, labelList, lexiconList=None, checkV
     print('Created dataset with %d samples' % nSamples)
 
 
-
-def crnn_dataset():
+def crnn_dataset(): # a simple example of generating data
     imagePathList = []
     labelList = []
     image_dir = 'data/dataset/images/train'
@@ -85,6 +85,7 @@ def crnn_dataset():
     createDataset("data/dataset/lmdb/train", imagePathList, labelList)
 
 
+# read into LMDB dataset from READ data type input
 def lmdb_dataset_read(data_dir, output_path):
 
     env = lmdb.open(output_path, map_size=1099511627776)
