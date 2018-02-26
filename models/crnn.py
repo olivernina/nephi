@@ -32,7 +32,7 @@ class CRNN(nn.Module):
         ks = [3, 3, 3, 3, 3, 3, 2]
         ps = [1, 1, 1, 1, 1, 1, 0]
         ss = [1, 1, 1, 1, 1, 1, 1]
-        nm = [64, 128, 256, 256, 512, 512, 512]
+        nm = [64, 128, 256, 256, 512, 512, 512] # size of each layer
 
         cnn = nn.Sequential()
 
@@ -42,7 +42,9 @@ class CRNN(nn.Module):
             cnn.add_module('conv{0}'.format(i),
                            nn.Conv2d(nIn, nOut, ks[i], ss[i], ps[i]))
             if batchNormalization:
-                cnn.add_module('batchnorm{0}'.format(i), nn.BatchNorm2d(nOut))
+                cnn.add_module('batchnorm{0}'.format(i), nn.BatchNorm2d(nOut)) # reduces overfitting
+
+            # always add a Relu as well (rectifies all negative values to 0, which trains it faster, helps to alleviate the vanishing gradient problem which is the issue where the lower layers of the network train very slowly because the gradient decreases exponentially through the layers")
             if leakyRelu:
                 cnn.add_module('relu{0}'.format(i),
                                nn.LeakyReLU(0.2, inplace=True))
@@ -50,7 +52,7 @@ class CRNN(nn.Module):
                 cnn.add_module('relu{0}'.format(i), nn.ReLU(True))
 
         convRelu(0)
-        cnn.add_module('pooling{0}'.format(0), nn.MaxPool2d(2, 2))  # 64x16x64
+        cnn.add_module('pooling{0}'.format(0), nn.MaxPool2d(2, 2))  # 64x16x64 pooling is downsampling, with a "stride" overlap
         convRelu(1)
         cnn.add_module('pooling{0}'.format(1), nn.MaxPool2d(2, 2))  # 128x8x32
         convRelu(2, True)
@@ -69,7 +71,7 @@ class CRNN(nn.Module):
             BidirectionalLSTM(nh, nh, nclass))
 
     def forward(self, input):
-        # conv features
+        # conv features (cnn)
         conv = self.cnn(input)
         b, c, h, w = conv.size()
         
