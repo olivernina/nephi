@@ -49,15 +49,23 @@ from warpctc_pytorch import CTCLoss
 ```
 or this [gist](https://gist.github.com/rdp/bc27be54ec883109989426a9af79ca39).
 
-This repository is a fork from the pytorch version of Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch)
+This repository is a fork from the pytorch version of Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch).
+And from https://github.com/bgshih/crnn/blob/master/tool/create_dataset.py (the original paper)
 
 ## Train a new model
 1. Construct dataset following original guide. For training with variable length, please sort the image according to the text length.
-2. To create the lmdb database, clone this repository and use ``create_dataset.py`` as follows:  
+2. To create the lmdb database, clone this repository and use ``create_dataset.py`` as follows: 
+
+First create a directory with training data, and a directory with validation data, then:
+
 ```
 nephi$  python create_dataset.py /path/to/your/training/data /new/train/lmdb/database
 nephi$  python create_dataset.py /path/to/your/val/data /new/val/lmdb/database
 ```
+
+This will create lmdb databases (indexes) used in the following step.
+
+
 3. To train a new model, we execute `crnn_main.py`. The argument format is as follows:
 ```
 nephi$ python crnn_main.py --trainroot /new/train/lmdb/database --valroot /new/val/imdb/database [--cuda]

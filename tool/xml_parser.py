@@ -28,6 +28,7 @@ if __name__=='__main__':
     # print result
     # result['bar']
 
+    # read in data from the READ dataset
     data_folder = '/Users/oliver/projects/datasets/htr-small'
 
     images_dir =os.path.join(data_folder,'Images')
