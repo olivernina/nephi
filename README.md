@@ -62,4 +62,11 @@ nephi$  python create_dataset.py /path/to/your/val/data /new/val/lmdb/database
 ```
 nephi$ python crnn_main.py --trainroot /new/train/lmdb/database --valroot /new/val/imdb/database [--cuda]
 ```
-The `--cuda` flag enables GPU acceleration. If your machine has CUDA and you do not use this flag, the software will warn you that you could be using GPU acceleration. Be sure to **provide a valid alphabet.txt file** for your dataset. For more help with argument structure, use `nephi$ python crnn_main.py -h`.
+
+It will train using your trainroot data, backpropagating to the neural network every "batch size" images (default 64), and update with how well it's doing as it goes.
+
+The `--cuda` flag enables GPU acceleration. If your machine has CUDA and you do not use this flag, the software will warn you that you could be using GPU acceleration.
+
+Be sure to **provide a valid alphabet.txt file** for your dataset (either pass one in as a parameter or create local file alphabet.txt). 
+
+For more help with argument structure, use `nephi$ python crnn_main.py -h`.

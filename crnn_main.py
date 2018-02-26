@@ -68,12 +68,12 @@ if not opt.random_sample:
     sampler = dataset.randomSequentialSampler(train_dataset, opt.batchSize)
 else:
     sampler = None
+
 train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=opt.batchSize, sampler=sampler,
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
-test_batch_size = 1
 test_dataset = dataset.lmdbDataset(root=opt.valroot)
 test_loader = torch.utils.data.DataLoader(
     test_dataset, batch_size=opt.batchSize, sampler=dataset.randomSequentialSampler(test_dataset, opt.batchSize),
@@ -143,7 +143,7 @@ else:
 
 
 def val(net, dataset, criterion, max_iter=2000):
-    print('Start val')
+    print('Start validation set')
 
     for p in crnn.parameters():
         p.requires_grad = False
