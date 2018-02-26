@@ -51,7 +51,7 @@ if opt.experiment is None:
     opt.experiment = 'expr'
 os.system('mkdir {0}'.format(opt.experiment))
 
-opt.manualSeed = random.randint(1, 10000)  # fix seed
+opt.manualSeed = random.randint(1, 10000)  # fix seed (new random seed)
 print("Random Seed: ", opt.manualSeed)
 random.seed(opt.manualSeed)
 np.random.seed(opt.manualSeed)
