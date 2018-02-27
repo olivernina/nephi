@@ -1,5 +1,5 @@
 ## Installation
-1. Install conda (a local sandbox/install manager), create a conda enviroment
+1. Install conda (a local sandbox/install manager), and create a new conda enviroment
 
 OS X:
 ```
@@ -50,13 +50,13 @@ from warpctc_pytorch import CTCLoss
 or this [gist](https://gist.github.com/rdp/bc27be54ec883109989426a9af79ca39).
 
 This repository is a fork from the pytorch version of Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch).
-And from https://github.com/bgshih/crnn/blob/master/tool/create_dataset.py (the original CRNN paper)
+And from the original CRNN [paper](https://github.com/bgshih/crnn/blob/master/tool/create_dataset.py).
 
 ## Train a new model
-1. Construct dataset following original guide. For training with variable length, please sort the image according to the text length.
-2. To create the lmdb database, clone this repository and use ``create_dataset.py`` as follows: 
+1. For training with variable length, please sort the image according to the text length.
+2. Create an lmdb database, clone this repository and use ``create_dataset.py`` as follows: 
 
-First fill a directory with training data, and one with validation data.  Example data structure:
+First fill one directory with training data, and one with validation data.  Example data structure:
 
 ```
 /path/to/your/data/25_this is what it says.png
@@ -80,7 +80,7 @@ python create_dataset.py /path/to/your/val/data /new/val/lmdb/database --xml
 nephi$ python crnn_main.py --trainroot /new/train/lmdb/database --valroot /new/val/imdb/database [--cuda]
 ```
 
-It will train using your trainroot data, backpropagating to the neural network every "batch size" images (default 64), and update with how well it's doing as it goes.
+It will train using your trainroot data, backpropagating to the neural network every "batch size" images, and update the console with how well it's doing as it goes.
 
 The `--cuda` flag enables GPU acceleration. If your machine has CUDA and you do not use this flag, the software will warn you that you could be using GPU acceleration.
 
