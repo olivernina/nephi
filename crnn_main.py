@@ -36,7 +36,7 @@ parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--crnn', default='', help="path to start crnn file (to continue training between invocations)")
 parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz', help='alphabet, like 01234abc... or create the alphabet.txt file which overrides it')
 parser.add_argument('--experiment', default=None, help='Where to store samples and models (model save directory)')
-parser.add_argument('--displayInterval', type=int, default=5, help='Interval to display progress')
+parser.add_argument('--displayInterval', type=int, default=5, help='Interval number of batches to display progress')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
 parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
 parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
@@ -243,6 +243,8 @@ def trainBatch(net, criterion, optimizer):
     return cost
 
 
+print("Starting training...")
+
 for epoch in range(opt.niter):
     train_iter = iter(train_loader)
     i = 0
@@ -251,21 +253,22 @@ for epoch in range(opt.niter):
             p.requires_grad = True
         crnn.train()
 
-        cost = trainBatch(crnn, criterion, optimizer)
+        cost = trainBatch(crnn, criterion, optimizer) # it trains/backpropagates once/batch, each batch is made up of "batchSize" images
+        # once you're done with all batches that's the end of one "epoch"
         loss_avg.add(cost)
         i += 1
         
         # Display the loss
         if i % opt.displayInterval == 0:
-            print('[%d/%d][%d/%d] Loss: %f' %
-                  (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
+            print('[%d/%d][%d/%d] Loss: %f' % (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
             loss_avg.reset()
         
-        # Evaluate performance on validation and training sets
+        # Evaluate performance on validation and training sets periodically
         if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             val(crnn, test_loader, criterion)
             val(crnn, train_loader, criterion)
 
         # do checkpointing
         if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
+            print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
             torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
