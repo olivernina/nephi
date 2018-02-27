@@ -28,20 +28,20 @@ parser.add_argument('--batchSize', type=int, default=64, help='input batch size'
 parser.add_argument('--imgH', type=int, default=32, help='the height of the input image to network')
 parser.add_argument('--imgW', type=int, default=100, help='the width of the input image to network')
 parser.add_argument('--nh', type=int, default=256, help='size of the lstm hidden state')
-parser.add_argument('--niter', type=int, default=25, help='number of epochs to train for')
+parser.add_argument('--niter', type=int, default=25, help='number of epochs to train for, default 25')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Critic, default=0.00005')
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
-parser.add_argument('--crnn', default='', help="path to crnn (to continue training)")
+parser.add_argument('--crnn', default='', help="path to crnn (to continue training between invocations)")
 parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz')
 parser.add_argument('--experiment', default=None, help='Where to store samples and models (model directory)')
 parser.add_argument('--displayInterval', type=int, default=5, help='Interval to be displayed')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display when test')
 parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
-parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save model parameters')
-parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is rmsprop)')
-parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is rmsprop)')
+parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model, ex: netCRNN_{1}_{2}.pth')
+parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is false, rmsprop)')
+parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is false, use rmsprop)')
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
 parser.add_argument('--random_sample', action='store_true', help='whether to sample the dataset with random sampler')
 opt = parser.parse_args()
@@ -264,11 +264,10 @@ for epoch in range(opt.niter):
             loss_avg.reset()
         
         # Evaluate performance on validation and training sets
-        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of epoch
+        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             val(crnn, test_loader, criterion)
             val(crnn, train_loader, criterion)
 
         # do checkpointing
-        if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of epoch
-            torch.save(
-                crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
+        if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
+            torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
