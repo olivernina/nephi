@@ -35,8 +35,8 @@ parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--crnn', default='', help="path to crnn (to continue training)")
 parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz')
-parser.add_argument('--experiment', default=None, help='Where to store samples and models')
-parser.add_argument('--displayInterval', type=int, default=500, help='Interval to be displayed')
+parser.add_argument('--experiment', default=None, help='Where to store samples and models (model directory)')
+parser.add_argument('--displayInterval', type=int, default=5, help='Interval to be displayed')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display when test')
 parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
 parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save model parameters')
@@ -123,6 +123,8 @@ if opt.cuda:
 if opt.crnn != '':
     print('loading pretrained model from %s' % opt.crnn)
     crnn.load_state_dict(torch.load(opt.crnn))
+
+print("Your neural network:")
 print(crnn)
     
 image = Variable(image)
@@ -188,7 +190,6 @@ def val(net, dataset, criterion, max_iter=2000):
         # Case is ignored in the accuracy, which is not ideal for an actual working system
         
         _, preds = preds.max(2)
-        print(print(torch.__version__))
         if torch.__version__ < '0.2':
           preds = preds.squeeze(2) # https://github.com/meijieru/crnn.pytorch/issues/31
         preds = preds.transpose(1, 0).contiguous().view(-1)
@@ -231,7 +232,6 @@ def trainBatch(net, criterion, optimizer):
     preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
     cost = criterion(preds, text, preds_size, length) / batch_size
     crnn.zero_grad()
-    print("training from a batch...")
     cost.backward()
     optimizer.step()
     return cost
