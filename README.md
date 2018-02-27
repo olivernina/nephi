@@ -14,7 +14,7 @@ $  conda activate nephi
 
 2. Install [PyTorch](http://pytorch.org/).
 ```
-conda install pytorch torchvision -c pytorch opencv -y # enough if you don't need CUDA, else build from source
+conda install pytorch torchvision opencv -c pytorch -y # this is enough if you don't need CUDA, else build from source
 ```
 3. Install [lmdb](https://lmdb.readthedocs.io/en/release/), and a few more dependencies:
 
@@ -37,7 +37,7 @@ On OS X, substitute
 ```
 cmake ../ -DWITH_OMP=OFF
 ```
-and add
+remove -std=c++11 from setup.py file, and add
 ```
 cd ../build
 cp libwarpctc.dylib cp libwarpctc.dylib /usr/local/anaconda3/lib
