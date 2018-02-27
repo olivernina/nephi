@@ -60,7 +60,7 @@ First fill a directory with training data, and one with validation data.  Exampl
 
 ```
 /path/to/your/data/25_this is what it says.png
-/path/to/your/data/26_this is what the next one says.png
+/path/to/your/data/26_this is what the next one says.jpg
 ```
 Now bootstrap the lmdb (input) index databases:
 ```
