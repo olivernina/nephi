@@ -33,13 +33,13 @@ parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Cr
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
-parser.add_argument('--crnn', default='', help="path to crnn (to continue training between invocations)")
+parser.add_argument('--crnn', default='', help="path to start crnn file (to continue training between invocations)")
 parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz', help='alphabet, like 01234abc... or create the alphabet.txt file which overrides it')
 parser.add_argument('--experiment', default=None, help='Where to store samples and models (model save directory)')
 parser.add_argument('--displayInterval', type=int, default=5, help='Interval to display progress')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
 parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
-parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model, ex: netCRNN_{1}_{2}.pth')
+parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is false, rmsprop)')
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is false, use rmsprop)')
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
@@ -99,11 +99,10 @@ if os.path.exists('alphabet.txt'):
 
 
 nclass = len(opt.alphabet) + 1
-nc = 1
+nc = 1 # always one
 
 converter = utils.strLabelConverter(opt.alphabet)
 criterion = CTCLoss()
-
 
 # custom weights initialization called on crnn
 def weights_init(m):
@@ -133,8 +132,7 @@ if opt.crnn != '':
     print('loading pretrained model from %s' % opt.crnn)
     crnn.load_state_dict(torch.load(opt.crnn))
 
-print("Your neural network:")
-print(crnn)
+print("Your neural network:", crnn)
     
 image = Variable(image)
 text = Variable(text)
@@ -145,12 +143,11 @@ loss_avg = utils.averager()
 
 # setup optimizer
 if opt.adam:
-    optimizer = optim.Adam(crnn.parameters(), lr=opt.lr,
-                           betas=(opt.beta1, 0.999))
+    optimizer = optim.Adam(crnn.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 elif opt.adadelta:
     optimizer = optim.Adadelta(crnn.parameters(), lr=opt.lr)
 else:
-    optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)
+    optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr) # default
 
 
 def val(net, dataset, criterion, max_iter=2000):

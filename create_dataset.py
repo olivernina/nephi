@@ -71,7 +71,7 @@ def createDataset(outputPath, imagePathList, labelList, lexiconList=None, checkV
 
 
 def simple_dataset_from_dir(image_dir, output_path): 
-    # a simple example of generating data (does not generate an alphabet.txt file, you can generate your own out of band)
+    # a simple example of generating data (does not generate an alphabet.txt file, generate your own out of band)
     # pass an image_dir like data/dataset/images/train that contains files like
     # 25_this is the contents.png
     imagePathList = []
@@ -80,8 +80,8 @@ def simple_dataset_from_dir(image_dir, output_path):
     for file in files:
         image_path = file
         imagePathList.append(os.path.join(image_dir,image_path)) # full path
-        print(file)
-        label = file.split('_')[1] # file like 25_victor.png
+        label = os.path.splitext(file.split('_')[1])[0] # "victor" from 25_victor.png
+        print(file, label)
         labelList.append(label)
 
     createDataset(output_path, imagePathList, labelList)
