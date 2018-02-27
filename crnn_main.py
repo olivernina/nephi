@@ -34,10 +34,10 @@ parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. de
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--crnn', default='', help="path to crnn (to continue training between invocations)")
-parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz')
-parser.add_argument('--experiment', default=None, help='Where to store samples and models (model directory)')
-parser.add_argument('--displayInterval', type=int, default=5, help='Interval to be displayed')
-parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display when test')
+parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz', help='alphabet, like 01234abc... or create the alphabet.txt file which overrides it')
+parser.add_argument('--experiment', default=None, help='Where to store samples and models (model save directory)')
+parser.add_argument('--displayInterval', type=int, default=5, help='Interval to display progress')
+parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
 parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
 parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model, ex: netCRNN_{1}_{2}.pth')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is false, rmsprop)')
@@ -45,11 +45,12 @@ parser.add_argument('--adadelta', action='store_true', help='Whether to use adad
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
 parser.add_argument('--random_sample', action='store_true', help='whether to sample the dataset with random sampler')
 opt = parser.parse_args()
-print(opt)
+print("Running with options:", opt)
 
 if opt.experiment is None:
     opt.experiment = 'expr'
-os.system('mkdir {0}'.format(opt.experiment))
+if not os.path.isdir(opt.experiment):
+  os.system('mkdir {0}'.format(opt.experiment))
 
 opt.manualSeed = random.randint(1, 10000)  # fix seed (new random seed)
 print("Random Seed: ", opt.manualSeed)
@@ -70,7 +71,7 @@ assert test_dataset
 
 minn = min(len(test_dataset), len(train_dataset))
 if opt.batchSize > minn:
-  print("adjusting batchSize down to test size", minn) # without this it does some tail sample thing wrong I think...
+  print("Adjusting batchSize down for small test size to ", minn) # without this it does some tail sample thing wrong I think...
   opt.batchSize = minn
 
 if not opt.random_sample:
