@@ -3,6 +3,7 @@
 A hackable OCR template for the 21st century.
 
 Purpose: to lower the bar for getting started with trainable neural networks for handwriting recognition.
+
 And to create a community resource for best practices.
 
 ## Installation
@@ -21,13 +22,16 @@ $  conda activate nephi
 
 2. Install [PyTorch](http://pytorch.org/).
 ```
-conda install pytorch torchvision opencv -c pytorch -y # this is enough if you don't need CUDA, if you do, build from source
+# this is enough if you don't need CUDA, if you do, build pytorch from source
+conda install pytorch torchvision opencv -c pytorch -y
+
 ```
 3. Install [lmdb](https://lmdb.readthedocs.io/en/release/), and a few more dependencies:
 
 ```
 conda install -c conda-forge python-lmdb lxml python-levenshtein -y
 ```
+
 4. Install WarpCTC as explained [here](https://github.com/SeanNaren/warp-ctc/tree/pytorch_bindings/pytorch_binding).
 
 ```
@@ -50,7 +54,7 @@ cd ../build
 cp libwarpctc.dylib cp libwarpctc.dylib /usr/local/anaconda3/lib
 ```
 
-Test it with
+You can test that your install worked with `$python`
 ```
 from warpctc_pytorch import CTCLoss
 ```
@@ -69,7 +73,7 @@ First fill one directory with training data, and one with validation data.  Exam
 /path/to/your/data/25_this is what it says.png
 /path/to/your/data/26_this is what the next one says.jpg
 ```
-Now bootstrap the lmdb (input) index databases:
+Now bootstrap the lmdb index databases:
 ```
 nephi$  python create_dataset.py /path/to/your/training/data /new/train/lmdb/database
 nephi$  python create_dataset.py /path/to/your/val/data /new/val/lmdb/database
