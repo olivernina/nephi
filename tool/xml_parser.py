@@ -16,7 +16,7 @@ def page_images(data_folder):
         print xml
         file  = open(xml)
         xml_string = file.read()
-        page = objectify.fromstring(xml_string)
+        page = objectify.fromstring(xml_string) # convert from xml string to "python type object"
 
         images.append(page)
 

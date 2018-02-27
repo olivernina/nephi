@@ -178,6 +178,7 @@ def val(net, dataset, criterion, max_iter=2000):
         utils.loadData(length, l)
 
         preds = crnn(image)
+        print(preds.size())
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
         cost = criterion(preds, text, preds_size, length) / batch_size
         loss_avg.add(cost)
@@ -187,7 +188,9 @@ def val(net, dataset, criterion, max_iter=2000):
         # Case is ignored in the accuracy, which is not ideal for an actual working system
         
         _, preds = preds.max(2)
-        preds = preds.squeeze(2)
+        print(print(torch.__version__))
+        if torch.__version__ < '0.2':
+          preds = preds.squeeze(2) # https://github.com/meijieru/crnn.pytorch/issues/31
         preds = preds.transpose(1, 0).contiguous().view(-1)
         sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
         for pred, target in zip(sim_preds, cpu_texts):
@@ -228,6 +231,7 @@ def trainBatch(net, criterion, optimizer):
     preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
     cost = criterion(preds, text, preds_size, length) / batch_size
     crnn.zero_grad()
+    print("training from a batch...")
     cost.backward()
     optimizer.step()
     return cost

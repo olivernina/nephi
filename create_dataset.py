@@ -70,23 +70,23 @@ def createDataset(outputPath, imagePathList, labelList, lexiconList=None, checkV
     print('Created dataset with %d samples' % nSamples)
 
 
-def crnn_dataset(image_dir): 
-    # a simple example of generating data (does not generate an alphabet.txt file, you can do that out of band)
+def simple_dataset_from_dir(image_dir, output_path): 
+    # a simple example of generating data (does not generate an alphabet.txt file, you can generate your own out of band)
     # pass an image_dir like data/dataset/images/train that contains files like
     # 25_this is the contents.png
     imagePathList = []
     labelList = []
-    image_dir = 'data/dataset/images/train'
     files = os.listdir(image_dir)
     for file in files:
         image_path = file
         imagePathList.append(os.path.join(image_dir,image_path)) # full path
+        print(file)
         label = file.split('_')[1] # file like 25_victor.png
         labelList.append(label)
 
-    createDataset("data/dataset/lmdb/train", imagePathList, labelList)
+    createDataset(output_path, imagePathList, labelList)
 
-# read into LMDB dataset from READ data type input
+# read into LMDB dataset from XML 
 def lmdb_dataset_read(data_dir, output_path):
 
     env = lmdb.open(output_path, map_size=1099511627776)
@@ -252,4 +252,8 @@ def extract_strips(data_dir, output_path):  # example of cutting pieces of image
 if __name__ == '__main__':
     data_dir = sys.argv[1]
     output_path = sys.argv[2]
-    lmdb_dataset_read(data_dir,output_path)
+    if (len(sys.argv) == 4) and (sys.argv[3] == "--xml"):
+      lmdb_dataset_read(data_dir, output_path)
+    else:
+      simple_dataset_from_dir(data_dir, output_path) 
+
