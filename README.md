@@ -3,7 +3,7 @@
 
 OS X:
 ```
-$ brew install anaconda
+$ brew cask install anaconda
 $ echo ". /usr/local/anaconda3/etc/profile.d/conda.sh" >> ~/.bash_profile
 ```
 Then
@@ -14,7 +14,7 @@ $  conda activate nephi
 
 2. Install [PyTorch](http://pytorch.org/).
 ```
-conda install pytorch torchvision opencv -c pytorch -y # this is enough if you don't need CUDA, else build from source
+conda install pytorch torchvision opencv -c pytorch -y # this is enough if you don't need CUDA, if you do, build from source
 ```
 3. Install [lmdb](https://lmdb.readthedocs.io/en/release/), and a few more dependencies:
 
@@ -33,7 +33,7 @@ make
 cd ../pytorch_binding
 python setup.py install
 ```
-On OS X, substitute
+On OS X, substitute cmake with
 ```
 cmake ../ -DWITH_OMP=OFF
 ```
@@ -50,7 +50,7 @@ from warpctc_pytorch import CTCLoss
 or this [gist](https://gist.github.com/rdp/bc27be54ec883109989426a9af79ca39).
 
 This repository is a fork from the pytorch version of Convolutional Recurrent Neural Network (CRNN) repository found [here](https://github.com/meijieru/crnn.pytorch).
-And from https://github.com/bgshih/crnn/blob/master/tool/create_dataset.py (the original paper)
+And from https://github.com/bgshih/crnn/blob/master/tool/create_dataset.py (the original CRNN paper)
 
 ## Train a new model
 1. Construct dataset following original guide. For training with variable length, please sort the image according to the text length.
