@@ -64,6 +64,15 @@ if torch.cuda.is_available() and not opt.cuda:
 
 train_dataset = dataset.lmdbDataset(root=opt.trainroot)
 assert train_dataset
+
+test_dataset = dataset.lmdbDataset(root=opt.valroot)
+assert test_dataset
+
+minn = min(len(test_dataset), len(train_dataset))
+if opt.batchSize > minn:
+  print("adjusting batchSize down to test size", minn) # without this it does some tail sample thing wrong I think...
+  opt.batchSize = minn
+
 if not opt.random_sample:
     sampler = dataset.randomSequentialSampler(train_dataset, opt.batchSize)
 else:
@@ -74,7 +83,6 @@ train_loader = torch.utils.data.DataLoader(
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
-test_dataset = dataset.lmdbDataset(root=opt.valroot)
 test_loader = torch.utils.data.DataLoader(
     test_dataset, batch_size=opt.batchSize, sampler=dataset.randomSequentialSampler(test_dataset, opt.batchSize),
     num_workers=int(opt.workers),
