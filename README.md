@@ -1,3 +1,10 @@
+# Nephi OCR project
+
+A hackable OCR template for the 21st century.
+
+Purpose: to lower the bar for getting started with trainable neural networks for handwriting recognition.
+And to create a community resource for best practices.
+
 ## Installation
 1. Install conda (a local sandbox/install manager), and create a new conda enviroment
 
