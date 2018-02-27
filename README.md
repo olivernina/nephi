@@ -56,24 +56,24 @@ And from https://github.com/bgshih/crnn/blob/master/tool/create_dataset.py (the 
 1. Construct dataset following original guide. For training with variable length, please sort the image according to the text length.
 2. To create the lmdb database, clone this repository and use ``create_dataset.py`` as follows: 
 
-First create a directory with training data, and one with validation data.  Example data structure:
+First fill a directory with training data, and one with validation data.  Example data structure:
 
+```
 /path/to/your/data/25_this is what it says.png
 /path/to/your/data/26_this is what the next one says.png
-
-
+```
+Now bootstrap the lmdb (input) index databases:
 ```
 nephi$  python create_dataset.py /path/to/your/training/data /new/train/lmdb/database
 nephi$  python create_dataset.py /path/to/your/val/data /new/val/lmdb/database
 ```
 
-If you'd like to create one with XML descriptive input (ex: XML that describes line portions of a larger image), add --xml at the end
+If you'd like to input from XML descriptions (ex: XML that describes line portions within a larger image), 
+add --xml at the end
 
 ```
 python create_dataset.py /path/to/your/val/data /new/val/lmdb/database --xml
 ```
-
-These will bootstrap the lmdb databases (indexes) used in the following trainings.
 
 3. To train a new model, we execute `crnn_main.py`. The argument format is as follows:
 ```
