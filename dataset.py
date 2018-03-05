@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 import lmdb
 import six
 import sys
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 
 
@@ -65,6 +65,12 @@ class lmdbDataset(Dataset):
 
         return (img, label)
 
+    
+
+# RA: I think more work for making sure this code functions when the image height is larger than the resize height. However, when I ran the main module with this resizeNormalize function, i got no errors
+
+# RA 5 Mar 2018: I think for a transfer learning approach, we should not resize the images at all. We should just feed in the largest image height and width (independently) and pad the remaining space.
+
 
 class resizeNormalize(object):
 
@@ -74,9 +80,22 @@ class resizeNormalize(object):
         self.toTensor = transforms.ToTensor()
 
     def __call__(self, img):
-        img = img.resize(self.size, self.interpolation)
-        img = self.toTensor(img)
+        
+        # Resize image as necessary to new height, maintaining aspect ratio
+        o_size = img.size
+        AR = o_size[0] / float(o_size[1])
+        img = img.resize((int(round(AR * self.size[1])), self.size[1]), self.interpolation)
+        
+        # Now pad to new width, as target width is guaranteed to be larger than width if keep aspect ratio is true
+        o_size = img.size
+        delta_w = self.size[0] - o_size[0]
+        delta_h = self.size[1] - o_size[1]
+        padding = (delta_w//2, delta_h//2, delta_w-(delta_w//2), delta_h-(delta_h//2))
+        new_im = ImageOps.expand(img, padding, "white")
+        
+        img = self.toTensor(new_im)
         img.sub_(0.5).div_(0.5)
+        
         return img
 
 

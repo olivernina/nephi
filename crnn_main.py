@@ -73,7 +73,6 @@ train_loader = torch.utils.data.DataLoader(
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
-test_batch_size = 1
 test_dataset = dataset.lmdbDataset(root=opt.valroot)
 test_loader = torch.utils.data.DataLoader(
     test_dataset, batch_size=opt.batchSize, sampler=dataset.randomSequentialSampler(test_dataset, opt.batchSize),
