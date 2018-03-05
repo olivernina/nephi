@@ -16,7 +16,7 @@ def page_images(data_folder):
         print xml
         file  = open(xml)
         xml_string = file.read()
-        page = objectify.fromstring(xml_string)
+        page = objectify.fromstring(xml_string) # convert from xml string to "python type object"
 
         images.append(page)
 
@@ -28,6 +28,7 @@ if __name__=='__main__':
     # print result
     # result['bar']
 
+    # read in data from the READ dataset
     data_folder = '/Users/oliver/projects/datasets/htr-small'
 
     images_dir =os.path.join(data_folder,'Images')
