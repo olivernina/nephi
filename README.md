@@ -100,6 +100,6 @@ Be sure to **provide a valid alphabet.txt file** for your dataset (either pass o
 For more help with argument structure, use `nephi$ python crnn_main.py -h`.
 
 ## Acknowledgments
-Big thanks to Russell Ault from OSU who collaborated in development of the code made it possible to have a more robust framework. 
+Big thanks to Russell Ault from OSU who collaborated in the development of the code and made it possible to have a more robust framework. 
 Also thanks to Roger Pack from FamilySearch who presented our work at the annual Family History Technology Workshop and who gave us good feedback during the development of the library. Other people worth to mention for their feedback and input are Dr. William Barrett from BYU, Dr. Doug Kennard and Seth Stwart.  
 
