@@ -98,3 +98,8 @@ The `--cuda` flag enables GPU acceleration. If your machine has CUDA and you do 
 Be sure to **provide a valid alphabet.txt file** for your dataset (either pass one in as a parameter or create local file alphabet.txt). 
 
 For more help with argument structure, use `nephi$ python crnn_main.py -h`.
+
+## Acknowledgments
+Big thanks to Russell Ault from OSU who collaborated in development of the code made it possible to have a more robust framework. 
+Also thanks to Roger Pack from FamilySearch who presented our work at the annual Family History Technology Workshop and who gave us good feedback during the development of the library. Other people worth to mention for their feedback and input are Dr. William Barrett from BYU, Dr. Doug Kennard and Seth Stwart.  
+
