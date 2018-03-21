@@ -3,7 +3,14 @@ import lmdb # install lmdb by "pip install lmdb"
 import cv2
 import numpy as np
 from tool.xml_parser import page_images
+from glob import glob
+import re
 import sys
+
+stdout = sys.stdout
+reload(sys)  
+sys.setdefaultencoding('utf-8')
+sys.stdout = stdout
 
 def checkImageIsValid(imageBin):
     if imageBin is None:
@@ -69,6 +76,31 @@ def createDataset(outputPath, imagePathList, labelList, lexiconList=None, checkV
     writeCache(env, cache)
     print('Created dataset with %d samples' % nSamples)
 
+# Takes an image read by cv2 and masks out the region of interest (pts)
+def apply_mask(img, pts):
+    
+    pts = np.array(pts, np.int32)
+
+    xmin = min(pts, key=lambda x: x[0])[0]
+    xmax = max(pts, key=lambda x: x[0])[0]
+
+    ymin = min(pts, key=lambda x: x[1])[1]
+    ymax = max(pts, key=lambda x: x[1])[1]
+    updated_pts = [(p[0] - xmin, p[1] - ymin) for p in pts]
+    line_img = img[ymin:ymax, xmin:xmax].copy()
+    mask = np.zeros(line_img.shape, dtype=np.uint8)
+
+    roi_corners = np.array([updated_pts], dtype=np.int32)
+    channel_count = 1
+    if len(line_img.shape) > 2:
+        channel_count = line_img.shape[2]
+
+    ignore_mask_color = (255,) * channel_count
+    cv2.fillPoly(mask, roi_corners, ignore_mask_color)
+    line_img[mask == 0] = 255
+    
+    return line_img
+
 
 def simple_dataset_from_dir(image_dir, output_path): 
     # a simple example of generating data (does not generate an alphabet.txt file, generate your own out of band)
@@ -85,6 +117,60 @@ def simple_dataset_from_dir(image_dir, output_path):
         labelList.append(label)
 
     createDataset(output_path, imagePathList, labelList)
+
+
+# read into LMDB dataset from ICFHR 2018
+def icfhr_dataset_read(data_dir, output_path):
+
+    env = lmdb.open(output_path, map_size=1099511627776)
+    cache = {}
+    cnt = 1
+    
+    for img_file in glob(os.path.join(data_dir, "*/*/*.jpg")):
+        img_c = cv2.imread(img_file)
+        info_file = img_file + ".info" 
+        text_file = img_file + ".txt"
+        with open(info_file, "r") as i_f, open(text_file, "r") as t_f:
+            info = i_f.read()
+            gt = t_f.read()
+
+            mask = info.partition("MASK\n")[2]
+
+
+            myre = re.compile(r"[0-9]+,[0-9]+")
+            mask_p = myre.findall(mask)
+            mask_pts = [tuple(int(x) for x in v.split(',')) for v in mask_p]
+            line_img = apply_mask(img_c, mask_pts)
+            imageBin = cv2.imencode('.png', line_img)[1].tostring()
+            
+            if not checkImageIsValid(imageBin):
+                print('%s is not a valid image' % img_file)
+                continue
+
+            annotation = gt
+            label = annotation.encode('utf-8')
+            
+            imageKey = 'image-%09d' % cnt
+            labelKey = 'label-%09d' % cnt
+
+            print imageKey
+
+            cache[imageKey] = imageBin
+            cache[labelKey] = label
+            
+            if cnt % 1000 == 0:
+                writeCache(env, cache)
+                cache = {}
+                print('Written %d' % (cnt))
+
+            #line['database_id'] = cnt
+
+            cnt += 1
+
+    nSamples = cnt - 1
+    cache['num-samples'] = str(nSamples)
+    writeCache(env, cache)
+    print('Created dataset with %d samples' % nSamples)
 
 # read into LMDB dataset from XML 
 def lmdb_dataset_read(data_dir, output_path):
@@ -253,7 +339,9 @@ if __name__ == '__main__':
     data_dir = sys.argv[1]
     output_path = sys.argv[2]
     if (len(sys.argv) == 4) and (sys.argv[3] == "--xml"):
-      lmdb_dataset_read(data_dir, output_path)
+        lmdb_dataset_read(data_dir, output_path)
+    elif (len(sys.argv) == 4) and (sys.argv[3] == "--icfhr"):
+        icfhr_dataset_read(data_dir, output_path)
     else:
-      simple_dataset_from_dir(data_dir, output_path) 
+        simple_dataset_from_dir(data_dir, output_path) 
 

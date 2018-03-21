@@ -150,7 +150,7 @@ else:
     optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr) # default
 
 
-def val(net, dataset, criterion, max_iter=2000):
+def val(net, dataset, criterion, max_iter=1000):
     print('Start validation set')
 
     for p in crnn.parameters():

@@ -1,0 +1,1 @@
+python crnn_main.py --trainroot data/lmdb/train --valroot data/lmdb/val --cuda --lr 0.0001 --displayInterval 350 --valEpoch 10 --saveEpoch 10 --workers 10 --niter 50 --experiment expr_test_functional --keep_ratio --imgH 64 --imgW 220 --batchSize 8 > log_test_functional.txt
