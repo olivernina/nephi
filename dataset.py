@@ -59,11 +59,15 @@ class lmdbDataset(Dataset):
 
             label_key = 'label-%09d' % index
             label = str(txn.get(label_key))
+            
+            # I want the other thing not to have a problem with lmdb databases already here, okay, .get() should return None if there is nothing
+            file_key = 'file-%09d' % index
+            file_name = str(txn.get(file_key)) 
 
             if self.target_transform is not None:
                 label = self.target_transform(label)
 
-        return (img, label)
+        return (img, label, file_name)
 
     
 
@@ -134,7 +138,7 @@ class alignCollate(object):
         self.min_ratio = min_ratio
 
     def __call__(self, batch):
-        images, labels = zip(*batch)
+        images, labels, files = zip(*batch)
 
         imgH = self.imgH
         imgW = self.imgW
@@ -154,4 +158,4 @@ class alignCollate(object):
         images = [transform(image) for image in images]
         images = torch.cat([t.unsqueeze(0) for t in images], 0)
 
-        return images, labels
+        return images, labels, files
