@@ -120,7 +120,7 @@ def simple_dataset_from_dir(image_dir, output_path):
 
 
 # read into LMDB dataset from ICFHR 2018
-def icfhr_dataset_read(data_dir, output_path):
+def icfhr_dataset_read(data_dir, output_path, include_files=None):
 
     env = lmdb.open(output_path, map_size=1099511627776)
     cache = {}
@@ -128,7 +128,10 @@ def icfhr_dataset_read(data_dir, output_path):
     
     for img_file in glob(os.path.join(data_dir, "*/*/*.jpg")):
         img_c = cv2.imread(img_file)
-        info_file = img_file + ".info" 
+        info_file = img_file + ".info"
+        if include_files is not None:
+            if os.path.basename(img_file) not in include_files:
+                continue
         text_file = img_file + ".txt"
         with open(info_file, "r") as i_f, open(text_file, "r") as t_f:
             info = i_f.read()
@@ -152,11 +155,13 @@ def icfhr_dataset_read(data_dir, output_path):
             
             imageKey = 'image-%09d' % cnt
             labelKey = 'label-%09d' % cnt
+            fileKey = 'file-%09d' % cnt
 
             print imageKey
 
             cache[imageKey] = imageBin
             cache[labelKey] = label
+            cache[fileKey] = os.path.basename(img_file)
             
             if cnt % 1000 == 0:
                 writeCache(env, cache)
@@ -342,6 +347,9 @@ if __name__ == '__main__':
         lmdb_dataset_read(data_dir, output_path)
     elif (len(sys.argv) == 4) and (sys.argv[3] == "--icfhr"):
         icfhr_dataset_read(data_dir, output_path)
+    elif (len(sys.argv) == 5) and (sys.argv[3] == "--icfhr"):
+        with open(sys.argv[4], "r") as include_file:
+            icfhr_dataset_read(data_dir, output_path, include_file.read().split())
     else:
         simple_dataset_from_dir(data_dir, output_path) 
 

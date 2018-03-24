@@ -1,0 +1,4 @@
+
+# Modified the script to continue training where there was an error.
+python crnn_main.py --trainroot /deep_data/nephi/lmdb_ICFHR/general_data --valroot /deep_data/nephi/lmdb_ICFHR/specific_data --crnn experiments/expr_ICFHR_19Mar_extend/netCRNN_10_2982.pth --cuda --lr 0.00005 --displayInterval 120 --valEpoch 5 --saveEpoch 10 --workers 10 --niter 200 --experiment experiments/expr_ICFHR_21Mar_russell_speedtest --keep_ratio --imgH 80 --imgW 240 --batchSize 4 > log_ICFHR_21Mar_russell_speedtest.txt
+# On 20 march 2018 I lowered the lr from 0.0001 to 0.00005 and increased the batch size from 4 to 8. I changed names from "extend" to "extended". The problem I have been having is a memory allocation error when loading the line images of the training set for validation. I should probably change memory here somehow, but the temporary fix is that I've decreased the number of batches to load.

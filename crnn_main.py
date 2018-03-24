@@ -17,7 +17,7 @@ import models.crnn as crnn
 import sys  
 stdout = sys.stdout
 reload(sys)  
-sys.setdefaultencoding('latin-1')
+sys.setdefaultencoding('utf-8')
 from model_error import cer, wer
 
 parser = argparse.ArgumentParser()
@@ -44,6 +44,8 @@ parser.add_argument('--adam', action='store_true', help='Whether to use adam (de
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is false, use rmsprop)')
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
 parser.add_argument('--random_sample', action='store_true', help='whether to sample the dataset with random sampler')
+parser.add_argument('--test_icfhr', action='store_true', help='Whether to make predictions on the test set according to ICFHR format')
+parser.add_argument('--test_file', default='test_file', help='Path to file to store test set results')
 opt = parser.parse_args()
 print("Running with options:", opt)
 
@@ -149,6 +151,48 @@ elif opt.adadelta:
 else:
     optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr) # default
 
+def test(net, dataset, criterion):
+    print('Start test set predictions')
+
+    for p in crnn.parameters():
+        p.requires_grad = False
+
+    net.eval()
+
+    test_iter = iter(dataset)
+    all_file_names = []
+    all_preds = []
+    image_count = 0
+
+    for i in range(len(dataset)):
+        data = test_iter.next()
+        #i += 1
+        cpu_images, __, file_names = data
+        batch_size = cpu_images.size(0)
+        image_count = image_count + batch_size
+        utils.loadData(image, cpu_images)
+ 
+        preds = crnn(image)
+        #print(preds.size())
+        preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
+        
+        
+        # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
+        # Case is ignored in the accuracy, which is not ideal for an actual working system
+        
+        _, preds = preds.max(2)     
+        if torch.__version__ < '0.2':
+          preds = preds.squeeze(2) # https://github.com/meijieru/crnn.pytorch/issues/31
+        preds = preds.transpose(1, 0).contiguous().view(-1)
+        sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
+        
+        all_preds.extend(sim_preds)
+        all_file_names.extend(file_names)
+
+    
+    print("Total number of images in test set: %8d" % image_count)
+    
+    return (all_file_names, all_preds)
 
 def val(net, dataset, criterion, max_iter=1000):
     print('Start validation set')
@@ -174,10 +218,11 @@ def val(net, dataset, criterion, max_iter=1000):
     w_error = []
 
     max_iter = min(max_iter, len(dataset))
+    
     for i in range(max_iter):
         data = val_iter.next()
         i += 1
-        cpu_images, cpu_texts = data
+        cpu_images, cpu_texts, __ = data
         batch_size = cpu_images.size(0)
         image_count = image_count + batch_size
         utils.loadData(image, cpu_images)
@@ -186,7 +231,7 @@ def val(net, dataset, criterion, max_iter=1000):
         utils.loadData(length, l)
 
         preds = crnn(image)
-        print(preds.size())
+        #print(preds.size())
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
         cost = criterion(preds, text, preds_size, length) / batch_size
         loss_avg.add(cost)
@@ -227,7 +272,7 @@ def val(net, dataset, criterion, max_iter=1000):
 
 def trainBatch(net, criterion, optimizer):
     data = train_iter.next()
-    cpu_images, cpu_texts = data
+    cpu_images, cpu_texts, __ = data
     batch_size = cpu_images.size(0)
     utils.loadData(image, cpu_images)
     t, l = converter.encode(cpu_texts)
@@ -249,6 +294,15 @@ for epoch in range(opt.niter):
     train_iter = iter(train_loader)
     i = 0
     while i < len(train_loader):
+        
+        # Start by running prediction on test set, doing nothing else
+        if opt.test_icfhr:
+            files, predictions = test(crnn, test_loader, criterion)
+            with open(opt.test_file, "w") as test_results:
+                for file, pred in zip(files, predictions):
+                    test_results.write(' '.join([file, pred]) + "\n")
+            break
+        
         for p in crnn.parameters():
             p.requires_grad = True
         crnn.train()
@@ -272,3 +326,4 @@ for epoch in range(opt.niter):
         if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
             torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
+    break
