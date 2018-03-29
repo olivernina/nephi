@@ -279,6 +279,11 @@ def val(net, dataset, criterion, max_iter=1000):
 def trainBatch(net, criterion, optimizer):
     data = train_iter.next()
     cpu_images, cpu_texts, __ = data
+    
+    # I think here is a place we could add dynamic data augmentation with each batch. We could also put it in the batch generation code if it is called dynamically
+    
+    
+    
     batch_size = cpu_images.size(0)
     utils.loadData(image, cpu_images)
     t, l = converter.encode(cpu_texts)
