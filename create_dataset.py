@@ -6,6 +6,8 @@ from tool.xml_parser import page_images
 from glob import glob
 import re
 import sys
+import io
+encoding = 'utf-8'
 
 stdout = sys.stdout
 reload(sys)  
@@ -130,10 +132,12 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None):
         img_c = cv2.imread(img_file)
         info_file = img_file + ".info"
         if include_files is not None:
+            if ".jpg" not in include_files[0]:
+                include_files = [f + ".jpg" for f in include_files]
             if os.path.basename(img_file) not in include_files:
                 continue
         text_file = img_file + ".txt"
-        with open(info_file, "r") as i_f, open(text_file, "r") as t_f:
+        with open(info_file, "r") as i_f, io.open(text_file, "r", encoding=encoding) as t_f:
             info = i_f.read()
             gt = t_f.read()
 

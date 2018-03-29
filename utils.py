@@ -18,11 +18,11 @@ class strLabelConverter(object):
         ignore_case (bool, default=True): whether or not to ignore all of the case.
     """
 
-    def __init__(self, alphabet, ignore_case=True):
+    def __init__(self, alphabet, ignore_case=False):
         self._ignore_case = ignore_case
         if self._ignore_case:
             alphabet = alphabet.lower()
-        self.alphabet = alphabet + '-'  # for `-1` index
+        self.alphabet = alphabet + u'-'  # for `-1` index
 
         self.dict = {}
         for i, char in enumerate(alphabet):
@@ -39,7 +39,7 @@ class strLabelConverter(object):
             torch.IntTensor [length_0 + length_1 + ... length_{n - 1}]: encoded texts.
             torch.IntTensor [n]: length of each text.
         """
-        if isinstance(text, str):
+        if isinstance(text, basestring):
             text = [
                 self.dict[char.lower() if self._ignore_case else char]
                 for char in text
