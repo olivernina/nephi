@@ -11,6 +11,8 @@ from warpctc_pytorch import CTCLoss
 import os
 import utils
 import dataset
+import io
+encoding = 'utf-8'
 
 import models.crnn as crnn
 
@@ -18,6 +20,7 @@ import sys
 stdout = sys.stdout
 reload(sys)  
 sys.setdefaultencoding('utf-8')
+sys.stdout = stdout
 from model_error import cer, wer
 
 parser = argparse.ArgumentParser()
@@ -93,13 +96,16 @@ test_loader = torch.utils.data.DataLoader(
 
 if os.path.exists('alphabet.txt'):
     alphabet = ''
-    with open('alphabet.txt', 'r') as myfile:
-        alphabet = myfile.read()
+    with io.open('alphabet.txt', 'r', encoding=encoding) as myfile:
+        alphabet = myfile.read().split()
+        alphabet.append(u' ')
+        alphabet = ''.join(alphabet)
 
     if len(alphabet)>1:
         opt.alphabet = alphabet
 
-
+print("This is the alphabet:")
+print(opt.alphabet)
 nclass = len(opt.alphabet) + 1
 nc = 1 # always one
 
@@ -187,7 +193,7 @@ def test(net, dataset, criterion):
         sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
         
         all_preds.extend(sim_preds)
-        all_file_names.extend(file_names)
+        all_file_names.extend([f.partition(".jpg")[0] for f in file_names])
 
     
     print("Total number of images in test set: %8d" % image_count)
@@ -246,12 +252,12 @@ def val(net, dataset, criterion, max_iter=1000):
         preds = preds.transpose(1, 0).contiguous().view(-1)
         sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
         for pred, target in zip(sim_preds, cpu_texts):
-            if pred == target.lower():
+            if pred == target:
                 n_correct += 1
             
             # Case-insensitive character and word error rates
-            char_error.append(cer(pred, target.lower()))
-            w_error.append(wer(pred, target.lower()))
+            char_error.append(cer(pred, target))
+            w_error.append(wer(pred, target))
 
     raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:opt.n_test_disp]
     for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts):
@@ -298,9 +304,9 @@ for epoch in range(opt.niter):
         # Start by running prediction on test set, doing nothing else
         if opt.test_icfhr:
             files, predictions = test(crnn, test_loader, criterion)
-            with open(opt.test_file, "w") as test_results:
+            with io.open(opt.test_file, "w", encoding=encoding) as test_results:
                 for file, pred in zip(files, predictions):
-                    test_results.write(' '.join([file, pred]) + "\n")
+                    test_results.write(' '.join([file, pred]) + "\n")  # this should combine ascii text and unicode correctly
             break
         
         for p in crnn.parameters():
@@ -326,4 +332,6 @@ for epoch in range(opt.niter):
         if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
             torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
-    break
+    
+    if opt.test_icfhr:
+        break

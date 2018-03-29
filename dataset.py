@@ -11,6 +11,7 @@ import six
 import sys
 from PIL import Image, ImageOps
 import numpy as np
+encoding = 'utf-8'
 
 
 class lmdbDataset(Dataset):
@@ -58,7 +59,7 @@ class lmdbDataset(Dataset):
                 img = self.transform(img)
 
             label_key = 'label-%09d' % index
-            label = str(txn.get(label_key))
+            label = unicode(txn.get(label_key), encoding=encoding)   # Hopefully this still works with unicode
             
             # I want the other thing not to have a problem with lmdb databases already here, okay, .get() should return None if there is nothing
             file_key = 'file-%09d' % index
