@@ -37,7 +37,7 @@ parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. de
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--crnn', default='', help="path to start crnn file (to continue training between invocations)")
-parser.add_argument('--alphabet', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz', help='alphabet, like 01234abc... or create the alphabet.txt file which overrides it')
+parser.add_argument('--dataset', type=str, default='READ', help='type of dataset to use such as READ or ICFHR default is READ')
 parser.add_argument('--experiment', default=None, help='Where to store samples and models (model save directory)')
 parser.add_argument('--displayInterval', type=int, default=5, help='Interval number of batches to display progress')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
@@ -49,6 +49,7 @@ parser.add_argument('--keep_ratio', action='store_true', help='whether to keep r
 parser.add_argument('--random_sample', action='store_true', help='whether to sample the dataset with random sampler')
 parser.add_argument('--test_icfhr', action='store_true', help='Whether to make predictions on the test set according to ICFHR format')
 parser.add_argument('--test_file', default='test_file', help='Path to file to store test set results')
+
 opt = parser.parse_args()
 print("Running with options:", opt)
 
@@ -94,9 +95,18 @@ test_loader = torch.utils.data.DataLoader(
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
-if os.path.exists('alphabet.txt'):
+dataset_alphabet  = ''
+if opt.dataset == 'READ':
+    dataset_alphabet = 'alphabets/alphabet_read.txt'
+elif opt.dataset =='ICFHR':
+    dataset_alphabet = 'alphabets/ICFHR_alphabet.txt'
+else:
+    print('dataset '+opt.dataset+' not supported')
+    sys.exit(0)
+
+if os.path.exists(dataset_alphabet):
     alphabet = ''
-    with io.open('alphabet.txt', 'r', encoding=encoding) as myfile:
+    with io.open(dataset_alphabet, 'r', encoding=encoding) as myfile:
         alphabet = myfile.read().split()
         alphabet.append(u' ')
         alphabet = ''.join(alphabet)
