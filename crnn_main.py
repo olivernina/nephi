@@ -96,8 +96,9 @@ test_loader = torch.utils.data.DataLoader(
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
 dataset_alphabet  = ''
+opt.alphabet = ''
 if opt.dataset == 'READ':
-    dataset_alphabet = 'alphabets/alphabet_read.txt'
+    dataset_alphabet = 'alphabets/READ_alphabet.txt'
 elif opt.dataset =='ICFHR':
     dataset_alphabet = 'alphabets/ICFHR_alphabet.txt'
 else:
@@ -291,8 +292,7 @@ def trainBatch(net, criterion, optimizer):
     cpu_images, cpu_texts, __ = data
     
     # I think here is a place we could add dynamic data augmentation with each batch. We could also put it in the batch generation code if it is called dynamically
-    
-    
+
     
     batch_size = cpu_images.size(0)
     utils.loadData(image, cpu_images)
