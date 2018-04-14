@@ -1,0 +1,1 @@
+python crnn_main.py --trainroot /deep_data/nephi/data/lmdb_ICFHR/general_data --valroot /deep_data/nephi/data/lmdb_ICFHR/specific_data  --cuda --lr 0.0001 --displayInterval 120 --valEpoch 5 --saveEpoch 5 --workers 10 --niter 200 --experiment experiments/expr_ICFHR_29Mar_distort --keep_ratio --imgH 80 --imgW 240 --batchSize 2 > log_ICFHR_29Mar_img_distort.txt

@@ -7,6 +7,7 @@ from glob import glob
 import re
 import sys
 import io
+import argparse
 encoding = 'utf-8'
 
 stdout = sys.stdout
@@ -122,7 +123,7 @@ def simple_dataset_from_dir(image_dir, output_path):
 
 
 # read into LMDB dataset from ICFHR 2018
-def icfhr_dataset_read(data_dir, output_path, include_files=None):
+def icfhr_dataset_read(data_dir, output_path, include_files=None, binarize = False, howe_dir = False, simplebin_dir = False):
 
     env = lmdb.open(output_path, map_size=1099511627776)
     cache = {}
@@ -136,7 +137,12 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None):
                 include_files = [f + ".jpg" for f in include_files]
             if os.path.basename(img_file) not in include_files:
                 continue
+        
         text_file = img_file + ".txt"
+        if binarize:
+            howe_img = cv2.imread(os.path.join(howe_dir, os.path.basename(file_image).lower().partition(".jpg")[0] + "_howe.jpg"))
+            simplebin_img = cv2.imread(os.path.join(simplebin_dir, os.path.basename(file_image).lower().partition(".jpg")[0] + "_simplebin.jpg"))
+        
         with open(info_file, "r") as i_f, io.open(text_file, "r", encoding=encoding) as t_f:
             info = i_f.read()
             gt = t_f.read()
@@ -148,11 +154,24 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None):
             mask_p = myre.findall(mask)
             mask_pts = [tuple(int(x) for x in v.split(',')) for v in mask_p]
             line_img = apply_mask(img_c, mask_pts)
+            
+            if binarize:
+                howe_line_img = apply_mask(howe_img, pts)     # Hopefully this works even though Howe binarization takes out a few pixels
+                simplebin_line_img = apply_mask(simplebin_img, pts)
+            
             imageBin = cv2.imencode('.png', line_img)[1].tostring()
+            if binarize:
+                howe_imageBin = cv2.imencode('.png', howe_line_img)[1].tostring()
+                simplebin_imageBin = cv2.imencode('.png', simplebin_line_img)[1].tostring()
             
             if not checkImageIsValid(imageBin):
                 print('%s is not a valid image' % img_file)
                 continue
+                
+            if binarize:
+                if not (checkImageIsValid(howe_imageBin) and checkImageIsValid(simplebin_imageBin)):
+                    print('%s is not a valid image in howe or sauvola binarization' % image['image_file'])
+                    continue
 
             annotation = gt
             label = annotation.encode('utf-8')
@@ -160,10 +179,20 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None):
             imageKey = 'image-%09d' % cnt
             labelKey = 'label-%09d' % cnt
             fileKey = 'file-%09d' % cnt
+            
+            if binarize:
+                howe_imageKey = 'howe-image-%09d' % cnt
+                simplebin_imageKey = 'simplebin-image-%09d' % cnt
 
             print imageKey
+            if binarize:
+                print howe_imageKey
+                print simplebin_imageKey
 
             cache[imageKey] = imageBin
+            if binarize:
+                cache[howe_imageKey] = howe_imageBin
+                cache[simplebin_imageKey] = simplebin_imageBin
             cache[labelKey] = label
             cache[fileKey] = os.path.basename(img_file)
             
@@ -171,8 +200,6 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None):
                 writeCache(env, cache)
                 cache = {}
                 print('Written %d' % (cnt))
-
-            #line['database_id'] = cnt
 
             cnt += 1
 
@@ -182,7 +209,7 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None):
     print('Created dataset with %d samples' % nSamples)
 
 # read into LMDB dataset from XML 
-def lmdb_dataset_read(data_dir, output_path):
+def lmdb_dataset_read(data_dir, output_path, binarize = False, howe_dir = False, simplebin_dir = False):
 
     env = lmdb.open(output_path, map_size=1099511627776)
     images = page_images(data_dir)
@@ -191,7 +218,7 @@ def lmdb_dataset_read(data_dir, output_path):
     cache = {}
     cnt = 1
 
-    alpha_text = '0123456789abcdefghijklmnopqrstuvwxyz'
+    alpha_text = '' #'0123456789abcdefghijklmnopqrstuvwxyz'
     alphabet = []
     for c in alpha_text:
         alphabet.append(c)
@@ -202,7 +229,9 @@ def lmdb_dataset_read(data_dir, output_path):
         file_image = os.path.join(data_dir,'Images',image.Page.get('imageFilename'))
         image['data'] = cv2.imread(file_image)
         page_img = cv2.imread(file_image)
-        # page_img = image['data']
+        if binarize:
+            howe_img = cv2.imread(os.path.join(howe_dir, os.path.basename(file_image).lower().partition(".jpg")[0] + "_howe.jpg"))
+            simplebin_img = cv2.imread(os.path.join(simplebin_dir, os.path.basename(file_image).lower().partition(".jpg")[0] + "_simplebin.jpg"))
 
         for region in image.Page.TextRegion:
             print 'region'
@@ -216,55 +245,57 @@ def lmdb_dataset_read(data_dir, output_path):
                     print str(line.Coords.get('points'))
                     data = line.Coords.get('points')
                     pts = [tuple(int(x) for x in v.split(',')) for v in data.split()]
-                    pts = np.array(pts, np.int32)
-                    xmin = min(pts, key=lambda x: x[0])[0]
-                    xmax = max(pts, key=lambda x: x[0])[0]
-
-                    ymin = min(pts, key=lambda x: x[1])[1]
-                    ymax = max(pts, key=lambda x: x[1])[1]
-
-                    updated_pts = [(p[0] - xmin, p[1] - ymin) for p in pts]
-                    line_img = page_img[ymin:ymax, xmin:xmax].copy()
-                    # http://stackoverflow.com/a/15343106/3479446
-                    mask = np.zeros(line_img.shape, dtype=np.uint8)
-                    roi_corners = np.array([updated_pts], dtype=np.int32)
-
-                    channel_count = 1
-                    if len(line_img.shape) > 2:
-                        channel_count = line_img.shape[2]
-
-                    ignore_mask_color = (255,) * channel_count
-                    cv2.fillPoly(mask, roi_corners, ignore_mask_color)
-                    line_img[mask == 0] = 255
-                    # line['data'] = line_img
+                    line_img = apply_mask(page_img, pts)
+                    if binarize:
+                        howe_line_img = apply_mask(howe_img, pts)     # Hopefully this works even though Howe binarization takes out a few pixels
+                        simplebin_line_img = apply_mask(simplebin_img, pts)
+                    
                     imageBin = cv2.imencode('.png', line_img)[1].tostring()
-                    # imageBin = cv2.imencode('.png', line['data'])[1].tostring()
+                    if binarize:
+                        howe_imageBin = cv2.imencode('.png', howe_line_img)[1].tostring()
+                        simplebin_imageBin = cv2.imencode('.png', simplebin_line_img)[1].tostring()
 
                     if not checkImageIsValid(imageBin):
                         print('%s is not a valid image' % image['image_file'])
                         continue
+                    if binarize:
+                        if not (checkImageIsValid(howe_imageBin) and checkImageIsValid(simplebin_imageBin)):
+                            print('%s is not a valid image in howe or sauvola binarization' % image['image_file'])
+                            continue
 
                     annotation = line.TextEquiv.Unicode.text
-
-                    # label = annotation.encode('utf-8')
+                    
+                    if annotation is None:
+                        annotation = u''
+                    print("Printing apparent unicode!")
+                    print(annotation)
 
                     label = annotation.encode('utf-8')
+                    
+                    print("Printing encoded unicode!")
+                    print(label)
 
-                    for c in label:
+                    for c in annotation:
                         if not c in alphabet:
                             alphabet.append(c)
 
-                    # if not label.isalnum():
-                    #     print label
-                    #     sys.exit(0)
-
                     imageKey = 'image-%09d' % cnt
+                    if binarize:
+                        howe_imageKey = 'howe-image-%09d' % cnt
+                        simplebin_imageKey = 'simplebin-image-%09d' % cnt
                     labelKey = 'label-%09d' % cnt
 
                     print imageKey
+                    if binarize:
+                        print howe_imageKey
+                        print simplebin_imageKey
 
                     cache[imageKey] = imageBin
+                    if binarize:
+                        cache[howe_imageKey] = howe_imageBin
+                        cache[simplebin_imageKey] = simplebin_imageBin
                     cache[labelKey] = label
+                    
                     if cnt % 1000 == 0:
                         writeCache(env, cache)
                         cache = {}
@@ -280,8 +311,7 @@ def lmdb_dataset_read(data_dir, output_path):
     print('Created dataset with %d samples' % nSamples)
 
     alpha_text = ''.join(alphabet)
-
-    with open("alphabet.txt", "w") as text_file:
+    with io.open("alphabet.txt", "w", encoding=encoding) as text_file:
         text_file.write(alpha_text)
 
 
@@ -345,15 +375,28 @@ def extract_strips(data_dir, output_path):  # example of cutting pieces of image
 
 
 if __name__ == '__main__':
-    data_dir = sys.argv[1]
-    output_path = sys.argv[2]
-    if (len(sys.argv) == 4) and (sys.argv[3] == "--xml"):
-        lmdb_dataset_read(data_dir, output_path)
-    elif (len(sys.argv) == 4) and (sys.argv[3] == "--icfhr"):
-        icfhr_dataset_read(data_dir, output_path)
-    elif (len(sys.argv) == 5) and (sys.argv[3] == "--icfhr"):
-        with open(sys.argv[4], "r") as include_file:
-            icfhr_dataset_read(data_dir, output_path, include_file.read().split())
-    else:
-        simple_dataset_from_dir(data_dir, output_path) 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_dir', required=True, help='path to dataset')
+    parser.add_argument('--output_dir', required=True, help='path to lmdb database output')
+    parser.add_argument('--xml', action='store_true', help='whether the data are organized in /Images and /Pages subdirectories with PAGE segmentation file format')
+    parser.add_argument('--icfhr', action='store_true', help='whether the data are organized according to 2018 ICFHR Handwriting Recognition Competition format')
+    parser.add_argument('--files_include', help='File of filenames to selectively include in the lmdb database from data_dir')
+    parser.add_argument('--binarize', action='store_true', help='whether to include binarized data in lmdb database')
+    parser.add_argument('--howe_dir', help='path to howe binarized dataset')
+    parser.add_argument('--simplebin_dir', help='path to sauvola binarized dataset')
+    opt = parser.parse_args()
+    print("Running with options:", opt)
 
+    if not os.path.isdir(opt.output_dir):
+        os.system('mkdir {0}'.format(opt.output_dir))
+
+    if opt.xml:
+        lmdb_dataset_read(opt.data_dir, opt.output_dir, binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir)
+    elif opt.icfhr:
+        if files_include:
+            with open(opt.files_include, "r") as include_file:
+                icfhr_dataset_read(opt.data_dir, opt.output_dir, include_file.read().split(), binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir)
+        else:
+            icfhr_dataset_read(opt.data_dir, opt.output_dir, binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir)
+    else:
+        simple_dataset_from_dir(opt.data_dir, opt.output_dir) 

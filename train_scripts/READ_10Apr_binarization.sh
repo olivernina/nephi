@@ -1,0 +1,1 @@
+python crnn_main.py --trainroot /deep_data/nephi/data/lmdb_read_bin/train --valroot /deep_data/nephi/data/lmdb_read_bin/val  --cuda --lr 0.0001 --displayInterval 120 --valEpoch 5 --saveEpoch 5 --workers 10 --niter 200 --experiment experiments/expr_READ_10Apr_binarize --keep_ratio --imgH 60 --imgW 240 --batchSize 2 > log_READ_10Apr_binarization.txt
