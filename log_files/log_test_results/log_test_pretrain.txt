@@ -1,0 +1,4 @@
+Namespace(adadelta=False, adam=False, alphabet='0123456789abcdefghijklmnopqrstuvwxyz', batchSize=64, beta1=0.5, crnn='/home/ubuntu/dylan/nephi/expr/netCRNN_3210_100.pth', cuda=True, displayInterval=1, experiment='expr_test', imgH=32, imgW=100, keep_ratio=False, lr=1e-05, n_test_disp=10, ngpu=1, nh=256, niter=10, random_sample=False, saveInterval=10000, trainroot='data/lmdb/train', valInterval=1, valroot='data/lmdb/val', workers=10)
+Random Seed:  351
+Got to the weight initialization and loading pretrained model
+loading pretrained model from /home/ubuntu/dylan/nephi/expr/netCRNN_3210_100.pth
