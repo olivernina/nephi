@@ -1,0 +1,4759 @@
+Running with options: Namespace(adadelta=False, adam=False, alphabet='0123456789abcdefghijklmnopqrstuvwxyz', batchSize=2, beta1=0.5, binarize=True, crnn='', cuda=True, displayInterval=120, experiment='experiments/expr_READ_14Apr_prepareforgit', imgH=60, imgW=240, keep_ratio=True, lr=0.0001, n_test_disp=10, ngpu=1, nh=256, niter=200, random_sample=False, saveEpoch=5, test_file='test_file', test_icfhr=False, trainroot='/deep_data/nephi/data/lmdb_read_bin/train', valEpoch=5, valroot='/deep_data/nephi/data/lmdb_read_bin/val', workers=10)
+Random Seed:  8793
+This is the alphabet:
+40FreihatnūfsRb¬:vdgüomw.DlENBcLkPzAOuVȳGSCIH19Tj62,W5KōZpäÿMJ38x()āÖqß̄—öU7̈ē-Q<>/¾yY+ 
+Your neural network: DataParallel(
+  (module): CRNN(
+    (cnn): Sequential(
+      (conv0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (relu0): ReLU(inplace)
+      (pooling0): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+      (conv1): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (relu1): ReLU(inplace)
+      (pooling1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+      (conv2): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (batchnorm2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True)
+      (relu2): ReLU(inplace)
+      (conv3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (relu3): ReLU(inplace)
+      (pooling2): MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1), dilation=(1, 1), ceil_mode=False)
+      (conv4): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (batchnorm4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True)
+      (relu4): ReLU(inplace)
+      (conv5): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (relu5): ReLU(inplace)
+      (pooling3): MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1), dilation=(1, 1), ceil_mode=False)
+      (conv6): Conv2d(512, 512, kernel_size=(2, 2), stride=(1, 1))
+      (batchnorm6): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True)
+      (relu6): ReLU(inplace)
+    )
+    (rnn): Sequential(
+      (0): BidirectionalLSTM(
+        (rnn): LSTM(512, 256, bidirectional=True)
+        (embedding): Linear(in_features=512, out_features=256, bias=True)
+      )
+      (1): BidirectionalLSTM(
+        (rnn): LSTM(256, 256, bidirectional=True)
+        (embedding): Linear(in_features=512, out_features=89, bias=True)
+      )
+    )
+  )
+)
+Starting training...
+The image has shape:
+(53, 135, 3)
+The image has shape:
+(69, 329, 3)
+The image has shape:
+(101, 599, 3)
+The image has shape:
+(69, 419, 3)
+The image has shape:
+(104, 1029, 3)
+The image has shape:
+(107, 1002, 3)
+The image has shape:
+(117, 1289, 3)
+The image has shape:
+(99, 1151, 3)
+The image has shape:
+(117, 1192, 3)
+The image has shape:
+(112, 1263, 3)
+The image has shape:
+(121, 876, 3)
+The image has shape:
+(101, 915, 3)
+The image has shape:
+(76, 311, 3)
+The image has shape:
+(125, 1038, 3)
+The image has shape:
+(160, 405, 3)
+The image has shape:
+(157, 1238, 3)
+The image has shape:
+(110, 1124, 3)
+The image has shape:
+(116, 1004, 3)
+The image has shape:
+(94, 1108, 3)
+The image has shape:
+(89, 1190, 3)
+The image has shape:
+(121, 1008, 3)
+The image has shape:
+(148, 424, 3)
+The image has shape:
+(142, 1207, 3)
+The image has shape:
+(126, 1115, 3)
+The image has shape:
+(88, 624, 3)
+The image has shape:
+(170, 1186, 3)
+The image has shape:
+(93, 1180, 3)
+The image has shape:
+(92, 1061, 3)
+The image has shape:
+(113, 1275, 3)
+The image has shape:
+(96, 1218, 3)
+The image has shape:
+(122, 1094, 3)
+The image has shape:
+(147, 514, 3)
+The image has shape:
+(148, 1220, 3)
+The image has shape:
+(117, 1159, 3)
+The image has shape:
+(112, 1032, 3)
+The image has shape:
+(120, 1091, 3)
+The image has shape:
+(115, 1059, 3)
+The image has shape:
+(144, 1182, 3)
+The image has shape:
+(132, 1182, 3)
+The image has shape:
+(92, 1114, 3)
+The image has shape:
+(233, 1161, 3)
+The image has shape:
+(105, 1144, 3)
+The image has shape:
+(128, 1070, 3)
+The image has shape:
+(116, 1010, 3)
+The image has shape:
+(100, 313, 3)
+The image has shape:
+(185, 1265, 3)
+The image has shape:
+(103, 1060, 3)
+The image has shape:
+(101, 985, 3)
+The image has shape:
+(94, 1140, 3)
+The image has shape:
+(98, 872, 3)
+The image has shape:
+(101, 1173, 3)
+The image has shape:
+(104, 1305, 3)
+The image has shape:
+(264, 1365, 3)
+The image has shape:
+(83, 1162, 3)
+The image has shape:
+(197, 1118, 3)
+The image has shape:
+(129, 1053, 3)
+The image has shape:
+(98, 917, 3)
+The image has shape:
+(101, 960, 3)
+The image has shape:
+(124, 1090, 3)
+The image has shape:
+(193, 487, 3)
+The image has shape:
+(106, 994, 3)
+The image has shape:
+(104, 894, 3)
+The image has shape:
+(67, 412, 3)
+The image has shape:
+(203, 1218, 3)
+The image has shape:
+(84, 358, 3)
+The image has shape:
+(150, 1424, 3)
+The image has shape:
+(95, 1276, 3)
+The image has shape:
+(105, 1246, 3)
+The image has shape:
+(128, 1152, 3)
+The image has shape:
+(131, 1039, 3)
+The image has shape:
+(111, 1111, 3)
+The image has shape:
+(123, 1252, 3)
+The image has shape:
+(149, 1147, 3)
+The image has shape:
+(145, 1122, 3)
+The image has shape:
+(135, 1144, 3)
+The image has shape:
+(145, 1214, 3)
+The image has shape:
+(114, 972, 3)
+The image has shape:
+(120, 984, 3)
+The image has shape:
+(136, 1303, 3)
+The image has shape:
+(128, 1252, 3)
+The image has shape:
+(125, 1147, 3)
+The image has shape:
+(140, 1265, 3)
+The image has shape:
+(79, 56, 3)
+The image has shape:
+(172, 1226, 3)
+The image has shape:
+(132, 1193, 3)
+The image has shape:
+(131, 1238, 3)
+The image has shape:
+(156, 1153, 3)
+The image has shape:
+(127, 1295, 3)
+The image has shape:
+(67, 188, 3)
+The image has shape:
+(133, 1248, 3)
+The image has shape:
+(224, 1089, 3)
+The image has shape:
+(100, 913, 3)
+The image has shape:
+(92, 1239, 3)
+The image has shape:
+(110, 1105, 3)
+The image has shape:
+(197, 1203, 3)
+The image has shape:
+(114, 1259, 3)
+The image has shape:
+(115, 329, 3)
+The image has shape:
+(81, 180, 3)
+The image has shape:
+(113, 1260, 3)
+The image has shape:
+(121, 1283, 3)
+The image has shape:
+(186, 406, 3)
+The image has shape:
+(106, 292, 3)
+The image has shape:
+(90, 1140, 3)
+The image has shape:
+(154, 1278, 3)
+The image has shape:
+(134, 972, 3)
+The image has shape:
+(135, 995, 3)
+The image has shape:
+(99, 1061, 3)
+The image has shape:
+(128, 1070, 3)
+The image has shape:
+(90, 137, 3)
+The image has shape:
+(137, 1069, 3)
+The image has shape:
+(125, 1210, 3)
+The image has shape:
+(109, 1231, 3)
+The image has shape:
+(202, 1300, 3)
+The image has shape:
+(111, 1165, 3)
+The image has shape:
+(128, 1107, 3)
+The image has shThe image has shape:
+(30, 247, 3)
+The image has shape:
+(136, 1209, 3)
+The image has shape:
+(120, 1078, 3)
+The image has shape:
+(94, 1075, 3)
+The image has shape:
+(97, 1080, 3)
+The image has shape:
+(111, 1056, 3)
+The image has shape:
+(131, 1276, 3)
+The image has shape:
+(114, 1191, 3)
+The image has shape:
+(72, 132, 3)
+The image has shape:
+(92, 990, 3)
+The image has shape:
+(108, 1057, 3)
+The image has shape:
+(125, 1139, 3)
+The image has shape:
+(123, 1167, 3)
+The image has shape:
+(99, 1063, 3)
+The image has shape:
+(142, 1153, 3)
+The image has shape:
+(123, 1058, 3)
+The image has shape:
+(135, 1138, 3)
+The image has shape:
+(157, 1217, 3)
+The image has shape:
+(153, 1192, 3)
+The image has shape:
+(144, 1130, 3)
+The image has shape:
+(101, 918, 3)
+The image has shape:
+(83, 921, 3)
+The image has shape:
+(116, 1183, 3)
+The image has shape:
+(119, 1114, 3)
+The image has shape:
+(167, 1399, 3)
+The image has shape:
+(105, 1212, 3)
+The image has shape:
+(93, 935, 3)
+The image has shape:
+(106, 932, 3)
+The image has shape:
+(112, 1093, 3)
+The image has shape:
+(94, 108, 3)
+The image has shape:
+(90, 1241, 3)
+The image has shape:
+(101, 724, 3)
+The image has shape:
+(134, 63, 3)
+The image has shape:
+(121, 939, 3)
+The image has shape:
+(124, 1062, 3)
+The image has shape:
+(122, 1096, 3)
+The image has shape:
+(152, 1202, 3)
+The image has shape:
+(38, 605, 3)
+The image has shape:
+(110, 1032, 3)
+The image has shape:
+(87, 1107, 3)
+The image has shape:
+(109, 1158, 3)
+The image has shape:
+(148, 847, 3)
+The image has shape:
+(99, 133, 3)
+The image has shape:
+(91, 64, 3)
+The image has shape:
+(101, 957, 3)
+The image has shape:
+(79, 934, 3)
+The image has shape:
+(132, 1176, 3)
+The image has shape:
+(131, 1213, 3)
+The image has shape:
+(94, 956, 3)
+The image has shape:
+(122, 1039, 3)
+The image has shape:
+(80, 61, 3)
+The image has shape:
+(172, 996, 3)
+The image has shape:
+(93, 978, 3)
+The image has shape:
+(107, 1009, 3)
+The image has shape:
+(102, 1217, 3)
+The image has shape:
+(107, 1087, 3)
+The image has shape:
+(96, 798, 3)
+The image has shape:
+(118, 1062, 3)
+The image has shape:
+(121, 1364, 3)
+The image has shape:
+(108, 1220, 3)
+The image has shape:
+(101, 1144, 3)
+The image has shape:
+(108, 1191, 3)
+The image has shape:
+(85, 567, 3)
+The image has shape:
+(124, 110, 3)
+The image has shape:
+(111, 1031, 3)
+The image has shape:
+(119, 1150, 3)
+The image has shape:
+(213, 1117, 3)
+The image has shape:
+(71, 994, 3)
+The image has shape:
+(104, 1131, 3)
+The image has shape:
+(118, 1181, 3)
+The image has shape:
+(94, 1108, 3)
+The image has shape:
+(89, 1190, 3)
+The image has shape:
+(132, 982, 3)
+The image has shape:
+(144, 990, 3)
+The image has shape:
+(133, 1248, 3)
+The image has shape:
+(131, 1230, 3)
+The image has shape:
+(161, 1116, 3)
+The image has shape:
+(91, 1043, 3)
+The image has shape:
+(88, 1343, 3)
+The image has shape:
+(111, 499, 3)
+The image has shape:
+(73, 158, 3)
+The image has shape:
+(99, 104, 3)
+The image has shape:
+(252, 1256, 3)
+The image has shape:
+(160, 1165, 3)
+The image has shape:
+(258, 686, 3)
+The image has shape:
+(400, 1033, 3)
+The image has shape:
+(134, 1185, 3)
+The image has shape:
+(103, 1128, 3)
+The image has shape:
+(132, 1038, 3)
+The image has shape:
+(73, 468, 3)
+The image has shape:
+(119, 1136, 3)
+The image has shape:
+(103, 1110, 3)
+The image has shape:
+(130, 1110, 3)
+The image has shape:
+(132, 1005, 3)
+The image has shape:
+(168, 1189, 3)
+The image has shape:
+(180, 1371, 3)
+The image has shape:
+(45, 238, 3)
+The image has shape:
+(101, 1126, 3)
+The image has shape:
+(140, 1295, 3)
+The image has shape:
+(123, 1169, 3)
+The image has shape:
+(91, 976, 3)
+The image has shape:
+(104, 1029, 3)
+The image has shape:
+(83, 436, 3)
+The image has shape:
+(100, 91, 3)
+The image has shape:
+(126, 973, 3)
+The image has shape:
+(110, 1028, 3)
+The image has shape:
+(73, 209, 3)
+The image has shape:
+(243, 1301, 3)
+The image has shape:
+(103, 1072, 3)
+The image has shape:
+(101, 1088, 3)
+The image has shape:
+(111, 946, 3)
+The image has shape:
+(111, 1071, 3)
+The image has shape:
+(79, 261, 3)
+The image has shape:
+(140, 193, 3)
+The image has shape:
+(95, 1057, 3)
+The image has shape:
+(104, 1182, 3)The image has shape:
+(151, 1344, 3)
+The image has shape:
+(99, 426, 3)
+The image has shape:
+(134, 1133, 3)
+The image has shape:
+(166, 1199, 3)
+The image has shape:
+(132, 1135, 3)
+The image has shape:
+(129, 1138, 3)
+The image has shape:
+(83, 1017, 3)
+The image has shape:
+(97, 925, 3)
+The image has shape:
+(103, 1019, 3)
+The image has shape:
+(83, 951, 3)
+The image has shape:
+(108, 1304, 3)
+The image has shape:
+(108, 176, 3)
+The image has shape:
+(169, 1419, 3)
+The image has shape:
+(97, 1125, 3)
+The image has shape:
+(91, 910, 3)
+The image has shape:
+(116, 1016, 3)
+The image has shape:
+(168, 1307, 3)
+The image has shape:
+(123, 1220, 3)
+The image has shape:
+(104, 1180, 3)
+The image has shape:
+(121, 1207, 3)
+The image has shape:
+(97, 68, 3)
+The image has shape:
+(183, 986, 3)
+The image has shape:
+(129, 1138, 3)
+The image has shape:
+(124, 1138, 3)
+The image has shape:
+(96, 1215, 3)
+The image has shape:
+(113, 1140, 3)
+The image has shape:
+(118, 1137, 3)
+The image has shape:
+(116, 1054, 3)
+The image has shape:
+(97, 1125, 3)
+The image has shape:
+(106, 1246, 3)
+The image has shape:
+(126, 1147, 3)
+The image has shape:
+(123, 491, 3)
+The image has shape:
+(106, 1280, 3)
+The image has shape:
+(108, 1279, 3)
+The image has shape:
+(129, 51, 3)
+The image has shape:
+(114, 115, 3)
+The image has shape:
+(107, 1308, 3)
+The image has shape:
+(84, 231, 3)
+The image has shape:
+(104, 1014, 3)
+The image has shape:
+(108, 1090, 3)
+The image has shape:
+(69, 142, 3)
+The image has shape:
+(161, 1010, 3)
+The image has shape:
+(128, 455, 3)
+The image has shape:
+(108, 131, 3)
+The image has shape:
+(85, 116, 3)
+The image has shape:
+(144, 1019, 3)
+The image has shape:
+(124, 1252, 3)
+The image has shape:
+(119, 1249, 3)
+The image has shape:
+(113, 1098, 3)
+The image has shape:
+(138, 1228, 3)
+The image has shape:
+(137, 1255, 3)
+The image has shape:
+(122, 1247, 3)
+The image has shape:
+(138, 1299, 3)
+The image has shape:
+(133, 448, 3)
+The image has shape:
+(92, 1341, 3)
+The image has shape:
+(103, 1335, 3)
+The image has shape:
+(108, 962, 3)
+The image has shape:
+(128, 647, 3)
+The image has shape:
+(128, 1305, 3)
+The image has shape:
+(113, 1305, 3)
+The image has shape:
+(144, 1093, 3)
+The image has shape:
+(104, 1038, 3)
+The image has shape:
+(112, 1015, 3)
+The image has shape:
+(121, 592, 3)
+The image has shape:
+(97, 1134, 3)
+The image has shape:
+(119, 1009, 3)
+The image has shape:
+(115, 1148, 3)
+The image has shape:
+(114, 1168, 3)
+The image has shape:
+(110, 1022, 3)
+The image has shape:
+(108, 993, 3)
+The image has shape:
+(78, 560, 3)
+The image has shape:
+(97, 122, 3)
+The image has shape:
+(93, 991, 3)
+The image has shape:
+(96, 946, 3)
+The image has shape:
+(83, 449, 3)
+The image has shape:
+(168, 1139, 3)
+The image has shape:
+(94, 612, 3)
+The image has shape:
+(100, 610, 3)
+The image has shape:
+(121, 1090, 3)
+The image has shape:
+(149, 1039, 3)
+The image has shape:
+(115, 1166, 3)
+The image has shape:
+(156, 1376, 3)
+The image has shape:
+(131, 1159, 3)
+The image has shape:
+(103, 1098, 3)
+The image has shape:
+(78, 69, 3)
+The image has shape:
+(134, 1106, 3)
+The image has shape:
+(95, 461, 3)
+The image has shape:
+(123, 233, 3)
+The image has shape:
+(364, 1056, 3)
+The image has shape:
+(146, 602, 3)
+The image has shape:
+(68, 1033, 3)
+The image has shape:
+(87, 1130, 3)
+The image has shape:
+(142, 1243, 3)
+The image has shape:
+(141, 1231, 3)
+The image has shape:
+(136, 992, 3)
+The image has shape:
+(139, 1087, 3)
+The image has shape:
+(167, 1356, 3)
+The image has shape:
+(126, 1115, 3)
+The image has shape:
+(113, 1034, 3)
+The image has shape:
+(122, 1045, 3)
+The image has shape:
+(105, 1016, 3)
+The image has shape:
+(120, 850, 3)
+The image has shape:
+(98, 1053, 3)
+The image has shape:
+(89, 1128, 3)
+The image has shape:
+(102, 1066, 3)
+The image has shape:
+(72, 56, 3)
+The image has shape:
+(139, 1056, 3)
+The image has shape:
+(124, 1001, 3)
+The image has shape:
+(60, 450, 3)
+The image has shape:
+(74, 375, 3)
+The image has shape:
+(111, 835, 3)
+The image has shape:
+(171, 1021, 3)
+The image has shape:
+(97, 894, 3)
+The image has shape:
+(138, 562, 3)
+The image has shape:
+(136, 1059, 3)
+The image has shape:
+(93, 406The image has shape:
+(150, 1050, 3)
+The image has shape:
+(116, 972, 3)
+The image has shape:
+(104, 996, 3)
+The image has shape:
+(111, 596, 3)
+The image has shape:
+(168, 1313, 3)
+The image has shape:
+(112, 1204, 3)
+The image has shape:
+(183, 986, 3)
+The image has shape:
+(108, 1057, 3)
+The image has shape:
+(89, 225, 3)
+The image has shape:
+(112, 614, 3)
+The image has shape:
+(88, 794, 3)
+The image has shape:
+(93, 936, 3)
+The image has shape:
+(96, 1143, 3)
+The image has shape:
+(88, 970, 3)
+The image has shape:
+(102, 991, 3)
+The image has shape:
+(102, 902, 3)
+The image has shape:
+(105, 1092, 3)
+The image has shape:
+(97, 1039, 3)
+The image has shape:
+(119, 510, 3)
+The image has shape:
+(178, 1268, 3)
+The image has shape:
+(116, 1064, 3)
+The image has shape:
+(130, 1359, 3)
+The image has shape:
+(278, 1248, 3)
+The image has shape:
+(151, 1205, 3)
+The image has shape:
+(76, 153, 3)
+The image has shape:
+(234, 1418, 3)
+The image has shape:
+(114, 1172, 3)
+The image has shape:
+(125, 1218, 3)
+The image has shape:
+(206, 527, 3)
+The image has shape:
+(176, 1098, 3)
+The image has shape:
+(99, 1053, 3)
+The image has shape:
+(99, 1061, 3)
+The image has shape:
+(120, 1182, 3)
+The image has shape:
+(260, 615, 3)
+The image has shape:
+(172, 576, 3)
+The image has shape:
+(177, 574, 3)
+The image has shape:
+(121, 1008, 3)
+The image has shape:
+(148, 424, 3)
+The image has shape:
+(99, 1073, 3)
+The image has shape:
+(98, 1141, 3)
+The image has shape:
+(127, 1051, 3)
+The image has shape:
+(119, 937, 3)
+The image has shape:
+(131, 1105, 3)
+The image has shape:
+(163, 1224, 3)
+The image has shape:
+(160, 405, 3)
+The image has shape:
+(157, 1238, 3)
+The image has shape:
+(117, 1242, 3)
+The image has shape:
+(116, 1132, 3)
+The image has shape:
+(115, 1148, 3)
+The image has shape:
+(114, 1089, 3)
+The image has shape:
+(146, 1089, 3)
+The image has shape:
+(123, 1005, 3)
+The image has shape:
+(153, 1033, 3)
+The image has shape:
+(152, 1202, 3)
+The image has shape:
+(81, 1099, 3)
+The image has shape:
+(136, 1061, 3)
+The image has shape:
+(145, 638, 3)
+The image has shape:
+(237, 1057, 3)
+The image has shape:
+(100, 375, 3)
+The image has shape:
+(209, 1211, 3)
+The image has shape:
+(115, 1222, 3)
+The image has shape:
+(153, 1303, 3)
+The image has shape:
+(107, 1023, 3)
+The image has shape:
+(99, 944, 3)
+The image has shape:
+(95, 1014, 3)
+The image has shape:
+(106, 985, 3)
+The image has shape:
+(145, 1153, 3)
+The image has shape:
+(136, 1303, 3)
+The image has shape:
+(90, 1063, 3)
+The image has shape:
+(104, 968, 3)
+The image has shape:
+(161, 1064, 3)
+The image has shape:
+(115, 956, 3)
+The image has shape:
+(151, 1235, 3)
+The image has shape:
+(145, 1074, 3)
+The image has shape:
+(115, 908, 3)
+The image has shape:
+(105, 1002, 3)
+The image has shape:
+(114, 1168, 3)
+The image has shape:
+(127, 1241, 3)
+The image has shape:
+(75, 131, 3)
+The image has shape:
+(110, 1000, 3)
+The image has shape:
+(111, 1146, 3)
+The image has shape:
+(127, 1125, 3)
+The image has shape:
+(116, 1190, 3)
+The image has shape:
+(138, 1192, 3)
+The image has shape:
+(109, 931, 3)
+The image has shape:
+(120, 969, 3)
+The image has shape:
+(112, 1150, 3)
+The image has shape:
+(119, 1051, 3)
+The image has shape:
+(119, 1156, 3)
+The image has shape:
+(66, 935, 3)
+The image has shape:
+(109, 966, 3)
+The image has shape:
+(116, 1101, 3)
+The image has shape:
+(113, 1011, 3)
+The image has shape:
+(108, 1117, 3)
+The image has shape:
+(104, 891, 3)
+The image has shape:
+(104, 972, 3)
+The image has shape:
+(50, 225, 3)
+The image has shape:
+(217, 1291, 3)
+The image has shape:
+(140, 193, 3)
+The image has shape:
+(134, 1249, 3)
+The image has shape:
+(113, 1044, 3)
+The image has shape:
+(101, 1180, 3)
+The image has shape:
+(95, 969, 3)
+The image has shape:
+(101, 884, 3)
+The image has shape:
+(123, 1073, 3)
+The image has shape:
+(162, 1148, 3)
+The image has shape:
+(110, 1063, 3)
+The image has shape:
+(103, 947, 3)
+The image has shape:
+(109, 894, 3)
+The image has shape:
+(117, 1164, 3)
+The image has shape:
+(107, 1136, 3)
+The image has shape:
+(91, 750, 3)
+The image has shape:
+(135, 1138, 3)
+The image has shape:
+(157, 1217, 3)
+The image has shape:
+(110, 457, 3)
+The image has shapThe image has shape:
+(100, 1199, 3)
+The image has shape:
+(151, 1274, 3)
+The image has shape:
+(135, 971, 3)
+The image has shape:
+(113, 1036, 3)
+The image has shape:
+(136, 1209, 3)
+The image has shape:
+(123, 1137, 3)
+The image has shape:
+(93, 1056, 3)
+The image has shape:
+(104, 1036, 3)
+The image has shape:
+(129, 983, 3)
+The image has shape:
+(96, 1143, 3)
+The image has shape:
+(137, 1173, 3)
+The image has shape:
+(140, 1100, 3)
+The image has shape:
+(123, 1301, 3)
+The image has shape:
+(117, 1209, 3)
+The image has shape:
+(64, 391, 3)
+The image has shape:
+(135, 374, 3)
+The image has shape:
+(219, 1455, 3)
+The image has shape:
+(89, 1203, 3)
+The image has shape:
+(109, 946, 3)
+The image has shape:
+(91, 663, 3)
+The image has shape:
+(101, 1000, 3)
+The image has shape:
+(101, 972, 3)
+The image has shape:
+(157, 1181, 3)
+The image has shape:
+(172, 1226, 3)
+The image has shape:
+(202, 152, 3)
+The image has shape:
+(110, 1257, 3)
+The image has shape:
+(115, 1272, 3)
+The image has shape:
+(124, 1308, 3)
+The image has shape:
+(114, 1201, 3)
+The image has shape:
+(153, 1176, 3)
+The image has shape:
+(102, 1142, 3)
+The image has shape:
+(110, 1093, 3)
+The image has shape:
+(106, 958, 3)
+The image has shape:
+(109, 953, 3)
+The image has shape:
+(91, 719, 3)
+The image has shape:
+(266, 1377, 3)
+The image has shape:
+(118, 972, 3)
+The image has shape:
+(105, 1015, 3)
+The image has shape:
+(153, 1033, 3)
+The image has shape:
+(152, 1202, 3)
+The image has shape:
+(107, 1136, 3)
+The image has shape:
+(110, 1124, 3)
+The image has shape:
+(132, 1029, 3)
+The image has shape:
+(153, 1059, 3)
+The image has shape:
+(109, 1131, 3)
+The image has shape:
+(115, 1222, 3)
+The image has shape:
+(134, 1161, 3)
+The image has shape:
+(129, 1234, 3)
+The image has shape:
+(166, 970, 3)
+The image has shape:
+(119, 854, 3)
+The image has shape:
+(137, 569, 3)
+The image has shape:
+(73, 303, 3)
+The image has shape:
+(119, 911, 3)
+The image has shape:
+(109, 1011, 3)
+The image has shape:
+(186, 1188, 3)
+The image has shape:
+(85, 1113, 3)
+The image has shape:
+(98, 992, 3)
+The image has shape:
+(97, 1023, 3)
+The image has shape:
+(103, 682, 3)
+The image has shape:
+(95, 583, 3)
+The image has shape:
+(232, 961, 3)
+The image has shape:
+(318, 686, 3)
+The image has shape:
+(120, 1105, 3)
+The image has shape:
+(120, 1044, 3)
+The image has shape:
+(99, 1033, 3)
+The image has shape:
+(102, 1051, 3)
+The image has shape:
+(126, 1321, 3)
+The image has shape:
+(138, 420, 3)
+The image has shape:
+(153, 1145, 3)
+The image has shape:
+(126, 1178, 3)
+The image has shape:
+(109, 1065, 3)
+The image has shape:
+(93, 1070, 3)
+The image has shape:
+(78, 679, 3)
+The image has shape:
+(227, 1264, 3)
+The image has shape:
+(130, 442, 3)
+The image has shape:
+(201, 920, 3)
+The image has shape:
+(107, 950, 3)
+The image has shape:
+(117, 1115, 3)
+The image has shape:
+(102, 1033, 3)
+The image has shape:
+(120, 1235, 3)
+The image has shape:
+(39, 124, 3)
+The image has shape:
+(122, 899, 3)
+The image has shape:
+(97, 796, 3)
+The image has shape:
+(101, 881, 3)
+The image has shape:
+(94, 1211, 3)
+The image has shape:
+(111, 1205, 3)
+The image has shape:
+(102, 952, 3)
+The image has shape:
+(91, 978, 3)
+The image has shape:
+(99, 1130, 3)
+The image has shape:
+(87, 815, 3)
+The image has shape:
+(135, 1230, 3)
+The image has shape:
+(90, 653, 3)
+The image has shape:
+(162, 1220, 3)
+The image has shape:
+(123, 1210, 3)
+The image has shape:
+(58, 913, 3)
+The image has shape:
+(109, 946, 3)
+The image has shape:
+(109, 1016, 3)
+The image has shape:
+(95, 1005, 3)
+The image has shape:
+(120, 1069, 3)
+The image has shape:
+(119, 1163, 3)
+The image has shape:
+(173, 1195, 3)
+The image has shape:
+(138, 1149, 3)
+The image has shape:
+(73, 130, 3)
+The image has shape:
+(165, 1251, 3)
+The image has shape:
+(117, 936, 3)
+The image has shape:
+(110, 1022, 3)
+The image has shape:
+(141, 1042, 3)
+The image has shape:
+(83, 1009, 3)
+The image has shape:
+(137, 1182, 3)
+The image has shape:
+(139, 1240, 3)
+The image has shape:
+(141, 429, 3)
+The image has shape:
+(100, 313, 3)
+The image has shape:
+(143, 1073, 3)
+The image has shape:
+(128, 1107, 3)
+The image has shape:
+(136, 1093, 3)
+The image has shape:
+(The image has shape:
+(106, 171, 3)
+The image has shape:
+(130, 1078, 3)
+The image has shape:
+(116, 1132, 3)
+The image has shape:
+(80, 127, 3)
+The image has shape:
+(135, 917, 3)
+The image has shape:
+(123, 1125, 3)
+The image has shape:
+(101, 373, 3)
+The image has shape:
+(96, 146, 3)
+The image has shape:
+(135, 1274, 3)
+The image has shape:
+(94, 1186, 3)
+The image has shape:
+(138, 1181, 3)
+The image has shape:
+(104, 1337, 3)
+The image has shape:
+(119, 951, 3)
+The image has shape:
+(97, 787, 3)
+The image has shape:
+(99, 813, 3)
+The image has shape:
+(208, 1277, 3)
+The image has shape:
+(95, 259, 3)
+The image has shape:
+(231, 1344, 3)
+The image has shape:
+(82, 448, 3)
+The image has shape:
+(90, 458, 3)
+The image has shape:
+(126, 159, 3)
+The image has shape:
+(121, 1008, 3)
+The image has shape:
+(87, 1442, 3)
+The image has shape:
+(165, 1341, 3)
+The image has shape:
+(96, 492, 3)
+The image has shape:
+(82, 496, 3)
+The image has shape:
+(63, 1106, 3)
+The image has shape:
+(310, 876, 3)
+The image has shape:
+(119, 502, 3)
+The image has shape:
+(64, 212, 3)
+The image has shape:
+(68, 185, 3)
+The image has shape:
+(146, 1159, 3)
+The image has shape:
+(103, 1196, 3)
+The image has shape:
+(140, 1159, 3)
+The image has shape:
+(128, 1226, 3)
+The image has shape:
+(109, 1130, 3)
+The image has shape:
+(147, 1077, 3)
+The image has shape:
+(83, 948, 3)
+The image has shape:
+(96, 542, 3)
+The image has shape:
+(118, 1144, 3)
+The image has shape:
+(115, 1369, 3)
+The image has shape:
+(128, 1289, 3)
+The image has shape:
+(108, 991, 3)
+The image has shape:
+(99, 997, 3)
+The image has shape:
+(123, 613, 3)
+The image has shape:
+(85, 337, 3)
+The image has shape:
+(44, 170, 3)
+The image has shape:
+(82, 319, 3)
+The image has shape:
+(77, 97, 3)
+The image has shape:
+(89, 905, 3)
+The image has shape:
+(95, 1014, 3)
+The image has shape:
+(106, 985, 3)
+The image has shape:
+(98, 1218, 3)
+The image has shape:
+(101, 1254, 3)
+The image has shape:
+(143, 1080, 3)
+The image has shape:
+(120, 1092, 3)
+The image has shape:
+(100, 1022, 3)
+The image has shape:
+(102, 967, 3)
+The image has shape:
+(128, 1151, 3)
+The image has shape:
+(107, 1122, 3)
+The image has shape:
+(113, 1123, 3)
+The image has shape:
+(146, 1256, 3)
+The image has shape:
+(86, 128, 3)
+The image has shape:
+(122, 973, 3)
+The image has shape:
+(125, 1257, 3)
+The image has shape:
+(114, 1288, 3)
+The image has shape:
+(89, 983, 3)
+The image has shape:
+(45, 704, 3)
+The image has shape:
+(98, 1064, 3)
+The image has shape:
+(98, 947, 3)
+The image has shape:
+(129, 1162, 3)
+The image has shape:
+(124, 1171, 3)
+The image has shape:
+(238, 1258, 3)
+The image has shape:
+(93, 959, 3)
+The image has shape:
+(110, 1138, 3)
+The image has shape:
+(137, 1103, 3)
+The image has shape:
+(100, 1054, 3)
+The image has shape:
+(112, 1107, 3)
+The image has shape:
+(104, 815, 3)
+The image has shape:
+(139, 989, 3)
+The image has shape:
+(92, 1050, 3)
+The image has shape:
+(102, 1013, 3)
+The image has shape:
+(166, 1208, 3)
+The image has shape:
+(202, 1258, 3)
+The image has shape:
+(98, 1064, 3)
+The image has shape:
+(98, 947, 3)
+The image has shape:
+(104, 1064, 3)
+The image has shape:
+(101, 972, 3)
+The image has shape:
+(121, 1163, 3)
+The image has shape:
+(141, 1166, 3)
+The image has shape:
+(121, 1087, 3)
+The image has shape:
+(106, 1172, 3)
+The image has shape:
+(77, 383, 3)
+The image has shape:
+(84, 343, 3)
+The image has shape:
+(102, 468, 3)
+The image has shape:
+(70, 334, 3)
+The image has shape:
+(99, 1053, 3)
+The image has shape:
+(99, 1061, 3)
+The image has shape:
+(107, 1029, 3)
+The image has shape:
+(78, 642, 3)
+The image has shape:
+(223, 1266, 3)
+The image has shape:
+(109, 1115, 3)
+The image has shape:
+(128, 1056, 3)
+The image has shape:
+(96, 469, 3)
+The image has shape:
+(93, 936, 3)
+The image has shape:
+(95, 967, 3)
+The image has shape:
+(112, 1165, 3)
+The image has shape:
+(94, 1081, 3)
+The image has shape:
+(94, 925, 3)
+The image has shape:
+(92, 862, 3)
+The image has shape:
+(138, 1228, 3)
+The image has shape:
+(94, 1115, 3)
+The image has shape:
+(111, 528, 3)
+The image has shape:
+(97, 402, 3)
+The image has shape:
+(93, 92, 3)
+The image has shape:
+(191, 1109, 3)
+The image has shape:
+(1The image has shape:
+(108, 1189, 3)
+The image has shape:
+(132, 1174, 3)
+The image has shape:
+(124, 669, 3)
+The image has shape:
+(192, 1332, 3)
+The image has shape:
+(241, 475, 3)
+The image has shape:
+(314, 1226, 3)
+The image has shape:
+(127, 1117, 3)
+The image has shape:
+(151, 1251, 3)
+The image has shape:
+(105, 993, 3)
+The image has shape:
+(114, 993, 3)
+The image has shape:
+(104, 1038, 3)
+The image has shape:
+(91, 1050, 3)
+The image has shape:
+(102, 923, 3)
+The image has shape:
+(102, 1035, 3)
+The image has shape:
+(82, 1180, 3)
+The image has shape:
+(102, 436, 3)
+The image has shape:
+(91, 1211, 3)
+The image has shape:
+(121, 466, 3)
+The image has shape:
+(95, 966, 3)
+The image has shape:
+(118, 973, 3)
+The image has shape:
+(107, 455, 3)
+The image has shape:
+(96, 375, 3)
+The image has shape:
+(128, 1282, 3)
+The image has shape:
+(82, 1215, 3)
+The image has shape:
+(145, 511, 3)
+The image has shape:
+(109, 434, 3)
+The image has shape:
+(113, 878, 3)
+The image has shape:
+(125, 1132, 3)
+The image has shape:
+(79, 323, 3)
+The image has shape:
+(250, 1161, 3)
+The image has shape:
+(145, 1153, 3)
+The image has shape:
+(136, 1303, 3)
+The image has shape:
+(130, 1231, 3)
+The image has shape:
+(116, 1205, 3)
+The image has shape:
+(145, 511, 3)
+The image has shape:
+(109, 434, 3)
+The image has shape:
+(109, 1014, 3)
+The image has shape:
+(118, 1072, 3)
+The image has shape:
+(134, 1065, 3)
+The image has shape:
+(96, 1070, 3)
+The image has shape:
+(106, 987, 3)
+The image has shape:
+(95, 1068, 3)
+The image has shape:
+(139, 1226, 3)
+The image has shape:
+(133, 1098, 3)
+The image has shape:
+(101, 886, 3)
+The image has shape:
+(105, 908, 3)
+The image has shape:
+(156, 1376, 3)
+The image has shape:
+(208, 1313, 3)
+The image has shape:
+(93, 460, 3)
+The image has shape:
+(255, 1126, 3)
+The image has shape:
+(166, 1208, 3)
+The image has shape:
+(202, 1258, 3)
+The image has shape:
+(123, 926, 3)
+The image has shape:
+(49, 133, 3)
+The image has shape:
+(97, 1105, 3)
+The image has shape:
+(110, 1165, 3)
+The image has shape:
+(120, 1130, 3)
+The image has shape:
+(115, 1009, 3)
+The image has shape:
+(82, 727, 3)
+The image has shape:
+(148, 579, 3)
+The image has shape:
+(133, 1162, 3)
+The image has shape:
+(112, 1024, 3)
+The image has shape:
+(112, 1030, 3)
+The image has shape:
+(87, 1130, 3)
+The image has shape:
+(150, 1050, 3)
+The image has shape:
+(116, 972, 3)
+The image has shape:
+(120, 1156, 3)
+The image has shape:
+(136, 1210, 3)
+The image has shape:
+(121, 1199, 3)
+The image has shape:
+(131, 1213, 3)
+The image has shape:
+(103, 967, 3)
+The image has shape:
+(122, 866, 3)
+The image has shape:
+(136, 977, 3)
+The image has shape:
+(144, 1110, 3)
+The image has shape:
+(90, 1015, 3)
+The image has shape:
+(136, 958, 3)
+The image has shape:
+(122, 957, 3)
+The image has shape:
+(104, 884, 3)
+The image has shape:
+(107, 1061, 3)
+The image has shape:
+(95, 897, 3)
+The image has shape:
+(177, 978, 3)
+The image has shape:
+(91, 775, 3)
+The image has shape:
+(106, 1131, 3)
+The image has shape:
+(96, 1024, 3)
+The image has shape:
+(110, 1086, 3)
+The image has shape:
+(105, 1072, 3)
+The image has shape:
+(114, 56, 3)
+The image has shape:
+(155, 1072, 3)
+The image has shape:
+(149, 1241, 3)
+The image has shape:
+(141, 1248, 3)
+The image has shape:
+(281, 1240, 3)
+The image has shape:
+(140, 1130, 3)
+The image has shape:
+(67, 110, 3)
+The image has shape:
+(297, 903, 3)
+The image has shape:
+(147, 1322, 3)
+The image has shape:
+(108, 344, 3)
+The image has shape:
+(98, 1053, 3)
+The image has shape:
+(89, 1128, 3)
+The image has shape:
+(130, 481, 3)
+The image has shape:
+(83, 276, 3)
+The image has shape:
+(102, 1342, 3)
+The image has shape:
+(100, 1293, 3)
+The image has shape:
+(92, 1010, 3)
+The image has shape:
+(111, 990, 3)
+The image has shape:
+(158, 1203, 3)
+The image has shape:
+(66, 637, 3)
+The image has shape:
+(135, 1137, 3)
+The image has shape:
+(112, 1081, 3)
+The image has shape:
+(94, 968, 3)
+The image has shape:
+(103, 1049, 3)
+The image has shape:
+(148, 499, 3)
+The image has shape:
+(57, 231, 3)
+The image has shape:
+(139, 328, 3)
+The image has shape:
+(93, 92, 3)
+The image has shape:
+(223, 1357, 3)
+The image has shape:
+(123, 1262, The image has shape:
+(76, 654, 3)
+The image has shape:
+(129, 563, 3)
+The image has shape:
+(155, 1139, 3)
+The image has shape:
+(86, 1080, 3)
+The image has shape:
+(127, 1058, 3)
+The image has shape:
+(77, 378, 3)
+The image has shape:
+(126, 1166, 3)
+The image has shape:
+(123, 1192, 3)
+The image has shape:
+(89, 1176, 3)
+The image has shape:
+(107, 1154, 3)
+The image has shape:
+(104, 915, 3)
+The image has shape:
+(115, 884, 3)
+The image has shape:
+(76, 607, 3)
+The image has shape:
+(120, 456, 3)
+The image has shape:
+(92, 1320, 3)
+The image has shape:
+(116, 1328, 3)
+The image has shape:
+(114, 1131, 3)
+The image has shape:
+(112, 1142, 3)
+The image has shape:
+(88, 461, 3)
+The image has shape:
+(85, 567, 3)
+The image has shape:
+(110, 1226, 3)
+The image has shape:
+(84, 592, 3)
+The image has shape:
+(100, 828, 3)
+The image has shape:
+(68, 208, 3)
+The image has shape:
+(134, 1185, 3)
+The image has shape:
+(103, 1128, 3)
+The image has shape:
+(125, 1094, 3)
+The image has shape:
+(118, 1171, 3)
+The image has shape:
+(128, 1124, 3)
+The image has shape:
+(92, 1186, 3)
+The image has shape:
+(84, 434, 3)
+The image has shape:
+(80, 61, 3)
+The image has shape:
+(96, 982, 3)
+The image has shape:
+(126, 1098, 3)
+The image has shape:
+(63, 97, 3)
+The image has shape:
+(237, 1302, 3)
+The image has shape:
+(95, 880, 3)
+The image has shape:
+(99, 990, 3)
+The image has shape:
+(90, 1041, 3)
+The image has shape:
+(108, 1099, 3)
+The image has shape:
+(103, 885, 3)
+The image has shape:
+(89, 1010, 3)
+The image has shape:
+(94, 958, 3)
+The image has shape:
+(158, 326, 3)
+The image has shape:
+(130, 1158, 3)
+The image has shape:
+(130, 1268, 3)
+The image has shape:
+(108, 1090, 3)
+The image has shape:
+(123, 1070, 3)
+The image has shape:
+(122, 1125, 3)
+The image has shape:
+(117, 1205, 3)
+The image has shape:
+(119, 1044, 3)
+The image has shape:
+(121, 1022, 3)
+The image has shape:
+(94, 954, 3)
+The image has shape:
+(116, 831, 3)
+The image has shape:
+(162, 526, 3)
+The image has shape:
+(105, 486, 3)
+The image has shape:
+(105, 1191, 3)
+The image has shape:
+(163, 1271, 3)
+The image has shape:
+(134, 1082, 3)
+The image has shape:
+(123, 1115, 3)
+The image has shape:
+(96, 958, 3)
+The image has shape:
+(100, 960, 3)
+The image has shape:
+(104, 1136, 3)
+The image has shape:
+(94, 1005, 3)
+The image has shape:
+(126, 1022, 3)
+The image has shape:
+(149, 961, 3)
+The image has shape:
+(99, 1019, 3)
+The image has shape:
+(105, 983, 3)
+The image has shape:
+(151, 1155, 3)
+The image has shape:
+(137, 1155, 3)
+The image has shape:
+(106, 882, 3)
+The image has shape:
+(95, 894, 3)
+The image has shape:
+(128, 1245, 3)
+The image has shape:
+(78, 364, 3)
+The image has shape:
+(127, 1212, 3)
+The image has shape:
+(87, 1067, 3)
+The image has shape:
+(205, 1157, 3)
+The image has shape:
+(184, 951, 3)
+The image has shape:
+(127, 1241, 3)
+The image has shape:
+(129, 1159, 3)
+The image has shape:
+(96, 1067, 3)
+The image has shape:
+(90, 947, 3)
+The image has shape:
+(86, 1207, 3)
+The image has shape:
+(100, 1185, 3)
+The image has shape:
+(107, 1298, 3)
+The image has shape:
+(100, 1112, 3)
+The image has shape:
+(139, 1263, 3)
+The image has shape:
+(94, 735, 3)
+The image has shape:
+(128, 1110, 3)
+The image has shape:
+(143, 1191, 3)
+The image has shape:
+(128, 1192, 3)
+The image has shape:
+(110, 1115, 3)
+The image has shape:
+(109, 930, 3)
+The image has shape:
+(241, 805, 3)
+The image has shape:
+(101, 1303, 3)
+The image has shape:
+(103, 1261, 3)
+The image has shape:
+(44, 102, 3)
+The image has shape:
+(102, 963, 3)
+The image has shape:
+(66, 342, 3)
+The image has shape:
+(99, 120, 3)
+The image has shape:
+(112, 848, 3)
+The image has shape:
+(132, 1011, 3)
+The image has shape:
+(110, 1108, 3)
+The image has shape:
+(106, 1119, 3)
+The image has shape:
+(106, 1084, 3)
+The image has shape:
+(130, 1196, 3)
+The image has shape:
+(117, 1060, 3)
+The image has shape:
+(122, 1167, 3)
+The image has shape:
+(107, 1082, 3)
+The image has shape:
+(106, 994, 3)
+The image has shape:
+(126, 1102, 3)
+The image has shape:
+(67, 829, 3)
+The image has shape:
+(121, 953, 3)
+The image has shape:
+(74, 323, 3)
+The image has shape:
+(138, 1181, 3)
+The image has shape:
+(104, 1337, 3)
+The The image has shape:
+(97, 925, 3)
+The image has shape:
+(189, 917, 3)
+The image has shape:
+(108, 1140, 3)
+The image has shape:
+(121, 1024, 3)
+The image has shape:
+(132, 1397, 3)
+The image has shape:
+(156, 1271, 3)
+The image has shape:
+(96, 1011, 3)
+The image has shape:
+(100, 918, 3)
+The image has shape:
+(98, 998, 3)
+The image has shape:
+(113, 1052, 3)
+The image has shape:
+(81, 544, 3)
+The image has shape:
+(108, 408, 3)
+The image has shape:
+(118, 1071, 3)
+The image has shape:
+(118, 986, 3)
+The image has shape:
+(95, 930, 3)
+The image has shape:
+(142, 610, 3)
+The image has shape:
+(105, 980, 3)
+The image has shape:
+(78, 679, 3)
+The image has shape:
+(110, 1145, 3)
+The image has shape:
+(108, 1090, 3)
+The image has shape:
+(110, 1322, 3)
+The image has shape:
+(112, 1307, 3)
+The image has shape:
+(137, 1041, 3)
+The image has shape:
+(121, 1045, 3)
+The image has shape:
+(86, 232, 3)
+The image has shape:
+(175, 136, 3)
+The image has shape:
+(124, 1025, 3)
+The image has shape:
+(105, 1017, 3)
+The image has shape:
+(109, 1267, 3)
+The image has shape:
+(92, 1239, 3)
+The image has shape:
+(113, 1157, 3)
+The image has shape:
+(104, 1154, 3)
+The image has shape:
+(49, 133, 3)
+The image has shape:
+(147, 1024, 3)
+The image has shape:
+(152, 945, 3)
+The image has shape:
+(139, 1048, 3)
+The image has shape:
+(117, 1045, 3)
+The image has shape:
+(124, 903, 3)
+The image has shape:
+(96, 375, 3)
+The image has shape:
+(114, 178, 3)
+The image has shape:
+(67, 178, 3)
+The image has shape:
+(92, 1037, 3)
+The image has shape:
+(113, 1257, 3)
+The image has shape:
+(78, 1229, 3)
+The image has shape:
+(106, 929, 3)
+The image has shape:
+(185, 1231, 3)
+The image has shape:
+(33, 115, 3)
+The image has shape:
+(180, 956, 3)
+The image has shape:
+(98, 973, 3)
+The image has shape:
+(107, 962, 3)
+The image has shape:
+(114, 1267, 3)
+The image has shape:
+(98, 1090, 3)
+The image has shape:
+(107, 1144, 3)
+The image has shape:
+(124, 1233, 3)
+The image has shape:
+(82, 757, 3)
+The image has shape:
+(123, 613, 3)
+The image has shape:
+(81, 844, 3)
+The image has shape:
+(130, 1115, 3)
+The image has shape:
+(109, 1163, 3)
+The image has shape:
+(82, 342, 3)
+The image has shape:
+(161, 1010, 3)
+The image has shape:
+(105, 907, 3)
+The image has shape:
+(99, 1041, 3)
+The image has shape:
+(65, 389, 3)
+The image has shape:
+(136, 424, 3)
+The image has shape:
+(82, 392, 3)
+The image has shape:
+(107, 1097, 3)
+The image has shape:
+(125, 1174, 3)
+The image has shape:
+(102, 1020, 3)
+The image has shape:
+(110, 1146, 3)
+The image has shape:
+(113, 970, 3)
+The image has shape:
+(81, 750, 3)
+The image has shape:
+(88, 455, 3)
+The image has shape:
+(150, 586, 3)
+The image has shape:
+(74, 989, 3)
+The image has shape:
+(131, 401, 3)
+The image has shape:
+(120, 1076, 3)
+The image has shape:
+(103, 740, 3)
+The image has shape:
+(164, 1118, 3)
+The image has shape:
+(138, 981, 3)
+The image has shape:
+(88, 111, 3)
+The image has shape:
+(123, 551, 3)
+The image has shape:
+(96, 1206, 3)
+The image has shape:
+(146, 485, 3)
+The image has shape:
+(154, 507, 3)
+The image has shape:
+(120, 427, 3)
+The image has shape:
+(90, 322, 3)
+The image has shape:
+(92, 113, 3)
+The image has shape:
+(175, 1226, 3)
+The image has shape:
+(77, 1132, 3)
+The image has shape:
+(132, 1145, 3)
+The image has shape:
+(114, 1104, 3)
+The image has shape:
+(214, 1220, 3)
+The image has shape:
+(113, 1011, 3)
+The image has shape:
+(109, 1068, 3)
+The image has shape:
+(115, 1055, 3)
+The image has shape:
+(105, 626, 3)
+The image has shape:
+(157, 591, 3)
+The image has shape:
+(102, 1101, 3)
+The image has shape:
+(107, 1097, 3)
+The image has shape:
+(157, 591, 3)
+The image has shape:
+(57, 112, 3)
+The image has shape:
+(96, 126, 3)
+The image has shape:
+(204, 1250, 3)
+The image has shape:
+(97, 1118, 3)
+The image has shape:
+(116, 1292, 3)
+The image has shape:
+(45, 226, 3)
+The image has shape:
+(69, 308, 3)
+The image has shape:
+(117, 1026, 3)
+The image has shape:
+(139, 984, 3)
+The image has shape:
+(131, 1093, 3)
+The image has shape:
+(104, 1125, 3)
+The image has shape:
+(126, 935, 3)
+The image has shape:
+(126, 1065, 3)
+The image has shape:
+(135, 1227, 3)
+The image has shape:
+(114, 542, 3)
+The image haThe image has shape:
+(110, 1324, 3)
+The image has shape:
+(88, 1120, 3)
+The image has shape:
+(98, 955, 3)
+The image has shape:
+(102, 968, 3)
+The image has shape:
+(121, 443, 3)
+The image has shape:
+(94, 377, 3)
+The image has shape:
+(64, 322, 3)
+The image has shape:
+(169, 1192, 3)
+The image has shape:
+(76, 881, 3)
+The image has shape:
+(108, 1006, 3)
+The image has shape:
+(153, 1145, 3)
+The image has shape:
+(126, 1178, 3)
+The image has shape:
+(131, 593, 3)
+The image has shape:
+(180, 1110, 3)
+The image has shape:
+(136, 1374, 3)
+The image has shape:
+(132, 1257, 3)
+The image has shape:
+(108, 1208, 3)
+The image has shape:
+(129, 1162, 3)
+The image has shape:
+(85, 72, 3)
+The image has shape:
+(128, 988, 3)
+The image has shape:
+(127, 1198, 3)
+The image has shape:
+(102, 386, 3)
+The image has shape:
+(52, 182, 3)
+The image has shape:
+(111, 1095, 3)
+The image has shape:
+(107, 1007, 3)
+The image has shape:
+(101, 976, 3)
+The image has shape:
+(142, 1040, 3)
+The image has shape:
+(176, 1055, 3)
+The image has shape:
+(130, 528, 3)
+The image has shape:
+(88, 320, 3)
+The image has shape:
+(277, 1065, 3)
+The image has shape:
+(217, 1183, 3)
+The image has shape:
+(60, 307, 3)
+The image has shape:
+(83, 107, 3)
+The image has shape:
+(250, 1045, 3)
+The image has shape:
+(89, 996, 3)
+The image has shape:
+(83, 116, 3)
+The image has shape:
+(136, 1039, 3)
+The image has shape:
+(113, 1263, 3)
+The image has shape:
+(144, 1207, 3)
+The image has shape:
+(110, 457, 3)
+The image has shape:
+(84, 358, 3)
+The image has shape:
+(111, 1017, 3)
+The image has shape:
+(116, 1139, 3)
+The image has shape:
+(126, 524, 3)
+The image has shape:
+(198, 106, 3)
+The image has shape:
+(116, 1350, 3)
+The image has shape:
+(130, 1377, 3)
+The image has shape:
+(124, 1174, 3)
+The image has shape:
+(119, 1038, 3)
+The image has shape:
+(111, 983, 3)
+The image has shape:
+(74, 936, 3)
+The image has shape:
+(100, 215, 3)
+The image has shape:
+(262, 313, 3)
+The image has shape:
+(122, 1262, 3)
+The image has shape:
+(131, 1201, 3)
+The image has shape:
+(107, 1122, 3)
+The image has shape:
+(105, 1198, 3)
+The image has shape:
+(103, 1209, 3)
+The image has shape:
+(93, 1087, 3)
+The image has shape:
+(180, 764, 3)
+The image has shape:
+(216, 979, 3)
+The image has shape:
+(95, 894, 3)
+The image has shape:
+(105, 1016, 3)
+The image has shape:
+(141, 1350, 3)
+The image has shape:
+(140, 1277, 3)
+The image has shape:
+(201, 1251, 3)
+The image has shape:
+(112, 1221, 3)
+The image has shape:
+(170, 1150, 3)
+The image has shape:
+(82, 1103, 3)
+The image has shape:
+(109, 1027, 3)
+The image has shape:
+(107, 979, 3)
+The image has shape:
+(118, 1148, 3)
+The image has shape:
+(155, 758, 3)
+The image has shape:
+(121, 1337, 3)
+The image has shape:
+(173, 1405, 3)
+The image has shape:
+(111, 945, 3)
+The image has shape:
+(96, 111, 3)
+The image has shape:
+(85, 156, 3)
+The image has shape:
+(117, 1167, 3)
+The image has shape:
+(150, 1010, 3)
+The image has shape:
+(132, 944, 3)
+The image has shape:
+(102, 557, 3)
+The image has shape:
+(128, 58, 3)
+The image has shape:
+(121, 117, 3)
+The image has shape:
+(142, 1106, 3)
+The image has shape:
+(133, 1249, 3)
+The image has shape:
+(60, 385, 3)
+The image has shape:
+(109, 1130, 3)
+The image has shape:
+(122, 1158, 3)
+The image has shape:
+(151, 947, 3)
+The image has shape:
+(136, 1025, 3)
+The image has shape:
+(82, 431, 3)
+The image has shape:
+(81, 103, 3)
+The image has shape:
+(127, 1075, 3)
+The image has shape:
+(148, 499, 3)
+The image has shape:
+(168, 1307, 3)
+The image has shape:
+(123, 1220, 3)
+The image has shape:
+(101, 972, 3)
+The image has shape:
+(127, 1055, 3)
+The image has shape:
+(75, 989, 3)
+The image has shape:
+(58, 221, 3)
+The image has shape:
+(121, 953, 3)
+The image has shape:
+(74, 323, 3)
+The image has shape:
+(52, 647, 3)
+The image has shape:
+(108, 989, 3)
+The image has shape:
+(105, 1151, 3)
+The image has shape:
+(107, 993, 3)
+The image has shape:
+(111, 1071, 3)
+The image has shape:
+(116, 953, 3)
+The image has shape:
+(38, 605, 3)
+The image has shape:
+(127, 434, 3)
+The image has shape:
+(109, 1130, 3)
+The image has shape:
+(122, 1158, 3)
+The image has shape:
+(77, 994, 3)
+The image has shape:
+(101, 1007, 3)
+The iape:
+(128, 1114, 3)
+The image has shape:
+(100, 1163, 3)
+The image has shape:
+(110, 1078, 3)
+The image has shape:
+(113, 1109, 3)
+The image has shape:
+(110, 1056, 3)
+The image has shape:
+(136, 1348, 3)
+The image has shape:
+(127, 1330, 3)
+The image has shape:
+(109, 1084, 3)
+The image has shape:
+(137, 1009, 3)
+The image has shape:
+(104, 1136, 3)
+The image has shape:
+(94, 1005, 3)
+The image has shape:
+(89, 225, 3)
+The image has shape:
+(112, 614, 3)
+The image has shape:
+(114, 1161, 3)
+The image has shape:
+(31, 352, 3)
+The image has shape:
+(125, 924, 3)
+The image has shape:
+(89, 983, 3)
+The image has shape:
+(41, 640, 3)
+The image has shape:
+(154, 413, 3)
+The image has shape:
+(109, 418, 3)
+The image has shape:
+(89, 312, 3)
+The image has shape:
+(102, 69, 3)
+The image has shape:
+(153, 1119, 3)
+The image has shape:
+(99, 1173, 3)
+The image has shape:
+(107, 987, 3)
+The image has shape:
+(226, 1223, 3)
+The image has shape:
+(157, 1099, 3)
+The image has shape:
+(141, 1317, 3)
+The image has shape:
+(123, 1379, 3)
+The image has shape:
+(113, 1171, 3)
+The image has shape:
+(133, 1275, 3)
+The image has shape:
+(63, 404, 3)
+The image has shape:
+(243, 1184, 3)
+The image has shape:
+(138, 1210, 3)
+The image has shape:
+(118, 1237, 3)
+The image has shape:
+(104, 869, 3)
+The image has shape:
+(134, 540, 3)
+The image has shape:
+(108, 1046, 3)
+The image has shape:
+(90, 1063, 3)
+The image has shape:
+(98, 969, 3)
+The image has shape:
+(115, 1047, 3)
+The image has shape:
+(111, 421, 3)
+The image has shape:
+(97, 433, 3)
+The image has shape:
+(236, 1119, 3)
+The image has shape:
+(87, 420, 3)
+The image has shape:
+(97, 1078, 3)
+The image has shape:
+(93, 1151, 3)
+The image has shape:
+(124, 1327, 3)
+The image has shape:
+(113, 1279, 3)
+The image has shape:
+(102, 1148, 3)
+The image has shape:
+(117, 1207, 3)
+The image has shape:
+(210, 557, 3)
+The image has shape:
+(94, 518, 3)
+The image has shape:
+(115, 1261, 3)
+The image has shape:
+(88, 1265, 3)
+The image has shape:
+(144, 1140, 3)
+The image has shape:
+(128, 1151, 3)
+The image has shape:
+(166, 1199, 3)
+The image has shape:
+(155, 1297, 3)
+The image has shape:
+(60, 265, 3)
+The image has shape:
+(258, 1008, 3)
+The image has shape:
+(98, 992, 3)
+The image has shape:
+(89, 951, 3)
+The image has shape:
+(102, 1016, 3)
+The image has shape:
+(127, 509, 3)
+The image has shape:
+(107, 980, 3)
+The image has shape:
+(106, 939, 3)
+The image has shape:
+(103, 1209, 3)
+The image has shape:
+(93, 1087, 3)
+The image has shape:
+(139, 1294, 3)
+The image has shape:
+(118, 1326, 3)
+The image has shape:
+(50, 225, 3)
+The image has shape:
+(217, 1291, 3)
+The image has shape:
+(160, 71, 3)
+The image has shape:
+(125, 1029, 3)
+The image has shape:
+(216, 1142, 3)
+The image has shape:
+(108, 1126, 3)
+The image has shape:
+(104, 935, 3)
+The image has shape:
+(120, 999, 3)
+The image has shape:
+(133, 1157, 3)
+The image has shape:
+(43, 249, 3)
+The image has shape:
+(119, 1044, 3)
+The image has shape:
+(121, 1022, 3)
+The image has shape:
+(131, 1055, 3)
+The image has shape:
+(75, 989, 3)
+The image has shape:
+(125, 1194, 3)
+The image has shape:
+(134, 1134, 3)
+The image has shape:
+(167, 1182, 3)
+The image has shape:
+(112, 1230, 3)
+The image has shape:
+(126, 961, 3)
+The image has shape:
+(117, 976, 3)
+The image has shape:
+(93, 997, 3)
+The image has shape:
+(113, 1103, 3)
+The image has shape:
+(110, 1163, 3)
+The image has shape:
+(144, 1383, 3)
+The image has shape:
+(98, 975, 3)
+The image has shape:
+(103, 1026, 3)
+The image has shape:
+(112, 1284, 3)
+The image has shape:
+(115, 923, 3)
+The image has shape:
+(104, 972, 3)
+The image has shape:
+(81, 420, 3)
+The image has shape:
+(144, 1210, 3)
+The image has shape:
+(129, 1162, 3)
+The image has shape:
+(104, 1083, 3)
+The image has shape:
+(70, 571, 3)
+The image has shape:
+(146, 1227, 3)
+The image has shape:
+(101, 1120, 3)
+The image has shape:
+(115, 1152, 3)
+The image has shape:
+(97, 1172, 3)
+The image has shape:
+(116, 1205, 3)
+The image has shape:
+(104, 1174, 3)
+The image has shape:
+(149, 1160, 3)
+The image has shape:
+(120, 1076, 3)
+The image has shape:
+(115, 73, 3)
+The image has shape:
+(118, 1148, 3)
+The image has shape:
+(90, 99, 3)
+The image h
+The image has shape:
+(111, 1124, 3)
+The image has shape:
+(126, 1209, 3)
+The image has shape:
+(91, 1114, 3)
+The image has shape:
+(111, 1182, 3)
+The image has shape:
+(122, 1322, 3)
+The image has shape:
+(60, 162, 3)
+The image has shape:
+(113, 1305, 3)
+The image has shape:
+(106, 1297, 3)
+The image has shape:
+(113, 892, 3)
+The image has shape:
+(123, 1053, 3)
+The image has shape:
+(85, 1172, 3)
+The image has shape:
+(137, 1041, 3)
+The image has shape:
+(97, 998, 3)
+The image has shape:
+(94, 970, 3)
+The image has shape:
+(109, 1015, 3)
+The image has shape:
+(96, 1035, 3)
+The image has shape:
+(117, 1207, 3)
+The image has shape:
+(97, 1078, 3)
+The image has shape:
+(122, 1280, 3)
+The image has shape:
+(104, 1222, 3)
+The image has shape:
+(136, 1177, 3)
+The image has shape:
+(124, 1177, 3)
+The image has shape:
+(131, 1079, 3)
+The image has shape:
+(116, 1100, 3)
+The image has shape:
+(113, 1108, 3)
+The image has shape:
+(112, 1165, 3)
+The image has shape:
+(110, 1026, 3)
+The image has shape:
+(98, 1108, 3)
+The image has shape:
+(131, 1039, 3)
+The image has shape:
+(124, 1049, 3)
+The image has shape:
+(122, 1096, 3)
+The image has shape:
+(119, 1225, 3)
+The image has shape:
+(176, 1406, 3)
+The image has shape:
+(111, 421, 3)
+The image has shape:
+(110, 1191, 3)
+The image has shape:
+(129, 1249, 3)
+The image has shape:
+(139, 666, 3)
+The image has shape:
+(80, 312, 3)
+The image has shape:
+(122, 814, 3)
+The image has shape:
+(218, 949, 3)
+The image has shape:
+(182, 1272, 3)
+The image has shape:
+(113, 1219, 3)
+The image has shape:
+(104, 1010, 3)
+The image has shape:
+(88, 1141, 3)
+The image has shape:
+(126, 939, 3)
+The image has shape:
+(94, 930, 3)
+The image has shape:
+(116, 1166, 3)
+The image has shape:
+(115, 1159, 3)
+The image has shape:
+(52, 669, 3)
+The image has shape:
+(45, 238, 3)
+The image has shape:
+(217, 1183, 3)
+The image has shape:
+(168, 996, 3)
+The image has shape:
+(107, 1176, 3)
+The image has shape:
+(112, 1160, 3)
+The image has shape:
+(108, 1203, 3)
+The image has shape:
+(175, 1415, 3)
+The image has shape:
+(86, 854, 3)
+The image has shape:
+(102, 934, 3)
+The image has shape:
+(115, 994, 3)
+The image has shape:
+(114, 978, 3)
+The image has shape:
+(139, 1217, 3)
+The image has shape:
+(143, 1329, 3)
+The image has shape:
+(104, 1198, 3)
+The image has shape:
+(84, 345, 3)
+The image has shape:
+(132, 1145, 3)
+The image has shape:
+(114, 1104, 3)
+The image has shape:
+(114, 1116, 3)
+The image has shape:
+(114, 1172, 3)
+The image has shape:
+(91, 1047, 3)
+The image has shape:
+(123, 1227, 3)
+The image has shape:
+(111, 448, 3)
+The image has shape:
+(83, 449, 3)
+The image has shape:
+(89, 1224, 3)
+The image has shape:
+(99, 1103, 3)
+The image has shape:
+(78, 180, 3)
+The image has shape:
+(123, 1128, 3)
+The image has shape:
+(94, 1043, 3)
+The image has shape:
+(93, 1071, 3)
+The image has shape:
+(113, 1122, 3)
+The image has shape:
+(110, 1206, 3)
+The image has shape:
+(138, 1252, 3)
+The image has shape:
+(128, 1142, 3)
+The image has shape:
+(111, 261, 3)
+The image has shape:
+(150, 457, 3)
+The image has shape:
+(105, 1145, 3)
+The image has shape:
+(97, 1152, 3)
+The image has shape:
+(84, 967, 3)
+The image has shape:
+(105, 932, 3)
+The image has shape:
+(92, 724, 3)
+The image has shape:
+(144, 334, 3)
+The image has shape:
+(124, 1008, 3)
+The image has shape:
+(101, 858, 3)
+The image has shape:
+(104, 1076, 3)
+The image has shape:
+(96, 1067, 3)
+The image has shape:
+(126, 896, 3)
+The image has shape:
+(124, 1053, 3)
+The image has shape:
+(118, 1037, 3)
+The image has shape:
+(113, 1014, 3)
+The image has shape:
+(109, 1212, 3)
+The image has shape:
+(111, 1415, 3)
+The image has shape:
+(102, 1008, 3)
+The image has shape:
+(94, 420, 3)
+The image has shape:
+(114, 785, 3)
+The image has shape:
+(63, 97, 3)
+The image has shape:
+(163, 1094, 3)
+The image has shape:
+(104, 1031, 3)
+The image has shape:
+(100, 963, 3)
+The image has shape:
+(183, 1187, 3)
+The image has shape:
+(156, 1248, 3)
+The image has shape:
+(124, 1214, 3)
+The image has shape:
+(107, 1082, 3)
+The image has shape:
+(106, 994, 3)
+The image has shape:
+(170, 1413, 3)
+The image has shape:
+(136, 1334, 3)
+The image has shape:
+(101, 1173, 3)
+The image has shapeimage has shape:
+(185, 1415, 3)
+The image has shape:
+(148, 1381, 3)
+The image has shape:
+(102, 967, 3)
+The image has shape:
+(105, 942, 3)
+The image has shape:
+(129, 1112, 3)
+The image has shape:
+(122, 1188, 3)
+The image has shape:
+(66, 403, 3)
+The image has shape:
+(90, 137, 3)
+The image has shape:
+(108, 1112, 3)
+The image has shape:
+(137, 1260, 3)
+The image has shape:
+(81, 372, 3)
+The image has shape:
+(192, 1314, 3)
+The image has shape:
+(99, 1015, 3)
+The image has shape:
+(131, 1281, 3)
+The image has shape:
+(103, 1047, 3)
+The image has shape:
+(112, 986, 3)
+The image has shape:
+(131, 1213, 3)
+The image has shape:
+(89, 684, 3)
+The image has shape:
+(125, 1147, 3)
+The image has shape:
+(118, 1284, 3)
+The image has shape:
+(131, 1144, 3)
+The image has shape:
+(104, 1212, 3)
+The image has shape:
+(129, 1258, 3)
+The image has shape:
+(138, 1336, 3)
+The image has shape:
+(140, 61, 3)
+The image has shape:
+(101, 1023, 3)
+The image has shape:
+(110, 1040, 3)
+The image has shape:
+(117, 1128, 3)
+The image has shape:
+(115, 1081, 3)
+The image has shape:
+(108, 1064, 3)
+The image has shape:
+(126, 1228, 3)
+The image has shape:
+(150, 1238, 3)
+The image has shape:
+(107, 980, 3)
+The image has shape:
+(95, 1097, 3)
+The image has shape:
+(106, 1099, 3)
+The image has shape:
+(131, 1060, 3)
+The image has shape:
+(97, 1191, 3)
+The image has shape:
+(880, 480, 3)
+The image has shape:
+(117, 1083, 3)
+The image has shape:
+(152, 1211, 3)
+The image has shape:
+(135, 52, 3)
+The image has shape:
+(107, 925, 3)
+The image has shape:
+(108, 1321, 3)
+The image has shape:
+(87, 699, 3)
+The image has shape:
+(138, 1006, 3)
+The image has shape:
+(129, 986, 3)
+The image has shape:
+(95, 1194, 3)
+The image has shape:
+(93, 430, 3)
+The image has shape:
+(149, 1054, 3)
+The image has shape:
+(141, 1077, 3)
+The image has shape:
+(83, 54, 3)
+The image has shape:
+(143, 1036, 3)
+The image has shape:
+(176, 987, 3)
+The image has shape:
+(144, 621, 3)
+The image has shape:
+(254, 1156, 3)
+The image has shape:
+(112, 1131, 3)
+The image has shape:
+(74, 500, 3)
+The image has shape:
+(75, 360, 3)
+The image has shape:
+(95, 565, 3)
+The image has shape:
+(67, 242, 3)
+The image has shape:
+(97, 894, 3)
+The image has shape:
+(138, 562, 3)
+The image has shape:
+(129, 1266, 3)
+The image has shape:
+(124, 1190, 3)
+The image has shape:
+(241, 805, 3)
+The image has shape:
+(175, 1058, 3)
+The image has shape:
+(131, 1139, 3)
+The image has shape:
+(134, 1161, 3)
+The image has shape:
+(163, 1340, 3)
+The image has shape:
+(141, 1350, 3)
+The image has shape:
+(100, 1004, 3)
+The image has shape:
+(79, 992, 3)
+The image has shape:
+(136, 981, 3)
+The image has shape:
+(111, 971, 3)
+The image has shape:
+(96, 887, 3)
+The image has shape:
+(117, 1015, 3)
+The image has shape:
+(128, 1278, 3)
+The image has shape:
+(107, 1265, 3)
+The image has shape:
+(124, 1111, 3)
+The image has shape:
+(116, 1059, 3)
+The image has shape:
+(276, 1424, 3)
+The image has shape:
+(115, 1185, 3)
+The image has shape:
+(103, 885, 3)
+The image has shape:
+(89, 1010, 3)
+The image has shape:
+(155, 1174, 3)
+The image has shape:
+(153, 547, 3)
+The image has shape:
+(82, 968, 3)
+The image has shape:
+(153, 464, 3)
+The image has shape:
+(116, 1057, 3)
+The image has shape:
+(117, 1121, 3)
+The image has shape:
+(125, 1052, 3)
+The image has shape:
+(128, 1176, 3)
+The image has shape:
+(124, 1093, 3)
+The image has shape:
+(132, 1245, 3)
+The image has shape:
+(109, 1141, 3)
+The image has shape:
+(96, 981, 3)
+The image has shape:
+(108, 1013, 3)
+The image has shape:
+(110, 947, 3)
+The image has shape:
+(128, 1124, 3)
+The image has shape:
+(92, 1186, 3)
+The image has shape:
+(156, 1251, 3)
+The image has shape:
+(151, 1159, 3)
+The image has shape:
+(142, 1075, 3)
+The image has shape:
+(85, 956, 3)
+The image has shape:
+(120, 1056, 3)
+The image has shape:
+(119, 933, 3)
+The image has shape:
+(135, 1124, 3)
+The image has shape:
+(79, 83, 3)
+The image has shape:
+(139, 1291, 3)
+The image has shape:
+(122, 1170, 3)
+The image has shape:
+(139, 1029, 3)
+The image has shape:
+(105, 961, 3)
+The image has shape:
+(107, 925, 3)
+The image has shape:
+(118, 1034, 3)
+The image has shape:
+(100, 1164, 3)
+The image has shape:
+(104, 1s shape:
+(95, 1176, 3)
+The image has shape:
+(110, 1247, 3)
+The image has shape:
+(110, 1147, 3)
+The image has shape:
+(120, 1055, 3)
+The image has shape:
+(133, 1186, 3)
+The image has shape:
+(118, 1233, 3)
+The image has shape:
+(99, 1089, 3)
+The image has shape:
+(97, 1126, 3)
+The image has shape:
+(165, 1154, 3)
+The image has shape:
+(99, 1084, 3)
+The image has shape:
+(96, 1040, 3)
+The image has shape:
+(108, 1037, 3)
+The image has shape:
+(149, 1086, 3)
+The image has shape:
+(115, 1135, 3)
+The image has shape:
+(126, 1031, 3)
+The image has shape:
+(113, 956, 3)
+The image has shape:
+(121, 592, 3)
+The image has shape:
+(154, 1192, 3)
+The image has shape:
+(87, 73, 3)
+The image has shape:
+(134, 1065, 3)
+The image has shape:
+(115, 984, 3)
+The image has shape:
+(126, 1115, 3)
+The image has shape:
+(131, 1103, 3)
+The image has shape:
+(94, 1070, 3)
+The image has shape:
+(116, 1084, 3)
+The image has shape:
+(107, 1117, 3)
+The image has shape:
+(128, 1200, 3)
+The image has shape:
+(135, 1165, 3)
+The image has shape:
+(110, 1094, 3)
+The image has shape:
+(97, 946, 3)
+The image has shape:
+(103, 991, 3)
+The image has shape:
+(102, 1117, 3)
+The image has shape:
+(110, 1132, 3)
+The image has shape:
+(107, 1251, 3)
+The image has shape:
+(83, 306, 3)
+The image has shape:
+(95, 181, 3)
+The image has shape:
+(79, 181, 3)
+The image has shape:
+(151, 1240, 3)
+The image has shape:
+(101, 724, 3)
+The image has shape:
+(143, 432, 3)
+The image has shape:
+(116, 1148, 3)
+The image has shape:
+(137, 1089, 3)
+The image has shape:
+(91, 1060, 3)
+The image has shape:
+(103, 926, 3)
+The image has shape:
+(103, 341, 3)
+The image has shape:
+(65, 292, 3)
+The image has shape:
+(238, 1258, 3)
+The image has shape:
+(179, 711, 3)
+The image has shape:
+(98, 101, 3)
+The image has shape:
+(173, 1030, 3)
+The image has shape:
+(102, 1084, 3)
+The image has shape:
+(174, 1081, 3)
+The image has shape:
+(121, 1128, 3)
+The image has shape:
+(119, 1102, 3)
+The image has shape:
+(135, 971, 3)
+The image has shape:
+(113, 1036, 3)
+The image has shape:
+(94, 1149, 3)
+The image has shape:
+(116, 1208, 3)
+The image has shape:
+(130, 1184, 3)
+The image has shape:
+(142, 1230, 3)
+The image has shape:
+(67, 330, 3)
+The image has shape:
+(157, 560, 3)
+The image has shape:
+(127, 1067, 3)
+The image has shape:
+(119, 995, 3)
+The image has shape:
+(113, 1039, 3)
+The image has shape:
+(158, 379, 3)
+The image has shape:
+(132, 1060, 3)
+The image has shape:
+(127, 1064, 3)
+The image has shape:
+(109, 1148, 3)
+The image has shape:
+(79, 320, 3)
+The image has shape:
+(105, 1134, 3)
+The image has shape:
+(97, 1160, 3)
+The image has shape:
+(118, 1302, 3)
+The image has shape:
+(108, 1195, 3)
+The image has shape:
+(141, 1183, 3)
+The image has shape:
+(141, 1167, 3)
+The image has shape:
+(66, 153, 3)
+The image has shape:
+(137, 1020, 3)
+The image has shape:
+(162, 1626, 3)
+The image has shape:
+(73, 144, 3)
+The image has shape:
+(115, 1148, 3)
+The image has shape:
+(114, 1168, 3)
+The image has shape:
+(46, 514, 3)
+The image has shape:
+(126, 159, 3)
+The image has shape:
+(110, 1041, 3)
+The image has shape:
+(112, 377, 3)
+The image has shape:
+(116, 1132, 3)
+The image has shape:
+(80, 127, 3)
+The image has shape:
+(135, 1156, 3)
+The image has shape:
+(112, 1200, 3)
+The image has shape:
+(113, 1070, 3)
+The image has shape:
+(118, 968, 3)
+The image has shape:
+(116, 1173, 3)
+The image has shape:
+(85, 139, 3)
+The image has shape:
+(102, 329, 3)
+The image has shape:
+(156, 127, 3)
+The image has shape:
+(94, 103, 3)
+The image has shape:
+(137, 1037, 3)
+The image has shape:
+(166, 1149, 3)
+The image has shape:
+(142, 1146, 3)
+The image has shape:
+(113, 1148, 3)
+The image has shape:
+(128, 1188, 3)
+The image has shape:
+(127, 1092, 3)
+The image has shape:
+(131, 1020, 3)
+The image has shape:
+(93, 924, 3)
+The image has shape:
+(98, 983, 3)
+The image has shape:
+(100, 925, 3)
+The image has shape:
+(105, 984, 3)
+The image has shape:
+(126, 973, 3)
+The image has shape:
+(110, 1028, 3)
+The image has shape:
+(108, 1164, 3)
+The image has shape:
+(100, 1027, 3)
+The image has shape:
+(98, 1325, 3)
+The image has shape:
+(107, 1314, 3)
+The image has shape:
+(122, 1247, 3)
+The image has shape:
+(106, 1175, 3mage has shape:
+(94, 919, 3)
+The image has shape:
+(107, 840, 3)
+The image has shape:
+(89, 1302, 3)
+The image has shape:
+(105, 1201, 3)
+The image has shape:
+(106, 1374, 3)
+The image has shape:
+(121, 1337, 3)
+The image has shape:
+(91, 1047, 3)
+The image has shape:
+(123, 1227, 3)
+The image has shape:
+(93, 1324, 3)
+The image has shape:
+(104, 1334, 3)
+The image has shape:
+(91, 963, 3)
+The image has shape:
+(115, 931, 3)
+The image has shape:
+(101, 1142, 3)
+The image has shape:
+(119, 1136, 3)
+The image has shape:
+(90, 1298, 3)
+The image has shape:
+(111, 1323, 3)
+The image has shape:
+(105, 1132, 3)
+The image has shape:
+(127, 1156, 3)
+The image has shape:
+(105, 905, 3)
+The image has shape:
+(109, 930, 3)
+The image has shape:
+(174, 1461, 3)
+The image has shape:
+(101, 1152, 3)
+The image has shape:
+(92, 433, 3)
+The image has shape:
+(157, 521, 3)
+The image has shape:
+(163, 1114, 3)
+The image has shape:
+(100, 849, 3)
+The image has shape:
+(142, 1166, 3)
+The image has shape:
+(137, 1195, 3)
+The image has shape:
+(112, 1150, 3)
+The image has shape:
+(119, 1051, 3)
+The image has shape:
+(120, 929, 3)
+The image has shape:
+(111, 983, 3)
+The image has shape:
+(111, 990, 3)
+The image has shape:
+(107, 1059, 3)
+The image has shape:
+(97, 896, 3)
+The image has shape:
+(100, 1004, 3)
+The image has shape:
+(120, 1155, 3)
+The image has shape:
+(113, 968, 3)
+The image has shape:
+(107, 1077, 3)
+The image has shape:
+(102, 1081, 3)
+The image has shape:
+(76, 240, 3)
+The image has shape:
+(117, 1267, 3)
+The image has shape:
+(120, 1105, 3)
+The image has shape:
+(120, 1044, 3)
+The image has shape:
+(151, 1344, 3)
+The image has shape:
+(99, 426, 3)
+The image has shape:
+(107, 1259, 3)
+The image has shape:
+(109, 1225, 3)
+The image has shape:
+(133, 1162, 3)
+The image has shape:
+(112, 1024, 3)
+The image has shape:
+(133, 1184, 3)
+The image has shape:
+(142, 1068, 3)
+The image has shape:
+(85, 292, 3)
+The image has shape:
+(215, 1357, 3)
+The image has shape:
+(124, 1188, 3)
+The image has shape:
+(146, 1256, 3)
+The image has shape:
+(76, 586, 3)
+The image has shape:
+(75, 121, 3)
+The image has shape:
+(124, 1071, 3)
+The image has shape:
+(137, 1182, 3)
+The image has shape:
+(100, 901, 3)
+The image has shape:
+(105, 949, 3)
+The image has shape:
+(126, 935, 3)
+The image has shape:
+(126, 1065, 3)
+The image has shape:
+(144, 1130, 3)
+The image has shape:
+(150, 1122, 3)
+The image has shape:
+(125, 1142, 3)
+The image has shape:
+(150, 615, 3)
+The image has shape:
+(75, 148, 3)
+The image has shape:
+(240, 1099, 3)
+The image has shape:
+(83, 921, 3)
+The image has shape:
+(167, 631, 3)
+The image has shape:
+(125, 1052, 3)
+The image has shape:
+(128, 1176, 3)
+The image has shape:
+(167, 1214, 3)
+The image has shape:
+(99, 906, 3)
+The image has shape:
+(150, 1029, 3)
+The image has shape:
+(132, 995, 3)
+The image has shape:
+(74, 910, 3)
+The image has shape:
+(104, 1010, 3)
+The image has shape:
+(99, 133, 3)
+The image has shape:
+(91, 64, 3)
+The image has shape:
+(134, 1007, 3)
+The image has shape:
+(144, 1071, 3)
+The image has shape:
+(109, 975, 3)
+The image has shape:
+(92, 976, 3)
+The image has shape:
+(107, 943, 3)
+The image has shape:
+(111, 1031, 3)
+The image has shape:
+(98, 1088, 3)
+The image has shape:
+(123, 1189, 3)
+The image has shape:
+(113, 1016, 3)
+The image has shape:
+(101, 478, 3)
+The image has shape:
+(129, 1014, 3)
+The image has shape:
+(92, 1019, 3)
+The image has shape:
+(134, 1061, 3)
+The image has shape:
+(152, 1240, 3)
+The image has shape:
+(96, 514, 3)
+The image has shape:
+(71, 478, 3)
+The image has shape:
+(105, 1051, 3)
+The image has shape:
+(124, 738, 3)
+The image has shape:
+(159, 1359, 3)
+The image has shape:
+(143, 1310, 3)
+The image has shape:
+(111, 1069, 3)
+The image has shape:
+(117, 982, 3)
+The image has shape:
+(143, 1271, 3)
+The image has shape:
+(131, 1225, 3)
+The image has shape:
+(135, 1156, 3)
+The image has shape:
+(112, 1200, 3)
+The image has shape:
+(101, 922, 3)
+The image has shape:
+(111, 935, 3)
+The image has shape:
+(98, 967, 3)
+The image has shape:
+(101, 1009, 3)
+The image has shape:
+(109, 849, 3)
+The image has shape:
+(93, 872, 3)
+The image has shape:
+(230, 984, 3)
+The image has shape:
+(259, 1075, e:
+(84, 358, 3)
+The image has shape:
+(52, 147, 3)
+The image has shape:
+(77, 97, 3)
+The image has shape:
+(126, 444, 3)
+The image has shape:
+(76, 167, 3)
+The image has shape:
+(213, 1057, 3)
+The image has shape:
+(149, 388, 3)
+The image has shape:
+(104, 1036, 3)
+The image has shape:
+(108, 1034, 3)
+The image has shape:
+(104, 1362, 3)
+The image has shape:
+(93, 1324, 3)
+The image has shape:
+(262, 1125, 3)
+The image has shape:
+(185, 936, 3)
+The image has shape:
+(91, 984, 3)
+The image has shape:
+(78, 120, 3)
+The image has shape:
+(122, 1238, 3)
+The image has shape:
+(155, 1306, 3)
+The image has shape:
+(124, 1313, 3)
+The image has shape:
+(122, 1230, 3)
+The image has shape:
+(64, 211, 3)
+The image has shape:
+(110, 1141, 3)
+The image has shape:
+(110, 1242, 3)
+The image has shape:
+(119, 1113, 3)
+The image has shape:
+(93, 1021, 3)
+The image has shape:
+(101, 1105, 3)
+The image has shape:
+(100, 828, 3)
+The image has shape:
+(68, 208, 3)
+The image has shape:
+(142, 933, 3)
+The image has shape:
+(146, 1032, 3)
+The image has shape:
+(181, 468, 3)
+The image has shape:
+(514, 1155, 3)
+The image has shape:
+(140, 1223, 3)
+The image has shape:
+(103, 174, 3)
+The image has shape:
+(101, 1144, 3)
+The image has shape:
+(108, 1191, 3)
+The image has shape:
+(130, 998, 3)
+The image has shape:
+(85, 997, 3)
+The image has shape:
+(108, 1066, 3)
+The image has shape:
+(112, 1052, 3)
+The image has shape:
+(88, 460, 3)
+The image has shape:
+(112, 127, 3)
+The image has shape:
+(142, 1037, 3)
+The image has shape:
+(139, 1065, 3)
+The image has shape:
+(112, 986, 3)
+The image has shape:
+(138, 999, 3)
+The image has shape:
+(132, 1170, 3)
+The image has shape:
+(125, 1262, 3)
+The image has shape:
+(122, 1322, 3)
+The image has shape:
+(60, 162, 3)
+The image has shape:
+(98, 461, 3)
+The image has shape:
+(111, 378, 3)
+The image has shape:
+(113, 954, 3)
+The image has shape:
+(108, 1073, 3)
+The image has shape:
+(105, 1009, 3)
+The image has shape:
+(96, 997, 3)
+The image has shape:
+(94, 966, 3)
+The image has shape:
+(114, 1016, 3)
+The image has shape:
+(124, 1236, 3)
+The image has shape:
+(99, 1174, 3)
+The image has shape:
+(101, 1064, 3)
+The image has shape:
+(108, 1138, 3)
+The image has shape:
+(140, 1213, 3)
+The image has shape:
+(116, 1167, 3)
+The image has shape:
+(67, 230, 3)
+The image has shape:
+(176, 1343, 3)
+The image has shape:
+(176, 1343, 3)
+The image has shape:
+(117, 1317, 3)
+The image has shape:
+(107, 1308, 3)
+The image has shape:
+(84, 231, 3)
+The image has shape:
+(85, 322, 3)
+The image has shape:
+(85, 156, 3)
+The image has shape:
+(103, 1090, 3)
+The image has shape:
+(118, 1134, 3)
+The image has shape:
+(120, 1227, 3)
+The image has shape:
+(124, 1219, 3)
+The image has shape:
+(109, 1195, 3)
+The image has shape:
+(126, 1218, 3)
+The image has shape:
+(110, 1078, 3)
+The image has shape:
+(124, 1106, 3)
+The image has shape:
+(100, 951, 3)
+The image has shape:
+(98, 975, 3)
+The image has shape:
+(119, 1163, 3)
+The image has shape:
+(131, 1136, 3)
+The image has shape:
+(113, 1291, 3)
+The image has shape:
+(110, 1361, 3)
+The image has shape:
+(91, 1183, 3)
+The image has shape:
+(84, 332, 3)
+The image has shape:
+(129, 1208, 3)
+The image has shape:
+(118, 1339, 3)
+The image has shape:
+(159, 610, 3)
+The image has shape:
+(96, 542, 3)
+The image has shape:
+(138, 1278, 3)
+The image has shape:
+(137, 1132, 3)
+The image has shape:
+(141, 1262, 3)
+The image has shape:
+(94, 1149, 3)
+The image has shape:
+(118, 525, 3)
+The image has shape:
+(222, 1386, 3)
+The image has shape:
+(105, 1360, 3)
+The image has shape:
+(111, 1268, 3)
+The image has shape:
+(97, 1158, 3)
+The image has shape:
+(136, 1278, 3)
+The image has shape:
+(127, 1089, 3)
+The image has shape:
+(141, 1300, 3)
+The image has shape:
+(93, 958, 3)
+The image has shape:
+(98, 1007, 3)
+The image has shape:
+(123, 528, 3)
+The image has shape:
+(169, 1359, 3)
+The image has shape:
+(144, 334, 3)
+The image has shape:
+(225, 1341, 3)
+The image has shape:
+(90, 1015, 3)
+The image has shape:
+(136, 958, 3)
+The image has shape:
+(118, 759, 3)
+The image has shape:
+(181, 544, 3)
+The image has shape:
+(118, 973, 3)
+The image has shape:
+(126, 896, 3)
+The image has shape:
+(104, 1126, 3)
+The image has 144, 1104, 3)
+The image has shape:
+(113, 540, 3)
+The image has shape:
+(127, 670, 3)
+The image has shape:
+(223, 1272, 3)
+The image has shape:
+(128, 1271, 3)
+The image has shape:
+(93, 570, 3)
+The image has shape:
+(66, 446, 3)
+The image has shape:
+(112, 848, 3)
+The image has shape:
+(132, 1011, 3)
+The image has shape:
+(223, 969, 3)
+The image has shape:
+(100, 884, 3)
+The image has shape:
+(156, 1210, 3)
+The image has shape:
+(113, 78, 3)
+The image has shape:
+(102, 1253, 3)
+The image has shape:
+(82, 1180, 3)
+The image has shape:
+(73, 1228, 3)
+The image has shape:
+(110, 1311, 3)
+The image has shape:
+(120, 1134, 3)
+The image has shape:
+(132, 1182, 3)
+The image has shape:
+(289, 1265, 3)
+The image has shape:
+(127, 1123, 3)
+The image has shape:
+(118, 1006, 3)
+The image has shape:
+(135, 971, 3)
+The image has shape:
+(106, 1280, 3)
+The image has shape:
+(108, 1279, 3)
+The image has shape:
+(104, 886, 3)
+The image has shape:
+(232, 1044, 3)
+The image has shape:
+(158, 379, 3)
+The image has shape:
+(25, 217, 3)
+The image has shape:
+(113, 998, 3)
+The image has shape:
+(116, 1081, 3)
+The image has shape:
+(151, 1201, 3)
+The image has shape:
+(143, 1018, 3)
+The image has shape:
+(100, 480, 3)
+The image has shape:
+(53, 127, 3)
+The image has shape:
+(213, 1342, 3)
+The image has shape:
+(106, 1307, 3)
+The image has shape:
+(158, 1203, 3)
+The image has shape:
+(66, 637, 3)
+The image has shape:
+(119, 954, 3)
+The image has shape:
+(109, 907, 3)
+The image has shape:
+(135, 541, 3)
+The image has shape:
+(113, 128, 3)
+The image has shape:
+(106, 1099, 3)
+The image has shape:
+(131, 1060, 3)
+The image has shape:
+(132, 396, 3)
+The image has shape:
+(110, 457, 3)
+The image has shape:
+(117, 1222, 3)
+The image has shape:
+(107, 1150, 3)
+The image has shape:
+(119, 1128, 3)
+The image has shape:
+(142, 1243, 3)
+The image has shape:
+(110, 809, 3)
+The image has shape:
+(165, 983, 3)
+The image has shape:
+(88, 471, 3)
+The image has shape:
+(93, 143, 3)
+The image has shape:
+(172, 1115, 3)
+The image has shape:
+(117, 1155, 3)
+The image has shape:
+(116, 977, 3)
+The image has shape:
+(106, 956, 3)
+The image has shape:
+(122, 1240, 3)
+The image has shape:
+(117, 1057, 3)
+The image has shape:
+(89, 65, 3)
+The image has shape:
+(293, 967, 3)
+The image has shape:
+(153, 1265, 3)
+The image has shape:
+(110, 1075, 3)
+The image has shape:
+(291, 677, 3)
+The image has shape:
+(402, 444, 3)
+The image has shape:
+(89, 1010, 3)
+The image has shape:
+(98, 943, 3)
+The image has shape:
+(102, 1149, 3)
+The image has shape:
+(99, 813, 3)
+The image has shape:
+(103, 1043, 3)
+The image has shape:
+(120, 1155, 3)
+The image has shape:
+(158, 534, 3)
+The image has shape:
+(81, 292, 3)
+The image has shape:
+(112, 1253, 3)
+The image has shape:
+(105, 1171, 3)
+The image has shape:
+(112, 871, 3)
+The image has shape:
+(102, 960, 3)
+The image has shape:
+(109, 1014, 3)
+The image has shape:
+(104, 965, 3)
+The image has shape:
+(127, 954, 3)
+The image has shape:
+(109, 962, 3)
+The image has shape:
+(101, 1076, 3)
+The image has shape:
+(113, 1044, 3)
+The image has shape:
+(173, 1249, 3)
+The image has shape:
+(163, 1270, 3)
+The image has shape:
+(133, 1114, 3)
+The image has shape:
+(172, 1115, 3)
+The image has shape:
+(140, 530, 3)
+The image has shape:
+(86, 232, 3)
+The image has shape:
+(30, 247, 3)
+The image has shape:
+(136, 1209, 3)
+The image has shape:
+(139, 1199, 3)
+The image has shape:
+(126, 1167, 3)
+The image has shape:
+(128, 1115, 3)
+The image has shape:
+(137, 1130, 3)
+The image has shape:
+(109, 1042, 3)
+The image has shape:
+(60, 529, 3)
+The image has shape:
+(93, 112, 3)
+The image has shape:
+(96, 1046, 3)
+The image has shape:
+(116, 1148, 3)
+The image has shape:
+(143, 1271, 3)
+The image has shape:
+(103, 1335, 3)
+The image has shape:
+(126, 1372, 3)
+The image has shape:
+(146, 1227, 3)
+The image has shape:
+(101, 1120, 3)
+The image has shape:
+(117, 1167, 3)
+The image has shape:
+(98, 1145, 3)
+The image has shape:
+(60, 307, 3)
+The image has shape:
+(83, 107, 3)
+The image has shape:
+(93, 1108, 3)
+The image has shape:
+(64, 213, 3)
+The image has shape:
+(70, 962, 3)
+The image has shape:
+(111, 1006, 3)
+The image has shape:
+(74, 197, 3)
+The image has shape:
+3)
+The image has shape:
+(99, 1103, 3)
+The image has shape:
+(85, 298, 3)
+The image has shape:
+(96, 947, 3)
+The image has shape:
+(100, 1019, 3)
+The image has shape:
+(145, 454, 3)
+The image has shape:
+(47, 184, 3)
+The image has shape:
+(91, 1011, 3)
+The image has shape:
+(130, 426, 3)
+The image has shape:
+(156, 1065, 3)
+The image has shape:
+(101, 925, 3)
+The image has shape:
+(94, 828, 3)
+The image has shape:
+(109, 875, 3)
+The image has shape:
+(143, 1084, 3)
+The image has shape:
+(133, 1065, 3)
+The image has shape:
+(144, 1104, 3)
+The image has shape:
+(145, 1135, 3)
+The image has shape:
+(109, 1015, 3)
+The image has shape:
+(96, 1035, 3)
+The image has shape:
+(102, 1014, 3)
+The image has shape:
+(129, 983, 3)
+The image has shape:
+(118, 1144, 3)
+The image has shape:
+(113, 540, 3)
+The image has shape:
+(119, 1089, 3)
+The image has shape:
+(147, 598, 3)
+The image has shape:
+(103, 1048, 3)
+The image has shape:
+(106, 984, 3)
+The image has shape:
+(165, 1320, 3)
+The image has shape:
+(170, 1413, 3)
+The image has shape:
+(78, 120, 3)
+The image has shape:
+(144, 1089, 3)
+The image has shape:
+(85, 1276, 3)
+The image has shape:
+(126, 1319, 3)
+The image has shape:
+(133, 1149, 3)
+The image has shape:
+(117, 936, 3)
+The image has shape:
+(76, 607, 3)
+The image has shape:
+(120, 456, 3)
+The image has shape:
+(108, 1053, 3)
+The image has shape:
+(90, 962, 3)
+The image has shape:
+(112, 1356, 3)
+The image has shape:
+(115, 1261, 3)
+The image has shape:
+(183, 1147, 3)
+The image has shape:
+(114, 1257, 3)
+The image has shape:
+(118, 1128, 3)
+The image has shape:
+(111, 1053, 3)
+The image has shape:
+(104, 915, 3)
+The image has shape:
+(115, 884, 3)
+The image has shape:
+(95, 1070, 3)
+The image has shape:
+(74, 754, 3)
+The image has shape:
+(106, 292, 3)
+The image has shape:
+(141, 59, 3)
+The image has shape:
+(130, 1268, 3)
+The image has shape:
+(133, 1164, 3)
+The image has shape:
+(127, 1114, 3)
+The image has shape:
+(112, 838, 3)
+The image has shape:
+(111, 1038, 3)
+The image has shape:
+(102, 965, 3)
+The image has shape:
+(174, 1229, 3)
+The image has shape:
+(152, 1191, 3)
+The image has shape:
+(86, 168, 3)
+The image has shape:
+(136, 1242, 3)
+The image has shape:
+(116, 907, 3)
+The image has shape:
+(154, 327, 3)
+The image has shape:
+(104, 854, 3)
+The image has shape:
+(121, 584, 3)
+The image has shape:
+(109, 1098, 3)
+The image has shape:
+(122, 1181, 3)
+The image has shape:
+(132, 1166, 3)
+The image has shape:
+(132, 1213, 3)
+The image has shape:
+(164, 1272, 3)
+The image has shape:
+(96, 1193, 3)
+The image has shape:
+(135, 56, 3)
+The image has shape:
+(96, 951, 3)
+The image has shape:
+(135, 1161, 3)
+The image has shape:
+(141, 1239, 3)
+The image has shape:
+(114, 1296, 3)
+The image has shape:
+(102, 1190, 3)
+The image has shape:
+(97, 1125, 3)
+The image has shape:
+(111, 448, 3)
+The image has shape:
+(112, 1078, 3)
+The image has shape:
+(83, 227, 3)
+The image has shape:
+(125, 1172, 3)
+The image has shape:
+(102, 1057, 3)
+The image has shape:
+(123, 1125, 3)
+The image has shape:
+(141, 1045, 3)
+The image has shape:
+(96, 1070, 3)
+The image has shape:
+(100, 988, 3)
+The image has shape:
+(144, 1039, 3)
+The image has shape:
+(162, 1220, 3)
+The image has shape:
+(99, 55, 3)
+The image has shape:
+(114, 1073, 3)
+The image has shape:
+(121, 1193, 3)
+The image has shape:
+(249, 1262, 3)
+The image has shape:
+(150, 1268, 3)
+The image has shape:
+(109, 1133, 3)
+The image has shape:
+(95, 930, 3)
+The image has shape:
+(142, 610, 3)
+The image has shape:
+(82, 916, 3)
+The image has shape:
+(100, 894, 3)
+The image has shape:
+(107, 1093, 3)
+The image has shape:
+(117, 1254, 3)
+The image has shape:
+(76, 171, 3)
+The image has shape:
+(180, 1440, 3)
+The image has shape:
+(118, 973, 3)
+The image has shape:
+(126, 896, 3)
+The image has shape:
+(63, 413, 3)
+The image has shape:
+(91, 386, 3)
+The image has shape:
+(149, 1022, 3)
+The image has shape:
+(137, 1028, 3)
+The image has shape:
+(225, 1180, 3)
+The image has shape:
+(112, 1162, 3)
+The image has shape:
+(85, 296, 3)
+The image has shape:
+(180, 1124, 3)
+The image has shape:
+(132, 413, 3)
+The image has shape:
+(85, 360, 3)
+The image has shape:
+(107, 986, 3)
+The image has shape:
+(83, 993, 40, 1173, 3)
+The image has shape:
+(154, 1319, 3)
+The image has shape:
+(109, 1283, 3)
+The image has shape:
+(84, 77, 3)
+The image has shape:
+(109, 1093, 3)
+The image has shape:
+(109, 1149, 3)
+The image has shape:
+(119, 951, 3)
+The image has shape:
+(97, 787, 3)
+The image has shape:
+(124, 1129, 3)
+The image has shape:
+(112, 1250, 3)
+The image has shape:
+(88, 794, 3)
+The image has shape:
+(135, 579, 3)
+The image has shape:
+(196, 1184, 3)
+The image has shape:
+(112, 1233, 3)
+The image has shape:
+(104, 1142, 3)
+The image has shape:
+(106, 1151, 3)
+The image has shape:
+(66, 417, 3)
+The image has shape:
+(252, 1256, 3)
+The image has shape:
+(109, 876, 3)
+The image has shape:
+(85, 950, 3)
+The image has shape:
+(149, 1086, 3)
+The image has shape:
+(158, 1119, 3)
+The image has shape:
+(305, 1088, 3)
+The image has shape:
+(104, 1161, 3)
+The image has shape:
+(105, 74, 3)
+The image has shape:
+(205, 954, 3)
+The image has shape:
+(98, 1071, 3)
+The image has shape:
+(116, 1049, 3)
+The image has shape:
+(78, 402, 3)
+The image has shape:
+(79, 240, 3)
+The image has shape:
+(82, 319, 3)
+The image has shape:
+(162, 358, 3)
+The image has shape:
+(204, 1389, 3)
+The image has shape:
+(101, 1197, 3)
+The image has shape:
+(111, 1166, 3)
+The image has shape:
+(133, 1186, 3)
+The image has shape:
+(148, 1322, 3)
+The image has shape:
+(111, 1017, 3)
+The image has shape:
+(82, 1114, 3)
+The image has shape:
+(92, 1041, 3)
+The image has shape:
+(113, 1140, 3)
+The image has shape:
+(113, 1157, 3)
+The image has shape:
+(141, 1269, 3)
+The image has shape:
+(194, 1322, 3)
+The image has shape:
+(129, 1132, 3)
+The image has shape:
+(102, 329, 3)
+The image has shape:
+(96, 111, 3)
+The image has shape:
+(191, 1172, 3)
+The image has shape:
+(99, 1181, 3)
+The image has shape:
+(84, 1149, 3)
+The image has shape:
+(160, 1108, 3)
+The image has shape:
+(126, 1049, 3)
+The image has shape:
+(93, 1008, 3)
+The image has shape:
+(110, 1012, 3)
+The image has shape:
+(114, 1261, 3)
+The image has shape:
+(87, 1097, 3)
+The image has shape:
+(114, 851, 3)
+The image has shape:
+(111, 1039, 3)
+The image has shape:
+(90, 996, 3)
+The image has shape:
+(102, 1052, 3)
+The image has shape:
+(102, 1033, 3)
+The image has shape:
+(120, 1235, 3)
+The image has shape:
+(81, 897, 3)
+The image has shape:
+(204, 979, 3)
+The image has shape:
+(90, 116, 3)
+The image has shape:
+(140, 907, 3)
+The image has shape:
+(104, 1168, 3)
+The image has shape:
+(112, 1194, 3)
+The image has shape:
+(103, 943, 3)
+The image has shape:
+(103, 896, 3)
+The image has shape:
+(162, 1109, 3)
+The image has shape:
+(176, 1194, 3)
+The image has shape:
+(102, 1081, 3)
+The image has shape:
+(92, 395, 3)
+The image has shape:
+(108, 589, 3)
+The image has shape:
+(177, 1009, 3)
+The image has shape:
+(366, 1489, 3)
+The image has shape:
+(102, 208, 3)
+The image has shape:
+(140, 1128, 3)
+The image has shape:
+(104, 221, 3)
+The image has shape:
+(108, 1001, 3)
+The image has shape:
+(102, 1077, 3)
+The image has shape:
+(97, 994, 3)
+The image has shape:
+(176, 555, 3)
+The image has shape:
+(110, 907, 3)
+The image has shape:
+(114, 1053, 3)
+The image has shape:
+(112, 958, 3)
+The image has shape:
+(112, 1001, 3)
+The image has shape:
+(103, 1060, 3)
+The image has shape:
+(101, 985, 3)
+The image has shape:
+(116, 1071, 3)
+The image has shape:
+(107, 1030, 3)
+The image has shape:
+(110, 1032, 3)
+The image has shape:
+(87, 1107, 3)
+The image has shape:
+(112, 614, 3)
+The image has shape:
+(181, 1006, 3)
+The image has shape:
+(28, 180, 3)
+The image has shape:
+(112, 1210, 3)
+The image has shape:
+(105, 817, 3)
+The image has shape:
+(88, 574, 3)
+The image has shape:
+(105, 989, 3)
+The image has shape:
+(156, 1065, 3)
+The image has shape:
+(82, 757, 3)
+The image has shape:
+(123, 613, 3)
+The image has shape:
+(127, 670, 3)
+The image has shape:
+(105, 403, 3)
+The image has shape:
+(156, 1284, 3)
+The image has shape:
+(135, 1168, 3)
+The image has shape:
+(123, 1218, 3)
+The image has shape:
+(113, 1263, 3)
+The image has shape:
+(144, 1014, 3)
+The image has shape:
+(134, 973, 3)
+The image has shape:
+(216, 1086, 3)
+The image has shape:
+(165, 794, 3)
+The image has shape:
+(95, 1008, 3)
+The image has shape:
+(135, 581, 3)
+The image has sh, 3)
+The image has shape:
+(122, 1236, 3)
+The image has shape:
+(121, 1242, 3)
+The image has shape:
+(104, 1064, 3)
+The image has shape:
+(101, 972, 3)
+The image has shape:
+(115, 1185, 3)
+The image has shape:
+(132, 1131, 3)
+The image has shape:
+(146, 601, 3)
+The image has shape:
+(78, 560, 3)
+The image has shape:
+(102, 971, 3)
+The image has shape:
+(112, 1058, 3)
+The image has shape:
+(88, 475, 3)
+The image has shape:
+(77, 87, 3)
+The image has shape:
+(78, 402, 3)
+The image has shape:
+(88, 460, 3)
+The image has shape:
+(77, 469, 3)
+The image has shape:
+(141, 573, 3)
+The image has shape:
+(105, 919, 3)
+The image has shape:
+(118, 1112, 3)
+The image has shape:
+(160, 1372, 3)
+The image has shape:
+(127, 1359, 3)
+The image has shape:
+(104, 531, 3)
+The image has shape:
+(84, 474, 3)
+The image has shape:
+(118, 948, 3)
+The image has shape:
+(108, 1013, 3)
+The image has shape:
+(124, 967, 3)
+The image has shape:
+(95, 796, 3)
+The image has shape:
+(107, 86, 3)
+The image has shape:
+(129, 1132, 3)
+The image has shape:
+(95, 897, 3)
+The image has shape:
+(103, 1055, 3)
+The image has shape:
+(108, 1066, 3)
+The image has shape:
+(112, 1052, 3)
+The image has shape:
+(114, 966, 3)
+The image has shape:
+(120, 951, 3)
+The image has shape:
+(118, 1218, 3)
+The image has shape:
+(92, 1219, 3)
+The image has shape:
+(90, 955, 3)
+The image has shape:
+(108, 966, 3)
+The image has shape:
+(131, 1112, 3)
+The image has shape:
+(148, 1322, 3)
+The image has shape:
+(104, 1032, 3)
+The image has shape:
+(102, 1068, 3)
+The image has shape:
+(110, 1141, 3)
+The image has shape:
+(107, 1184, 3)
+The image has shape:
+(84, 77, 3)
+The image has shape:
+(161, 1116, 3)
+The image has shape:
+(116, 1292, 3)
+The image has shape:
+(115, 1094, 3)
+The image has shape:
+(108, 1304, 3)
+The image has shape:
+(108, 176, 3)
+The image has shape:
+(84, 996, 3)
+The image has shape:
+(88, 951, 3)
+The image has shape:
+(158, 1168, 3)
+The image has shape:
+(168, 1189, 3)
+The image has shape:
+(118, 1034, 3)
+The image has shape:
+(115, 978, 3)
+The image has shape:
+(66, 371, 3)
+The image has shape:
+(51, 458, 3)
+The image has shape:
+(169, 1192, 3)
+The image has shape:
+(70, 1134, 3)
+The image has shape:
+(155, 1297, 3)
+The image has shape:
+(145, 1268, 3)
+The image has shape:
+(62, 72, 3)
+The image has shape:
+(350, 1076, 3)
+The image has shape:
+(107, 962, 3)
+The image has shape:
+(98, 916, 3)
+The image has shape:
+(95, 100, 3)
+The image has shape:
+(283, 1312, 3)
+The image has shape:
+(116, 295, 3)
+The image has shape:
+(60, 202, 3)
+The image has shape:
+(112, 561, 3)
+The image has shape:
+(78, 511, 3)
+The image has shape:
+(113, 1279, 3)
+The image has shape:
+(136, 1358, 3)
+The image has shape:
+(109, 894, 3)
+The image has shape:
+(117, 1164, 3)
+The image has shape:
+(85, 545, 3)
+The image has shape:
+(74, 392, 3)
+The image has shape:
+(299, 1237, 3)
+The image has shape:
+(308, 740, 3)
+The image has shape:
+(88, 110, 3)
+The image has shape:
+(156, 1128, 3)
+The image has shape:
+(115, 994, 3)
+The image has shape:
+(114, 978, 3)
+The image has shape:
+(182, 1059, 3)
+The image has shape:
+(128, 926, 3)
+The image has shape:
+(100, 1126, 3)
+The image has shape:
+(122, 1216, 3)
+The image has shape:
+(112, 999, 3)
+The image has shape:
+(121, 977, 3)
+The image has shape:
+(156, 1210, 3)
+The image has shape:
+(113, 78, 3)
+The image has shape:
+(116, 1039, 3)
+The image has shape:
+(107, 977, 3)
+The image has shape:
+(103, 938, 3)
+The image has shape:
+(104, 1017, 3)
+The image has shape:
+(86, 1210, 3)
+The image has shape:
+(113, 1380, 3)
+The image has shape:
+(111, 961, 3)
+The image has shape:
+(99, 908, 3)
+The image has shape:
+(125, 1262, 3)
+The image has shape:
+(67, 782, 3)
+The image has shape:
+(100, 509, 3)
+The image has shape:
+(276, 1424, 3)
+The image has shape:
+(140, 1212, 3)
+The image has shape:
+(149, 1171, 3)
+The image has shape:
+(131, 1184, 3)
+The image has shape:
+(127, 1089, 3)
+The image has shape:
+(114, 1270, 3)
+The image has shape:
+(125, 1346, 3)
+The image has shape:
+(162, 1148, 3)
+The image has shape:
+(165, 1248, 3)
+The image has shape:
+(101, 962, 3)
+The image has shape:
+(108, 1097, 3)
+The image has shape:
+(115, 1302, 3)
+The image has shape:
+(107, 1204, 3)
+Theshape:
+(136, 1230, 3)
+The image has shape:
+(98, 1043, 3)
+The image has shape:
+(115, 1142, 3)
+156, 3)
+The image has shape:
+(111, 1069, 3)
+The image has shape:
+(117, 982, 3)
+The image has shape:
+(87, 905, 3)
+The image has shape:
+(94, 841, 3)
+(123, 1300, 3)
+The image has shape:
+(99, 1020, 3)
+The image has shape:
+(98, 1072, 3)
+ape:
+(113, 1109, 3)
+The image has shape:
+(110, 1056, 3)
+The image has shape:
+(125, 389, 3)
+The image has shape:
+(80, 454, 3)
+3)
+The image has shape:
+(104, 1063, 3)
+The image has shape:
+(93, 987, 3)
+The image has shape:
+(115, 93, 3)
+The image has shape:
+(145, 1097, 3)
+ image has shape:
+(129, 421, 3)
+The image has shape:
+(76, 308, 3)
+3)
+The image has shape:
+(114, 542, 3)
+The image has shape:
+(55, 128, 3)
+:
+(104, 1305, 3)
+The image has shape:
+(141, 1274, 3)
+The image has shape:
+(88, 128, 3)
+The image has shape:
+(94, 1075, 3)
+The image has shape:
+(114, 814, 3)
+as shape:
+(112, 80, 3)
+The image has shape:
+(318, 1096, 3)
+The image has shape:
+(141, 1137, 3)
+The image has shape:
+(115, 998, 3)
+The image has shape:
+(84, 602, 3)
+The image has shape:
+(111, 995, 3)
+The image has shape:
+(143, 1101, 3)
+)
+The image has shape:
+(294, 1240, 3)
+The image has shape:
+(156, 1153, 3)
+The image has shape:
+(112, 959, 3)
+The image has shape:
+(96, 1012, 3)
+[0/200][120/4184] Loss: 84.915885
+[0/200][240/4184] Loss: 72.112703
+[0/200][360/4184] Loss: 76.750380
+[0/200][480/4184] Loss: 72.484173
+[0/200][600/4184] Loss: 70.436442
+[0/200][720/4184] Loss: 70.255345
+[0/200][840/4184] Loss: 66.664972
+[0/200][960/4184] Loss: 64.586679
+[0/200][1080/4184] Loss: 60.663327
