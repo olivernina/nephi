@@ -49,6 +49,7 @@ parser.add_argument('--keep_ratio', action='store_true', help='whether to keep r
 parser.add_argument('--random_sample', action='store_true', help='whether to sample the dataset with random sampler')
 parser.add_argument('--test_icfhr', action='store_true', help='Whether to make predictions on the test set according to ICFHR format')
 parser.add_argument('--test_file', default='test_file', help='Path to file to store test set results')
+parser.add_argument('--binarize', action="store_true", help='Whether to use howe and sauvola binarization as separate channels, requires these data to already be in the lmdb databases')
 opt = parser.parse_args()
 print("Running with options:", opt)
 
@@ -68,10 +69,10 @@ cudnn.benchmark = True
 if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
-train_dataset = dataset.lmdbDataset(root=opt.trainroot)
+train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize)
 assert train_dataset
 
-test_dataset = dataset.lmdbDataset(root=opt.valroot)
+test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize)
 assert test_dataset
 
 minn = min(len(test_dataset), len(train_dataset))
@@ -107,7 +108,7 @@ if os.path.exists('alphabet.txt'):
 print("This is the alphabet:")
 print(opt.alphabet)
 nclass = len(opt.alphabet) + 1
-nc = 1 # always one
+nc = 3 if opt.binarize else 1 
 
 converter = utils.strLabelConverter(opt.alphabet)
 criterion = CTCLoss()
