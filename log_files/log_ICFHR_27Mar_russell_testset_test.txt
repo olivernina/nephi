@@ -1,0 +1,45 @@
+Running with options: Namespace(adadelta=False, adam=False, alphabet='0123456789abcdefghijklmnopqrstuvwxyz', batchSize=32, beta1=0.5, crnn='/deep_data/nephi/experiments/expr_ICFHR_27Mar_alph_werr_fixed_extended/netCRNN_20_5963.pth', cuda=True, displayInterval=120, experiment='experiments/expr_ICFHR_24Mar_testset_test', imgH=80, imgW=240, keep_ratio=True, lr=5e-05, n_test_disp=10, ngpu=1, nh=256, niter=200, random_sample=False, saveEpoch=10, test_file='30865_0_unicodeformatted.txt', test_icfhr=True, trainroot='/deep_data/nephi/data/lmdb_ICFHR/general_data', valEpoch=5, valroot='/deep_data/nephi/data/lmdb_ICFHR/test_data/30865_testtrack', workers=10)
+Random Seed:  7010
+This is the alphabet:
+eniratsdholcugmv.wbf,zkpySDA-MEjGBIHVßCWP1N¬TJFKRO"ʒLæx2:’q08ZU;–3'4·ø7!5?6)9(—/=┌YQ&X«»[│]§°ειν”τ|ασ 
+loading pretrained model from /deep_data/nephi/experiments/expr_ICFHR_27Mar_alph_werr_fixed_extended/netCRNN_20_5963.pth
+Your neural network: DataParallel(
+  (module): CRNN(
+    (cnn): Sequential(
+      (conv0): Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (relu0): ReLU(inplace)
+      (pooling0): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+      (conv1): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (relu1): ReLU(inplace)
+      (pooling1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+      (conv2): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (batchnorm2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True)
+      (relu2): ReLU(inplace)
+      (conv3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (relu3): ReLU(inplace)
+      (pooling2): MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1), dilation=(1, 1), ceil_mode=False)
+      (conv4): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (batchnorm4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True)
+      (relu4): ReLU(inplace)
+      (conv5): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (relu5): ReLU(inplace)
+      (pooling3): MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1), dilation=(1, 1), ceil_mode=False)
+      (conv6): Conv2d(512, 512, kernel_size=(2, 2), stride=(1, 1))
+      (batchnorm6): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True)
+      (relu6): ReLU(inplace)
+    )
+    (rnn): Sequential(
+      (0): BidirectionalLSTM(
+        (rnn): LSTM(512, 256, bidirectional=True)
+        (embedding): Linear(in_features=512, out_features=256, bias=True)
+      )
+      (1): BidirectionalLSTM(
+        (rnn): LSTM(256, 256, bidirectional=True)
+        (embedding): Linear(in_features=512, out_features=103, bias=True)
+      )
+    )
+  )
+)
+Starting training...
+Start test set predictions
+Total number of images in test set:      156
