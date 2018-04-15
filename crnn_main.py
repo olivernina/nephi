@@ -31,7 +31,7 @@ parser.add_argument('--batchSize', type=int, default=64, help='input batch size'
 parser.add_argument('--imgH', type=int, default=32, help='the height of the input image to network')
 parser.add_argument('--imgW', type=int, default=100, help='the width of the input image to network')
 parser.add_argument('--nh', type=int, default=256, help='size of the lstm hidden state')
-parser.add_argument('--niter', type=int, default=25, help='number of epochs to train for, default 25')
+parser.add_argument('--niter', type=int, default=6, help='number of epochs to train for, default 25')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Critic, default=0.00005')
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
@@ -39,9 +39,9 @@ parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--crnn', default='', help="path to start crnn file (to continue training between invocations)")
 parser.add_argument('--dataset', type=str, default='READ', help='type of dataset to use such as READ or ICFHR default is READ')
 parser.add_argument('--experiment', default=None, help='Where to store samples and models (model save directory)')
-parser.add_argument('--displayInterval', type=int, default=5, help='Interval number of batches to display progress')
+parser.add_argument('--displayInterval', type=int, default=20, help='Interval number of batches to display progress')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
-parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
+parser.add_argument('--valEpoch', type=int, default=2, help='Epoch to display validation and training error rates')
 parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is false, rmsprop)')
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is false, use rmsprop)')
@@ -281,10 +281,13 @@ def val(net, dataset, criterion, max_iter=1000):
     
     char_arr = np.array(char_error)
     w_arr = np.array(w_error)
-    print("Character error rate mean: %4.4f; Character error rate sd: %4.4f" % (np.mean(char_arr), np.std(char_arr, ddof=1)))
-    print("Word error rate mean: %4.4f; Word error rate sd: %4.4f" % (np.mean(w_arr), np.std(w_arr, ddof=1)))
+    char_mean_error = np.mean(char_arr)
+    word_mean_error = np.mean(w_arr)
+
+    print("Character error rate mean: %4.4f; Character error rate sd: %4.4f" %( char_mean_error, np.std(char_arr, ddof=1)))
+    print("Word error rate mean: %4.4f; Word error rate sd: %4.4f" % (word_mean_error, np.std(w_arr, ddof=1)))
     
-    return (char_error, w_error)
+    return char_mean_error, word_mean_error, accuracy
 
 
 def trainBatch(net, criterion, optimizer):
@@ -311,10 +314,15 @@ def trainBatch(net, criterion, optimizer):
 
 print("Starting training...")
 
+plot_losses = []
+w_errors = []
+c_errors = []
+accuracies = []
+
 for epoch in range(opt.niter):
     train_iter = iter(train_loader)
     i = 0
-    while i < len(train_loader):
+    while i < 100:#len(train_loader):
         
         # Start by running prediction on test set, doing nothing else
         if opt.test_icfhr:
@@ -336,12 +344,18 @@ for epoch in range(opt.niter):
         # Display the loss
         if i % opt.displayInterval == 0:
             print('[%d/%d][%d/%d] Loss: %f' % (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
+            if loss_avg.val() <100000000:
+                plot_losses.append(loss_avg.val())
             loss_avg.reset()
         
         # Evaluate performance on validation and training sets periodically
-        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
-            val(crnn, test_loader, criterion)
+        if (epoch % opt.valEpoch == 0) and (i >= 100):#(i >= len(train_loader)):      # Runs at end of some epochs
+            char_error,word_error,accuracy = val(crnn, test_loader, criterion)
             val(crnn, train_loader, criterion)
+
+            w_errors.append(word_error)
+            c_errors.append(char_error)
+            accuracies.append(accuracy)
 
         # do checkpointing
         if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
@@ -350,3 +364,9 @@ for epoch in range(opt.niter):
     
     if opt.test_icfhr:
         break
+
+
+utils.showPlot(c_errors,'cerr')
+utils.showPlot(w_errors,'werr')
+utils.showPlot(accuracies,'acc')
+utils.showPlot(plot_losses,'loss')

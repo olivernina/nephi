@@ -147,3 +147,22 @@ def assureRatio(img):
         main = nn.UpsamplingBilinear2d(size=(h, h), scale_factor=None)
         img = main(img)
     return img
+
+
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import datetime
+import os
+def showPlot(points,prefix):
+    plt.interactive(False)
+    plt.figure()
+    fig, ax = plt.subplots()
+    # this locator puts ticks at regular intervals
+    loc = ticker.MultipleLocator(base=0.2)
+    ax.yaxis.set_major_locator(loc)
+    plt.plot(points)
+
+    if not os.path.exists('./plots'):
+        os.mkdir('./plots')
+
+    plt.savefig('plots/' +prefix+'_'+ datetime.datetime.now().strftime("%m-%d-%y-%H-%M") + '.png')
