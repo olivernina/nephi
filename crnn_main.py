@@ -49,8 +49,8 @@ parser.add_argument('--keep_ratio', action='store_true', help='whether to keep r
 parser.add_argument('--random_sample', action='store_true', help='whether to sample the dataset with random sampler')
 parser.add_argument('--test_icfhr', action='store_true', help='Whether to make predictions on the test set according to ICFHR format')
 parser.add_argument('--test_file', default='test_file', help='Path to file to store test set results')
-
 parser.add_argument('--binarize', action="store_true", help='Whether to use howe and sauvola binarization as separate channels, requires these data to already be in the lmdb databases')
+parser.add_argument('--plot', action='store_true', help='Save plots')
 
 opt = parser.parse_args()
 print("Running with options:", opt)
@@ -367,8 +367,13 @@ for epoch in range(opt.niter):
     if opt.test_icfhr:
         break
 
+if opt.plot:
+    utils.savePoints(c_errors,'cerr')
+    utils.savePoints(w_errors,'werr')
+    utils.savePoints(accuracies,'acc')
+    utils.savePoints(plot_losses,'loss')
 
-utils.showPlot(c_errors,'cerr')
-utils.showPlot(w_errors,'werr')
-utils.showPlot(accuracies,'acc')
-utils.showPlot(plot_losses,'loss')
+    # utils.showPlot(c_errors,'cerr')
+    # utils.showPlot(w_errors,'werr')
+    # utils.showPlot(accuracies,'acc')
+    # utils.showPlot(plot_losses,'loss')

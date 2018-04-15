@@ -121,8 +121,11 @@ class lmdbDataset(Dataset):
             final_image = Image.merge("RGB", (img, img_howe, img_simplebin)) if self.binarize else img
             if self.transform is not None:
                 final_image = self.transform(final_image)
-            print("The image has shape:")
-            print(np.array(final_image).shape)
+
+            DEBUG = False
+            if DEBUG:
+                print("The image has shape:")
+                print(np.array(final_image).shape)
        
             return (final_image, label, file_name)
 
