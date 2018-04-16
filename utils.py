@@ -151,7 +151,7 @@ def assureRatio(img):
 
 # import matplotlib.pyplot as plt
 # import matplotlib.ticker as ticker
-# import datetime
+import datetime
 import os
 import numpy as np
 #
@@ -169,10 +169,10 @@ import numpy as np
 #
 #     plt.savefig('plots/' +prefix+'_'+ datetime.datetime.now().strftime("%m-%d-%y-%H-%M") + '.png')
 
-def savePoints(points, prefix):
-    a = np.array(points)
+def savePlot(history, prefix):
+    # a = np.array(history)
     if not os.path.exists('./plots'):
         os.mkdir('./plots')
 
-    # np.save('plots/'+prefix+'.npy',a)
-    np.savetxt('plots/'+prefix+".csv", a, delimiter=",")
+    np.savetxt('plots/'+prefix+'.txt',
+                  history, fmt='%.3f')
