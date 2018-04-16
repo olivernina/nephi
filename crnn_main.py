@@ -316,16 +316,14 @@ def trainBatch(net, criterion, optimizer):
 
 print("Starting training...")
 
-plot_losses = []
-w_errors = []
-c_errors = []
-accuracies = []
+history_errors = []
+curr_loss = 0
 
 for epoch in range(opt.niter):
     train_iter = iter(train_loader)
-    i = 0
-    while i < 100:#len(train_loader):
-        
+    i = 1
+
+    while i < len(train_loader):
         # Start by running prediction on test set, doing nothing else
         if opt.test_icfhr:
             files, predictions = test(crnn, test_loader, criterion)
@@ -347,33 +345,25 @@ for epoch in range(opt.niter):
         if i % opt.displayInterval == 0:
             print('[%d/%d][%d/%d] Loss: %f' % (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
             if loss_avg.val() <100000000:
-                plot_losses.append(loss_avg.val())
+               curr_loss = loss_avg.val()
+
             loss_avg.reset()
         
         # Evaluate performance on validation and training sets periodically
-        if (epoch % opt.valEpoch == 0) and (i >= 100):#(i >= len(train_loader)):      # Runs at end of some epochs
+        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             char_error,word_error,accuracy = val(crnn, test_loader, criterion)
             val(crnn, train_loader, criterion)
+            history_errors.append([epoch, i, curr_loss,word_error,char_error,accuracy])
 
-            w_errors.append(word_error)
-            c_errors.append(char_error)
-            accuracies.append(accuracy)
+            if opt.plot:
+                utils.savePlot(history_errors,'plot')
+                # utils.showPlot(c_errors, 'cerr')
 
         # do checkpointing
         if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
             torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
-    
+
+
     if opt.test_icfhr:
         break
-
-if opt.plot:
-    utils.savePoints(c_errors,'cerr')
-    utils.savePoints(w_errors,'werr')
-    utils.savePoints(accuracies,'acc')
-    utils.savePoints(plot_losses,'loss')
-
-    # utils.showPlot(c_errors,'cerr')
-    # utils.showPlot(w_errors,'werr')
-    # utils.showPlot(accuracies,'acc')
-    # utils.showPlot(plot_losses,'loss')
