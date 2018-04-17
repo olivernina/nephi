@@ -73,7 +73,8 @@ def plot(column, metric, smoothing, work_dir):
         if y.max() > max_y:
             max_y = y.max()
 
-        data_x_y_enum_name.append((x, y, i, filename.split('/')[-2]))
+        # data_x_y_enum_name.append((x, y, i, filename.split('/')[-2]))
+        data_x_y_enum_name.append((x, y, i, 'CRNN'))
 
     fig = pyplot.figure(figsize=(6, 6))
     axes = pyplot.gca()
