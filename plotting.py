@@ -124,19 +124,19 @@ if __name__=="__main__":
     if plot_type == 'loss':
         plot(-4, 'loss', smoothing, work_dir)
 
-    elif plot_type == 'werr':
-        plot(-3, 'werr', smoothing, work_dir)
+    elif plot_type == 'WER':
+        plot(-3, 'WER', smoothing, work_dir)
 
-    elif plot_type == 'cerr':
-        plot(-2, 'cerr', smoothing, work_dir)
+    elif plot_type == 'CER':
+        plot(-2, 'CER', smoothing, work_dir)
 
     elif plot_type == 'accu':
         plot(-1, 'accu', smoothing, work_dir)
 
     elif plot_type == 'all':
         plot(-4, 'loss', smoothing, work_dir)
-        plot(-3, 'werr', smoothing, work_dir)
-        plot(-2, 'cerr', smoothing, work_dir)
+        plot(-3, 'WER', smoothing, work_dir)
+        plot(-2, 'CER', smoothing, work_dir)
         plot(-1, 'accu', smoothing, work_dir)
     else:
     	print plot_type+" metric not supported"
