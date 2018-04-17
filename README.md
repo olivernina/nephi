@@ -20,7 +20,7 @@ $  conda activate nephi
 
 2. Install [PyTorch](http://pytorch.org/).
 ```
-# this is enough if you don't need CUDA, if you do, build pytorch from source
+# this is enough if you don't need CUDA or if you are in a Unix-based OS system. For OSX, build pytorch from source
 conda install pytorch torchvision opencv -c pytorch -y
 
 ```
