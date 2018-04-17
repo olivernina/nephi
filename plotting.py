@@ -87,7 +87,7 @@ def plot(column, metric, smoothing, work_dir):
     # axes.set_xlim([0, 100])
     pyplot.xlabel('Iterations')
     pyplot.ylabel('{}'.format(metric.upper()))
-    pyplot.title('CRNN')
+    pyplot.title(metric)
 
     for x, y, enum, name in data_x_y_enum_name:
         # Will crash if file only has 1 line.
