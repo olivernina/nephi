@@ -100,7 +100,7 @@ def plot(column, metric, smoothing, work_dir):
             continue
 
     pyplot.legend(loc='lower right', shadow=True, fontsize='medium')
-    pyplot.savefig(os.path.join(work_dir, '{}.eps'.format(metric)))
+    # pyplot.savefig(os.path.join(work_dir, '{}.eps'.format(metric)))
     pyplot.savefig(os.path.join(work_dir, '{}.png'.format(metric)))
     print "Plotted {} series".format(len(data_x_y_enum_name))
 
