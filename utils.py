@@ -6,6 +6,8 @@ import torch.nn as nn
 from torch.autograd import Variable
 import collections
 
+SOS_token = 1
+EOS_token = 2
 
 class strLabelConverter(object):
     """Convert between str and label.
@@ -18,16 +20,28 @@ class strLabelConverter(object):
         ignore_case (bool, default=True): whether or not to ignore all of the case.
     """
 
-    def __init__(self, alphabet, ignore_case=False):
+    def __init__(self, alphabet, ignore_case=False,attention=False):
+
         self._ignore_case = ignore_case
+        self.attention = attention
+
         if self._ignore_case:
             alphabet = alphabet.lower()
-        self.alphabet = alphabet + u'-'  # for `-1` index
+
+        if attention:
+            self.offset = 3
+            self.alphabet = alphabet + u'---'  # for `-1` index
+        else:
+            self.offset = 1
+            self.alphabet = alphabet + u'-'  # for `-1` index
+
+        self.num_classes = len(self.alphabet)
 
         self.dict = {}
         for i, char in enumerate(alphabet):
             # NOTE: 0 is reserved for 'blank' required by warp_ctc
-            self.dict[char] = i + 1
+            # Oliver: I am proposing to reserve 1 and 2 for SOS and EOS
+            self.dict[char] = i + self.offset
 
     def encode(self, text):
         """Support batch or single str.
@@ -44,9 +58,17 @@ class strLabelConverter(object):
                 self.dict[char.lower() if self._ignore_case else char]
                 for char in text
             ]
+
+            if self.attention:
+                text.append(EOS_token)
+
             length = [len(text)]
         elif isinstance(text, collections.Iterable):
-            length = [len(s) for s in text]
+            if self.attention:
+                length = [len(s)+1 for s in text]
+            else:
+                length = [len(s) for s in text]
+
             text = ''.join(text)
             text, _ = self.encode(text)
         return (torch.IntTensor(text), torch.IntTensor(length))
@@ -68,12 +90,12 @@ class strLabelConverter(object):
             length = length[0]
             assert t.numel() == length, "text with length: {} does not match declared length: {}".format(t.numel(), length)
             if raw:
-                return ''.join([self.alphabet[i - 1] for i in t])
+                return ''.join([self.alphabet[i - self.offset] for i in t])
             else:
                 char_list = []
                 for i in range(length):
                     if t[i] != 0 and (not (i > 0 and t[i - 1] == t[i])):
-                        char_list.append(self.alphabet[t[i] - 1])
+                        char_list.append(self.alphabet[t[i] - self.offset])
                 return ''.join(char_list)
         else:
             # batch mode
