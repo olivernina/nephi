@@ -14,7 +14,7 @@ import dataset
 import io
 encoding = 'utf-8'
 
-import models.crnn as crnn
+import models.crnn
 
 import sys  
 stdout = sys.stdout
@@ -23,6 +23,7 @@ sys.setdefaultencoding('utf-8')
 sys.stdout = stdout
 from model_error import cer, wer
 
+MAX_LENGTH = 100
 parser = argparse.ArgumentParser()
 parser.add_argument('--trainroot', required=True, help='path to dataset')
 parser.add_argument('--valroot', required=True, help='path to dataset')
@@ -51,6 +52,7 @@ parser.add_argument('--test_icfhr', action='store_true', help='Whether to make p
 parser.add_argument('--test_file', default='test_file', help='Path to file to store test set results')
 parser.add_argument('--binarize', action="store_true", help='Whether to use howe and sauvola binarization as separate channels, requires these data to already be in the lmdb databases')
 parser.add_argument('--plot', action='store_true', help='Save plots')
+parser.add_argument('--attention', action='store_true', help='running attention model instead of CRNN and CTC')
 
 opt = parser.parse_args()
 print("Running with options:", opt)
@@ -87,6 +89,9 @@ if not opt.random_sample:
 else:
     sampler = None
 
+if opt.attention is True: #attention can only work with one sample at a time
+    opt.batchSize = 1
+
 train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=opt.batchSize, sampler=sampler,
     num_workers=int(opt.workers),
@@ -119,11 +124,20 @@ if os.path.exists(dataset_alphabet):
 
 print("This is the alphabet:")
 print(opt.alphabet)
-nclass = len(opt.alphabet) + 1
-nc = 3 if opt.binarize else 1 
 
-converter = utils.strLabelConverter(opt.alphabet)
-criterion = CTCLoss()
+converter = utils.strLabelConverter(opt.alphabet,attention=opt.attention)
+
+# nclass = len(opt.alphabet) + 1
+nclass = converter.num_classes
+nc = 3 if opt.binarize else 1
+
+
+
+if opt.attention:
+    criterion = torch.nn.NLLLoss()
+else:
+    criterion = CTCLoss()
+
 
 # custom weights initialization called on crnn
 def weights_init(m):
@@ -134,18 +148,30 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
 
+if opt.attention:
+    # crnn = models.crnn.CRNNATT(opt.imgH, nc, nclass, opt.nh)
+    # hidden_size = 256
+    encoder = models.crnn.EncoderRNN(nc,opt.nh)
+    attn_decoder = models.crnn.AttnDecoderRNN(opt.nh, nclass, dropout_p=0.1)
+    encoder.apply(weights_init)
 
-crnn = crnn.CRNN(opt.imgH, nc, nclass, opt.nh)
-#print("Got to the weight initialization and loading pretrained model")
-crnn.apply(weights_init)
+else:
+    crnn = models.crnn.CRNN(opt.imgH, nc, nclass, opt.nh)
+    #print("Got to the weight initialization and loading pretrained model")
+    crnn.apply(weights_init)
 
-image = torch.FloatTensor(opt.batchSize, 3, opt.imgW, opt.imgH)   #  
+image = torch.FloatTensor(opt.batchSize, 3, opt.imgW, opt.imgH)   #
 text = torch.IntTensor(opt.batchSize * 5)          # RA: I don't understand why the text has this size
 length = torch.IntTensor(opt.batchSize)
 
 if opt.cuda:
-    crnn.cuda()
-    crnn = torch.nn.DataParallel(crnn, device_ids=range(opt.ngpu))
+    if opt.attention:
+        encoder.cuda()
+        attn_decoder.cuda()
+    else:
+        crnn.cuda()
+        crnn = torch.nn.DataParallel(crnn, device_ids=range(opt.ngpu))
+
     image = image.cuda()
     criterion = criterion.cuda()
 
@@ -153,8 +179,12 @@ if opt.crnn != '':
     print('loading pretrained model from %s' % opt.crnn)
     crnn.load_state_dict(torch.load(opt.crnn))
 
-print("Your neural network:", crnn)
-    
+if opt.attention:
+    print("Your encoder network:", encoder)
+    print("Your decoder network:", attn_decoder)
+else:
+    print("Your neural network:", crnn)
+
 image = Variable(image)
 text = Variable(text)
 length = Variable(length)
@@ -168,7 +198,13 @@ if opt.adam:
 elif opt.adadelta:
     optimizer = optim.Adadelta(crnn.parameters(), lr=opt.lr)
 else:
-    optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr) # default
+    if opt.attention:
+        optimizer = optim.RMSprop(encoder.parameters(), lr=opt.lr)
+        optimizer = optim.RMSprop(attn_decoder.parameters(), lr=opt.lr)
+    else:
+        optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)  # default
+
+
 
 def test(net, dataset, criterion):
     print('Start test set predictions')
@@ -313,11 +349,152 @@ def trainBatch(net, criterion, optimizer):
     optimizer.step()
     return cost
 
+def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, criterion, max_length=MAX_LENGTH):
+
+    data = train_iter.next()
+    cpu_images, cpu_texts,__ = data
+    # batch_size = cpu_images.size(0)
+    utils.loadData(image, cpu_images)
+    target, target_length = converter.encode(cpu_texts)
+    utils.loadData(text, target)
+    utils.loadData(length, target_length)
+
+    encoder_hidden = enc.initHidden()
+
+    encoder_optimizer.zero_grad()
+    decoder_optimizer.zero_grad()
+
+    encoder_outputs = Variable(torch.zeros(max_length, 512))
+    encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
+
+    loss = 0
+    encoder_output = enc(image)
+
+    target_variable = Variable(torch.LongTensor(target.cpu().numpy()).view(-1, 1)) #This is a hack. maybe there is a better way...
+    target_variable = target_variable.cuda() if opt.cuda else target_variable
+
+    for ei in range(length):
+        # encoder_outputs[ei] = encoder_output[0][0]
+        encoder_outputs[ei] = encoder_output[0][0]
+        # target_variable[ei] = target[ei]
+
+
+
+    decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))
+    decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
+
+    decoder_hidden = encoder_hidden
+
+    # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+
+    # Teacher forcing: Feed the target as the next input
+    for di in range(target_length):
+        decoder_output, decoder_hidden, decoder_attention = dec(
+            decoder_input, decoder_hidden, encoder_outputs)
+        # print(decoder_output)
+        # print(di)
+        # print(target_variable[di])
+
+        loss += criterion(decoder_output, target_variable[di])
+        decoder_input = target_variable[di]  # Teacher forcing
+
+
+
+    loss.backward()
+
+    encoder_optimizer.step()
+    decoder_optimizer.step()
+
+    return loss.data[0] / target_length.float()
+
+
+def evaluate(enc, dec, data):
+    MAX_LENGTH = 100
+    max_length = MAX_LENGTH
+    cpu_images, cpu_texts, __ = data
+    batch_size = cpu_images.size(0)
+
+    utils.loadData(image, cpu_images)
+    target, target_length = converter.encode(cpu_texts)
+    utils.loadData(text, target)
+    utils.loadData(length, target_length)
+
+    encoder_hidden = enc.initHidden()
+
+    encoder_output = enc(image)
+
+    encoder_outputs = Variable(torch.zeros(max_length, 512))
+    encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
+
+    target_variable = Variable(
+        torch.LongTensor(target.cpu().numpy()).view(-1, 1))  # This is a hack. maybe there is a better way...
+    target_variable = target_variable.cuda() if opt.cuda else target_variable
+
+    for ei in range(length):
+        encoder_outputs[ei] = encoder_output[0][0]
+
+    decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))  # SOS
+    decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
+
+    decoder_hidden = encoder_hidden
+
+    decoded_words = []
+    decoder_attentions = torch.zeros(max_length, max_length)
+
+    loss = 0
+
+    decoded_words = []
+
+    for di in range(max_length):
+        decoder_output, decoder_hidden, decoder_attention = dec(
+            decoder_input, decoder_hidden, encoder_outputs)
+        decoder_attentions[di] = decoder_attention.data
+        topv, topi = decoder_output.data.topk(1)
+        ni = topi[0][0]
+        preds_size = Variable(torch.IntTensor([1]))
+        preds = Variable(torch.IntTensor([ni]))
+
+        if ni == utils.EOS_token:
+            decoded_words.append('<EOS>')
+            break
+        else:
+            sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
+            decoded_words.append(sim_preds)
+
+        decoder_input = Variable(torch.LongTensor([[ni]]))
+        decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
+
+    return decoded_words, cpu_texts, decoder_attentions[:di + 1]
+
+
+def evaluateRandomly(enc, dec,test_loader,criterion, n=10):
+    val_iter = iter(test_loader)
+    for i in range(n):
+        data = val_iter.next()
+        output_words, target, attentions = evaluate(enc, dec, data)
+        output_sentence = ''.join(output_words)
+        print('{0}<{1}'.format(target, output_sentence))
+        print('')
+
+def valAttention(enc, dec,test_loader,criterion, n=10):
+    val_iter = iter(test_loader)
+    for i in range(n):
+        data = val_iter.next()
+        output_words, target, attentions = evaluate(enc, dec, data)
+        output_sentence = ''.join(output_words)
+        print('{0}<{1}'.format(target, output_sentence))
+        print('')
 
 print("Starting training...")
 
 history_errors = []
 curr_loss = 0
+
+if opt.attention:
+    encoder_optimizer = optim.SGD(encoder.parameters(), lr=opt.lr)
+    decoder_optimizer = optim.SGD(attn_decoder.parameters(), lr=opt.lr)
+
+
 
 for epoch in range(opt.niter):
     train_iter = iter(train_loader)
@@ -331,14 +508,18 @@ for epoch in range(opt.niter):
                 for file, pred in zip(files, predictions):
                     test_results.write(' '.join([file, pred]) + "\n")  # this should combine ascii text and unicode correctly
             break
-        
-        for p in crnn.parameters():
-            p.requires_grad = True
-        crnn.train()
 
-        cost = trainBatch(crnn, criterion, optimizer) # it trains/backpropagates once/batch, each batch is made up of "batchSize" images
+        if opt.attention:
+            loss = trainAttention(train_iter, encoder,
+                         attn_decoder, encoder_optimizer, decoder_optimizer, criterion)
+        else:
+            for p in crnn.parameters():
+                p.requires_grad = True
+            crnn.train()
+
+            loss = trainBatch(crnn, criterion, optimizer) # it trains/backpropagates once/batch, each batch is made up of "batchSize" images
         # once you're done with all batches that's the end of one "epoch"
-        loss_avg.add(cost)
+        loss_avg.add(loss)
         i += 1
         
         # Display the loss
@@ -351,8 +532,16 @@ for epoch in range(opt.niter):
         
         # Evaluate performance on validation and training sets periodically
         if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
-            char_error,word_error,accuracy = val(crnn, test_loader, criterion)
-            val(crnn, train_loader, criterion)
+            if opt.attention:
+                char_error=0
+                word_error=0
+                accuracy=0
+                evaluateRandomly(encoder, attn_decoder, train_loader, criterion)
+            else:
+                char_error, word_error, accuracy = val(crnn, test_loader, criterion)
+                val(crnn, train_loader, criterion)
+
+
             history_errors.append([epoch, i, curr_loss,word_error,char_error,accuracy])
 
             if opt.plot:
@@ -367,3 +556,4 @@ for epoch in range(opt.niter):
 
     if opt.test_icfhr:
         break
+
