@@ -553,10 +553,10 @@ for epoch in range(opt.niter):
             print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
 
             if opt.attention:
-                torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
-            else:
                 torch.save(encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
                 torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(opt.experiment, epoch, i))
+            else:
+                torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
 
     if opt.test_icfhr:
         break
