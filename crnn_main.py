@@ -42,7 +42,7 @@ parser.add_argument('--dataset', type=str, default='READ', help='type of dataset
 parser.add_argument('--experiment', default=None, help='Where to store samples and models (model save directory)')
 parser.add_argument('--displayInterval', type=int, default=100, help='Interval number of batches to display progress')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
-parser.add_argument('--valEpoch', type=int, default=5, help='Epoch to display validation and training error rates')
+parser.add_argument('--valEpoch', type=int, default=1, help='Epoch to display validation and training error rates')
 parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is false, rmsprop)')
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is false, use rmsprop)')
@@ -476,14 +476,139 @@ def evaluateRandomly(enc, dec,test_loader,criterion, n=30):
         print('{0}<{1}'.format(target, output_sentence))
         print('')
 
-def valAttention(enc, dec,test_loader,criterion, n=10):
-    val_iter = iter(test_loader)
-    for i in range(n):
+def valAttention(enc, dec,dataset,criterion, max_iter=1000):
+    print('Start validation set')
+
+    MAX_LENGTH = 100
+    max_length = MAX_LENGTH
+    # cpu_images, cpu_texts, __ = data
+    # batch_size = cpu_images.size(0)
+
+    # utils.loadData(image, cpu_images)
+    # target, target_length = converter.encode(cpu_texts)
+    # utils.loadData(text, target)
+    # utils.loadData(length, target_length)
+
+    # encoder_hidden = enc.initHidden()
+
+    # encoder_output = enc(image)
+
+    # RA: Testing out resizing
+    # data_loader = torch.utils.data.DataLoader(
+    #    dataset, shuffle=True, batch_size=opt.batchSize, num_workers=int(opt.workers))
+    # val_iter = iter(data_loader)
+    val_iter = iter(dataset)
+
+    i = 0
+    n_correct = 0
+    loss_avg = utils.averager()
+
+    image_count = 0
+    # Character and word error rate lists
+    char_error = []
+    w_error = []
+
+    sim_preds = []
+    raw_preds =[]
+    max_iter = min(max_iter, len(dataset))
+    gts = []
+    for i in range(max_iter):
         data = val_iter.next()
-        output_words, target, attentions = evaluate(enc, dec, data)
-        output_sentence = ''.join(output_words)
-        print('{0}<{1}'.format(target, output_sentence))
-        print('')
+        i += 1
+        cpu_images, cpu_texts, __ = data
+        gts.append(cpu_texts[0])
+        target, target_length = converter.encode(cpu_texts)
+        batch_size = cpu_images.size(0)
+        image_count = image_count + batch_size
+        utils.loadData(image, cpu_images)
+        t, l = converter.encode(cpu_texts)
+        utils.loadData(text, t)
+        utils.loadData(length, l)
+
+        encoder_hidden = enc.initHidden()
+        encoder_output = enc(image)
+
+        encoder_outputs = Variable(torch.zeros(max_length, 512))
+        encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
+
+        target_variable = Variable(
+            torch.LongTensor(target.cpu().numpy()).view(-1, 1))  # This is a hack. maybe there is a better way...
+        target_variable = target_variable.cuda() if opt.cuda else target_variable
+
+        for ei in range(length):
+            encoder_outputs[ei] = encoder_output[0][0]
+
+        decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))  # SOS
+        decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
+
+        decoder_hidden = encoder_hidden
+
+        decoded_words = []
+        decoder_attentions = torch.zeros(max_length, max_length)
+
+        loss = 0
+
+        decoded_words = []
+        pred_chars = []
+        pred_chars_size = 0
+        for di in range(max_length):
+            decoder_output, decoder_hidden, decoder_attention = dec(
+                decoder_input, decoder_hidden, encoder_outputs)
+            decoder_attentions[di] = decoder_attention.data
+            topv, topi = decoder_output.data.topk(1)
+            ni = topi[0][0]
+            preds_size = Variable(torch.IntTensor([1]))
+            preds = Variable(torch.IntTensor([ni]))
+
+            if ni == utils.EOS_token:
+                decoded_words.append('<EOS>')
+                break
+            else:
+                # sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
+                # decoded_words.append(sim_preds)
+                pred_chars.append(preds.data.numpy()[0])
+                pred_chars_size +=1
+
+            decoder_input = Variable(torch.LongTensor([[ni]]))
+            decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
+
+        # sim_preds = decoded_words
+        sim_pred = converter.decode(torch.IntTensor(np.array(pred_chars)), torch.IntTensor(np.array(pred_chars_size)), raw=False)
+        raw_pred = converter.decode(torch.IntTensor(np.array(pred_chars)), torch.IntTensor(np.array(pred_chars_size)),
+                                     raw=True)[:opt.n_test_disp]
+
+        sim_preds.append(sim_pred)
+        raw_preds.append(raw_pred)
+
+    for pred, target in zip(sim_preds, gts):
+        if pred == target:
+            n_correct += 1
+
+        # Case-insensitive character and word error rates
+        char_error.append(cer(pred, target))
+        w_error.append(wer(pred, target))
+
+    # raw_preds = decoded_words
+    # raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:opt.n_test_disp]
+
+    for raw_pred, pred, gt in zip(raw_preds[:opt.n_test_disp], sim_preds, gts):
+        print('%-20s => %-20smmm, gt: %-20s' % (raw_pred, pred, gt))
+
+    print("Total number of images in validation set: %8d" % image_count)
+
+    accuracy = n_correct / float(max_iter * opt.batchSize)
+    print('Test loss: %f, accuracy: %f' % (loss_avg.val(), accuracy))
+
+    char_arr = np.array(char_error)
+    w_arr = np.array(w_error)
+    char_mean_error = np.mean(char_arr)
+    word_mean_error = np.mean(w_arr)
+
+    print("Character error rate mean: %4.4f; Character error rate sd: %4.4f" % (
+    char_mean_error, np.std(char_arr, ddof=1)))
+    print("Word error rate mean: %4.4f; Word error rate sd: %4.4f" % (word_mean_error, np.std(w_arr, ddof=1)))
+
+    return char_mean_error, word_mean_error, accuracy
 
 print("Starting training...")
 
@@ -499,6 +624,7 @@ if opt.attention:
 for epoch in range(opt.niter):
     train_iter = iter(train_loader)
     i = 1
+
 
     while i < len(train_loader):
         # Start by running prediction on test set, doing nothing else
@@ -531,12 +657,13 @@ for epoch in range(opt.niter):
             loss_avg.reset()
         
         # Evaluate performance on validation and training sets periodically
-        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
+        if (epoch % opt.valEpoch == 0) :#and (i >= len(train_loader)):      # Runs at end of some epochs
             if opt.attention:
-                char_error=0
-                word_error=0
-                accuracy=0
-                evaluateRandomly(encoder, attn_decoder, train_loader, criterion)
+                # char_error=0
+                # word_error=0
+                # accuracy=0
+                # evaluateRandomly(encoder, attn_decoder, train_loader, criterion)
+                char_error, word_error, accuracy = valAttention(encoder,attn_decoder, train_loader, criterion)
             else:
                 char_error, word_error, accuracy = val(crnn, test_loader, criterion)
                 val(crnn, train_loader, criterion)
