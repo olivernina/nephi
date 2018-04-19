@@ -657,12 +657,9 @@ for epoch in range(opt.niter):
             loss_avg.reset()
         
         # Evaluate performance on validation and training sets periodically
-        if (epoch % opt.valEpoch == 0) :#and (i >= len(train_loader)):      # Runs at end of some epochs
+        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             if opt.attention:
-                # char_error=0
-                # word_error=0
-                # accuracy=0
-                # evaluateRandomly(encoder, attn_decoder, train_loader, criterion)
+
                 char_error, word_error, accuracy = valAttention(encoder,attn_decoder, train_loader, criterion)
             else:
                 char_error, word_error, accuracy = val(crnn, test_loader, criterion)
