@@ -679,12 +679,13 @@ for epoch in range(opt.niter):
 
         # do checkpointing
         if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
-            print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
 
             if opt.attention:
+                print("Saving epoch", '{0}/netAttnDec_{1}_{2}.pth'.format(opt.experiment, epoch, i))
                 torch.save(encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
                 torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(opt.experiment, epoch, i))
             else:
+                print("Saving epoch", '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
                 torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
 
     if opt.test_icfhr:
