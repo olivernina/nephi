@@ -54,6 +54,7 @@ parser.add_argument('--binarize', action="store_true", help='Whether to use howe
 parser.add_argument('--plot', action='store_true', help='Save plots')
 parser.add_argument('--attention', action='store_true', help='running attention model instead of CRNN and CTC')
 
+
 opt = parser.parse_args()
 print("Running with options:", opt)
 
@@ -657,9 +658,8 @@ for epoch in range(opt.niter):
             loss_avg.reset()
         
         # Evaluate performance on validation and training sets periodically
-        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
+        if (epoch % opt.valEpoch == 0):# and (i >= len(train_loader)):      # Runs at end of some epochs
             if opt.attention:
-
                 char_error, word_error, accuracy = valAttention(encoder,attn_decoder, train_loader, criterion)
             else:
                 char_error, word_error, accuracy = val(crnn, test_loader, criterion)
@@ -669,7 +669,7 @@ for epoch in range(opt.niter):
             history_errors.append([epoch, i, curr_loss,word_error,char_error,accuracy])
 
             if opt.plot:
-                utils.savePlot(history_errors,'plot')
+                utils.savePlot(history_errors,opt.experiment)
                 # utils.showPlot(c_errors, 'cerr')
 
         # do checkpointing
