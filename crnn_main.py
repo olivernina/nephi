@@ -42,7 +42,7 @@ parser.add_argument('--dataset', type=str, default='READ', help='type of dataset
 parser.add_argument('--experiment', default=None, help='Where to store samples and models (model save directory)')
 parser.add_argument('--displayInterval', type=int, default=100, help='Interval number of batches to display progress')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
-parser.add_argument('--valEpoch', type=int, default=1, help='Epoch to display validation and training error rates')
+parser.add_argument('--valEpoch', type=int, default=5, help='Epoch to display validation and training error rates')
 parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is false, rmsprop)')
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is false, use rmsprop)')
@@ -562,7 +562,7 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
             preds = Variable(torch.IntTensor([ni]))
 
             if ni == utils.EOS_token:
-                decoded_words.append('<EOS>')
+                # decoded_words.append('<EOS>') # This line is for debugging purposes. It is better to remove it for metrics
                 break
             else:
                 # sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
@@ -658,7 +658,7 @@ for epoch in range(opt.niter):
             loss_avg.reset()
         
         # Evaluate performance on validation and training sets periodically
-        if (epoch % opt.valEpoch == 0):# and (i >= len(train_loader)):      # Runs at end of some epochs
+        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             if opt.attention:
                 char_error, word_error, accuracy = valAttention(encoder,attn_decoder, train_loader, criterion)
             else:
