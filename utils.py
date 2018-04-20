@@ -191,10 +191,8 @@ import numpy as np
 #
 #     plt.savefig('plots/' +prefix+'_'+ datetime.datetime.now().strftime("%m-%d-%y-%H-%M") + '.png')
 
-def savePlot(history, prefix):
-    # a = np.array(history)
-    if not os.path.exists('./plots'):
-        os.mkdir('./plots')
+def savePlot(history, res_dir):
 
-    np.savetxt('plots/'+prefix+'.txt',
+    plot_path = os.path.join(res_dir, 'plot.txt')
+    np.savetxt(plot_path,
                   history, fmt='%.3f')
