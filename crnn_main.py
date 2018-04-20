@@ -552,6 +552,7 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
         decoded_words = []
         pred_chars = []
         pred_chars_size = 0
+        
         for di in range(max_length):
             decoder_output, decoder_hidden, decoder_attention = dec(
                 decoder_input, decoder_hidden, encoder_outputs)
@@ -561,22 +562,26 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
             preds_size = Variable(torch.IntTensor([1]))
             preds = Variable(torch.IntTensor([ni]))
 
+
+            
             if ni == utils.EOS_token:
                 # decoded_words.append('<EOS>') # This line is for debugging purposes. It is better to remove it for metrics
                 break
             else:
-                # sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
-                # decoded_words.append(sim_preds)
-                pred_chars.append(preds.data.numpy()[0])
+
+                pred_chars.append(ni)
                 pred_chars_size +=1
 
             decoder_input = Variable(torch.LongTensor([[ni]]))
             decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
 
         # sim_preds = decoded_words
-        sim_pred = converter.decode(torch.IntTensor(np.array(pred_chars)), torch.IntTensor(np.array(pred_chars_size)), raw=False)
-        raw_pred = converter.decode(torch.IntTensor(np.array(pred_chars)), torch.IntTensor(np.array(pred_chars_size)),
-                                     raw=True)[:opt.n_test_disp]
+        pc = torch.IntTensor(np.array(pred_chars))
+        pcs = torch.IntTensor(np.array([pred_chars_size]))
+
+
+        sim_pred = converter.decode(pc, pcs, raw=False)
+        raw_pred = converter.decode(pc, pcs, raw=True)[:opt.n_test_disp]
 
         sim_preds.append(sim_pred)
         raw_preds.append(raw_pred)
