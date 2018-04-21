@@ -132,13 +132,10 @@ converter = utils.strLabelConverter(opt.alphabet,attention=opt.attention)
 nclass = converter.num_classes
 nc = 3 if opt.binarize else 1
 
-
-
 if opt.attention:
     criterion = torch.nn.NLLLoss()
 else:
     criterion = CTCLoss()
-
 
 # custom weights initialization called on crnn
 def weights_init(m):
@@ -206,7 +203,6 @@ else:
         optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)  # default
 
 
-
 def test(net, dataset, criterion):
     print('Start test set predictions')
 
@@ -231,7 +227,6 @@ def test(net, dataset, criterion):
         preds = crnn(image)
         #print(preds.size())
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
-        
         
         # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
         # Case is ignored in the accuracy, which is not ideal for an actual working system
@@ -328,7 +323,6 @@ def val(net, dataset, criterion, max_iter=1000):
     
     return char_mean_error, word_mean_error, accuracy
 
-
 def trainBatch(net, criterion, optimizer):
     data = train_iter.next()
     cpu_images, cpu_texts, __ = data
@@ -375,30 +369,19 @@ def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, 
     target_variable = target_variable.cuda() if opt.cuda else target_variable
 
     for ei in range(length):
-        # encoder_outputs[ei] = encoder_output[0][0]
         encoder_outputs[ei] = encoder_output[0][0]
-        # target_variable[ei] = target[ei]
-
-
 
     decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))
     decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
-
     decoder_hidden = encoder_hidden
-
-    # use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
     # Teacher forcing: Feed the target as the next input
     for di in range(target_length):
         decoder_output, decoder_hidden, decoder_attention = dec(
             decoder_input, decoder_hidden, encoder_outputs)
-        # print(decoder_output)
-        # print(di)
-        # print(target_variable[di])
 
         loss += criterion(decoder_output, target_variable[di])
         decoder_input = target_variable[di]  # Teacher forcing
-
 
 
     loss.backward()
@@ -407,7 +390,6 @@ def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, 
     decoder_optimizer.step()
 
     return loss.data[0] / target_length.float()
-
 
 def evaluate(enc, dec, data):
     MAX_LENGTH = 100
@@ -429,6 +411,7 @@ def evaluate(enc, dec, data):
 
     target_variable = Variable(
         torch.LongTensor(target.cpu().numpy()).view(-1, 1))  # This is a hack. maybe there is a better way...
+
     target_variable = target_variable.cuda() if opt.cuda else target_variable
 
     for ei in range(length):
@@ -439,10 +422,7 @@ def evaluate(enc, dec, data):
 
     decoder_hidden = encoder_hidden
 
-    decoded_words = []
     decoder_attentions = torch.zeros(max_length, max_length)
-
-    loss = 0
 
     decoded_words = []
 
@@ -467,7 +447,6 @@ def evaluate(enc, dec, data):
 
     return decoded_words, cpu_texts, decoder_attentions[:di + 1]
 
-
 def evaluateRandomly(enc, dec,test_loader,criterion, n=30):
     val_iter = iter(test_loader)
     for i in range(n):
@@ -478,33 +457,19 @@ def evaluateRandomly(enc, dec,test_loader,criterion, n=30):
         print('')
 
 def valAttention(enc, dec,dataset,criterion, max_iter=1000):
+
     print('Start validation set')
 
     MAX_LENGTH = 100
     max_length = MAX_LENGTH
-    # cpu_images, cpu_texts, __ = data
-    # batch_size = cpu_images.size(0)
 
-    # utils.loadData(image, cpu_images)
-    # target, target_length = converter.encode(cpu_texts)
-    # utils.loadData(text, target)
-    # utils.loadData(length, target_length)
-
-    # encoder_hidden = enc.initHidden()
-
-    # encoder_output = enc(image)
-
-    # RA: Testing out resizing
-    # data_loader = torch.utils.data.DataLoader(
-    #    dataset, shuffle=True, batch_size=opt.batchSize, num_workers=int(opt.workers))
-    # val_iter = iter(data_loader)
     val_iter = iter(dataset)
 
-    i = 0
     n_correct = 0
     loss_avg = utils.averager()
 
     image_count = 0
+
     # Character and word error rate lists
     char_error = []
     w_error = []
@@ -532,10 +497,6 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
         encoder_outputs = Variable(torch.zeros(max_length, 512))
         encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
 
-        target_variable = Variable(
-            torch.LongTensor(target.cpu().numpy()).view(-1, 1))  # This is a hack. maybe there is a better way...
-        target_variable = target_variable.cuda() if opt.cuda else target_variable
-
         for ei in range(length):
             encoder_outputs[ei] = encoder_output[0][0]
 
@@ -543,11 +504,8 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
         decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
 
         decoder_hidden = encoder_hidden
-
-        decoded_words = []
         decoder_attentions = torch.zeros(max_length, max_length)
 
-        loss = 0
 
         decoded_words = []
         pred_chars = []
@@ -559,10 +517,6 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
             decoder_attentions[di] = decoder_attention.data
             topv, topi = decoder_output.data.topk(1)
             ni = topi[0][0]
-            preds_size = Variable(torch.IntTensor([1]))
-            preds = Variable(torch.IntTensor([ni]))
-
-
             
             if ni == utils.EOS_token:
                 # decoded_words.append('<EOS>') # This line is for debugging purposes. It is better to remove it for metrics
@@ -581,7 +535,7 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
 
 
         sim_pred = converter.decode(pc, pcs, raw=False)
-        raw_pred = converter.decode(pc, pcs, raw=True)[:opt.n_test_disp]
+        raw_pred = converter.decode(pc, pcs, raw=True)
 
         sim_preds.append(sim_pred)
         raw_preds.append(raw_pred)
@@ -593,9 +547,6 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
         # Case-insensitive character and word error rates
         char_error.append(cer(pred, target))
         w_error.append(wer(pred, target))
-
-    # raw_preds = decoded_words
-    # raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:opt.n_test_disp]
 
     for raw_pred, pred, gt in zip(raw_preds[:opt.n_test_disp], sim_preds, gts):
         print('%-20s => %-20smmm, gt: %-20s' % (raw_pred, pred, gt))
@@ -625,12 +576,9 @@ if opt.attention:
     encoder_optimizer = optim.SGD(encoder.parameters(), lr=opt.lr)
     decoder_optimizer = optim.SGD(attn_decoder.parameters(), lr=opt.lr)
 
-
-
 for epoch in range(opt.niter):
     train_iter = iter(train_loader)
     i = 1
-
 
     while i < len(train_loader):
         # Start by running prediction on test set, doing nothing else

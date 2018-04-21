@@ -46,7 +46,7 @@ class lmdbDataset(Dataset):
 
         with self.env.begin(write=False) as txn:
             nSamples = int(txn.get('num-samples'))
-            self.nSamples = nSamples
+            self.nSamples = 100#nSamples
         
         self.binarize = binarize
         self.transform = transform
