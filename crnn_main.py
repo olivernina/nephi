@@ -55,6 +55,7 @@ parser.add_argument('--binarize', action="store_true", help='Whether to use howe
 parser.add_argument('--plot', action='store_true', help='Save plots')
 # parser.add_argument('--attention', action='store_true', help='running attention model instead of CRNN and CTC')
 parser.add_argument('--model', type=str, default='ctc', help='type of model used i.e. ctc, attention, attention+ctc')
+parser.add_argument('--debug', action='store_true', help='Runs debug mode with 1000 samples of training')
 
 
 opt = parser.parse_args()
@@ -78,7 +79,7 @@ cudnn.benchmark = True
 if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
-train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, debug=True)
+train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, debug=opt.debug)
 assert train_dataset
 
 test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize)
