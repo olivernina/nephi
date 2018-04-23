@@ -31,7 +31,7 @@ encoding = 'utf-8'
 
 class lmdbDataset(Dataset):
 
-    def __init__(self, root=None, transform=None, target_transform=None, binarize=False):
+    def __init__(self, root=None, transform=None, target_transform=None, binarize=False, debug=False):
         self.env = lmdb.open(
             root,
             max_readers=1,
@@ -45,8 +45,11 @@ class lmdbDataset(Dataset):
             sys.exit(0)
 
         with self.env.begin(write=False) as txn:
-            nSamples = int(txn.get('num-samples'))
-            self.nSamples = 100#nSamples
+            if debug:
+                self.nSamples = 1000
+            else:
+                nSamples = int(txn.get('num-samples'))
+                self.nSamples = nSamples
         
         self.binarize = binarize
         self.transform = transform

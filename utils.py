@@ -118,12 +118,14 @@ class averager(object):
         self.reset()
 
     def add(self, v):
+
         if isinstance(v, Variable):
             count = v.data.numel()
             v = v.data.sum()
         elif isinstance(v, torch.Tensor):
             count = v.numel()
             v = v.sum()
+
 
         self.n_count += count
         self.sum += v
