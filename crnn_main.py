@@ -53,7 +53,6 @@ parser.add_argument('--test_icfhr', action='store_true', help='Whether to make p
 parser.add_argument('--test_file', default='test_file', help='Path to file to store test set results')
 parser.add_argument('--binarize', action="store_true", help='Whether to use howe and sauvola binarization as separate channels, requires these data to already be in the lmdb databases')
 parser.add_argument('--plot', action='store_true', help='Save plots')
-# parser.add_argument('--attention', action='store_true', help='running attention model instead of CRNN and CTC')
 parser.add_argument('--model', type=str, default='ctc', help='type of model used i.e. ctc, attention, attention+ctc')
 parser.add_argument('--debug', action='store_true', help='Runs debug mode with 1000 samples of training')
 
@@ -148,6 +147,8 @@ elif opt.model=='attention':
 elif opt.model=='attention+ctc':
     criterion_ctc = CTCLoss()
     criterion_att = torch.nn.NLLLoss()
+elif opt.model=='ctc_pretrain':
+    criterion = CTCLoss()
 
 
 # custom weights initialization called on crnn
@@ -171,10 +172,11 @@ elif opt.model=='attention+ctc':
     encoder = models.crnn.EncoderRNN(nc,opt.nh)
     attn_decoder = models.crnn.AttnDecoderRNN(opt.nh, nclass, dropout_p=0.1)
     encoder.apply(weights_init)
-    # crnn = models.crnn.CRNN(opt.imgH, nc, nclass, opt.nh)
-    # print("Got to the weight initialization and loading pretrained model")
     ctc_decoder = nn.Sequential(models.crnn.BidirectionalLSTM(512, opt.nh, opt.nh),models.crnn.BidirectionalLSTM(opt.nh, opt.nh, nclass))
-    # crnn.apply(weights_init)
+elif opt.model=='ctc_pretrain':
+    encoder = models.crnn.EncoderRNN(nc,opt.nh)
+    encoder.apply(weights_init)
+    ctc_decoder = nn.Sequential(models.crnn.BidirectionalLSTM(512, opt.nh, opt.nh),models.crnn.BidirectionalLSTM(opt.nh, opt.nh, nclass))
 
 
 image = torch.FloatTensor(opt.batchSize, 3, opt.imgW, opt.imgH)   #
@@ -194,8 +196,14 @@ if opt.cuda:
         encoder.cuda()
         attn_decoder.cuda()
         ctc_decoder.cuda()
-        # criterion_ctc = criterion_ctc.cuda()
-        # criterion_att = criterion_att.cuda()
+        criterion_ctc = criterion_ctc.cuda()
+        criterion_att = criterion_att.cuda()
+    elif opt.model=='ctc_pretrain':
+        encoder.cuda()
+        encoder = torch.nn.DataParallel(encoder, device_ids=range(opt.ngpu))
+        criterion = criterion.cuda()
+        ctc_decoder.cuda()
+        ctc_decoder = torch.nn.DataParallel(ctc_decoder, device_ids=range(opt.ngpu))
 
     image = image.cuda()
 
@@ -212,6 +220,9 @@ elif opt.model=='ctc':
 elif opt.model=='attention+ctc':
     print("Your encoder network:", encoder)
     print("Your att decoder network:", attn_decoder)
+    print("Your ctc decoder network:", ctc_decoder)
+elif opt.model=='ctc_pretrain':
+    print("Your encoder network:", encoder)
     print("Your ctc decoder network:", ctc_decoder)
 
 image = Variable(image)
@@ -236,6 +247,9 @@ elif opt.model=='ctc':
 elif opt.model=='attention+ctc':
     encoder_optimizer = optim.RMSprop(encoder.parameters(), lr=opt.lr)
     decoder_att_optimizer = optim.SGD(attn_decoder.parameters(), lr=opt.lr)
+    decoder_ctc_optimizer = optim.RMSprop(ctc_decoder.parameters(), lr=opt.lr)
+elif opt.model=='ctc_pretrain':
+    encoder_optimizer = optim.RMSprop(encoder.parameters(), lr=opt.lr)
     decoder_ctc_optimizer = optim.RMSprop(ctc_decoder.parameters(), lr=opt.lr)
 
 def test(net, dataset):
@@ -342,9 +356,9 @@ def val(net, dataset, criterion, max_iter=1000):
     raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:opt.n_test_disp]
     for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts):
         print('%-20s => %-20s, gt: %-20s' % (raw_pred, pred, gt))
-    
+
     print("Total number of images in validation set: %8d" % image_count)
-    
+
     accuracy = n_correct / float(max_iter * opt.batchSize)
     print('Test loss: %f, accuracy: %f' % (loss_avg.val(), accuracy))
     
@@ -355,7 +369,7 @@ def val(net, dataset, criterion, max_iter=1000):
 
     print("Character error rate mean: %4.4f; Character error rate sd: %4.4f" %( char_mean_error, np.std(char_arr, ddof=1)))
     print("Word error rate mean: %4.4f; Word error rate sd: %4.4f" % (word_mean_error, np.std(w_arr, ddof=1)))
-    
+
     return char_mean_error, word_mean_error, accuracy
 
 def trainBatch(net, criterion, optimizer):
@@ -473,12 +487,14 @@ def trainAttentionCTC( train_iter, enc, dec_att,dec_ctc, encoder_optimizer, deco
     # utils.loadData(text, t)
     # utils.loadData(length, l)
 
-    preds = encoder_output
+
+    decoder_output = ctc_decoder(encoder_output)
+    preds = decoder_output
     preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
     cost = criterion_ctc(preds, text, preds_size, length) / batch_size
     dec_ctc.zero_grad()
 
-    ctc_cost = cost.cuda()
+    ctc_cost = cost.cuda()  #For some reason cost is on CPU and has to be explicitly specified on cuda before adding it with the other cost
     total_loss = loss + ctc_cost
 
     total_loss.backward() # Note : We need to calculate the step size before we step
@@ -489,6 +505,56 @@ def trainAttentionCTC( train_iter, enc, dec_att,dec_ctc, encoder_optimizer, deco
 
     # return total_loss.data[0] / target_length.float()
     return total_loss
+
+def trainCTCPretrain( train_iter, enc, dec_ctc, encoder_optimizer, decoder_ctc_optimizer, criterion_ctc, max_length=MAX_LENGTH):
+
+    data = train_iter.next()
+    cpu_images, cpu_texts,__ = data
+
+    batch_size = cpu_images.size(0)
+    utils.loadData(image, cpu_images)
+    t, l = converter.encode(cpu_texts)
+    utils.loadData(text, t)
+    utils.loadData(length, l)
+
+    encoder_output = enc(image)
+
+    preds = encoder_output
+    preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
+    cost = criterion_ctc(preds, text, preds_size, length) / batch_size
+    dec_ctc.zero_grad()
+
+    ctc_cost = cost.cuda()  #For some reason cost is on CPU and has to be explicitly specified on cuda before adding it with the other cost
+    total_loss = loss + ctc_cost
+
+    total_loss.backward() # Note : We need to calculate the step size before we step
+
+    encoder_optimizer.step()
+    decoder_att_optimizer.step()
+    decoder_ctc_optimizer.step()
+
+    # return total_loss.data[0] / target_length.float()
+    return total_loss
+
+    data = train_iter.next()
+    cpu_images, cpu_texts, __ = data
+
+    # I think here is a place we could add dynamic data augmentation with each batch. We could also put it in the batch generation code if it is called dynamically
+
+
+    batch_size = cpu_images.size(0)
+    utils.loadData(image, cpu_images)
+    t, l = converter.encode(cpu_texts)
+    utils.loadData(text, t)
+    utils.loadData(length, l)
+
+    preds = crnn(image)
+    preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
+    cost = criterion(preds, text, preds_size, length) / batch_size
+    crnn.zero_grad()
+    cost.backward()
+    optimizer.step()
+    return cost
 
 def evaluate(enc, dec, data):
     MAX_LENGTH = 100
@@ -666,7 +732,7 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
 
     return char_mean_error, word_mean_error, accuracy
 
-def valAttentionCTC(enc, dec_att, dec_ctc, dataset, criterion, max_iter=1000):
+def valAttentionCTC(enc, dec_att, dec_ctc, dataset, criterion, max_iter=100):
 
     print('Start validation set')
 
@@ -893,6 +959,13 @@ for epoch in range(opt.niter):
             loss = trainAttentionCTC(train_iter, encoder,
                                   attn_decoder,ctc_decoder, encoder_optimizer, decoder_att_optimizer, decoder_ctc_optimizer, criterion_att,criterion_ctc)
 
+        elif opt.model=='attention+ctc':
+            loss = trainAttentionCTC(train_iter, encoder,
+                                  attn_decoder,ctc_decoder, encoder_optimizer, decoder_att_optimizer, decoder_ctc_optimizer, criterion_att,criterion_ctc)
+        elif opt.model=='ctc_pretrain':
+            loss = trainCTCPretrain(train_iter, encoder,
+                                  ctc_decoder, encoder_optimizer, decoder_ctc_optimizer, criterion_ctc)
+
         # once you're done with all batches that's the end of one "epoch"
         loss_avg.add(loss)
         i += 1
@@ -908,10 +981,10 @@ for epoch in range(opt.niter):
         # Evaluate performance on validation and training sets periodically
         if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             if opt.model=='attention':
-                char_error, word_error, accuracy = valAttention(encoder,attn_decoder, train_loader, criterion)
+                char_error, word_error, accuracy = valAttention(encoder,attn_decoder, test_loader, criterion)
             elif opt.model=='ctc':
                 char_error, word_error, accuracy = val(crnn, test_loader, criterion)
-                val(crnn, train_loader, criterion)
+                # val(crnn, train_loader, criterion)
             elif opt.model=='attention+ctc':
                 char_error, word_error, accuracy = valAttentionCTC(encoder,attn_decoder,ctc_decoder, train_loader, criterion_ctc)
 
