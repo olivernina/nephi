@@ -478,7 +478,8 @@ def trainAttentionCTC( train_iter, enc, dec_att,dec_ctc, encoder_optimizer, deco
     cost = criterion_ctc(preds, text, preds_size, length) / batch_size
     dec_ctc.zero_grad()
 
-    total_loss = loss + cost.cuda()
+    ctc_cost = cost.cuda()
+    total_loss = loss + ctc_cost
 
     total_loss.backward() # Note : We need to calculate the step size before we step
 
