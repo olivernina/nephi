@@ -55,17 +55,27 @@ parser.add_argument('--binarize', action="store_true", help='Whether to use howe
 parser.add_argument('--plot', action='store_true', help='Save plots')
 parser.add_argument('--model', type=str, default='ctc', help='type of model used i.e. ctc, attention, attention+ctc')
 parser.add_argument('--debug', action='store_true', help='Runs debug mode with 1000 samples of training')
+parser.add_argument('--rdir', default='results', help='Where to store samples, models and plots (model save directory)')
 
 
 opt = parser.parse_args()
 print("Running with options:", opt)
 
-if opt.experiment is None:
-    opt.experiment = 'expr'
-if not os.path.isdir(opt.experiment):
-    os.system('mkdir {0}'.format(opt.experiment))
+# if opt.experiment is None:
+#     opt.experiment = 'expr'
+if not os.path.isdir(opt.rdir):
+    os.system('mkdir {0}'.format(opt.rdir))
+# else:
+#     os.system('rm {0}/*'.format(opt.experiment))
+
+model_rpath = os.path.join(opt.rdir, opt.model)
+
+if not os.path.exists(model_rpath):
+    os.system('mkdir {0}'.format(model_rpath))
 else:
-    os.system('rm {0}/*'.format(opt.experiment))
+    print('result directory {0} already exists'.format(model_rpath))
+    sys.exit(0)
+    # os.system('rm {0}/*'.format(model_res_path))
 
 opt.manualSeed = random.randint(1, 10000)  # fix seed (new random seed)
 print("Random Seed: ", opt.manualSeed)
@@ -958,10 +968,6 @@ for epoch in range(opt.niter):
         elif opt.model=='attention+ctc':
             loss = trainAttentionCTC(train_iter, encoder,
                                   attn_decoder,ctc_decoder, encoder_optimizer, decoder_att_optimizer, decoder_ctc_optimizer, criterion_att,criterion_ctc)
-
-        elif opt.model=='attention+ctc':
-            loss = trainAttentionCTC(train_iter, encoder,
-                                  attn_decoder,ctc_decoder, encoder_optimizer, decoder_att_optimizer, decoder_ctc_optimizer, criterion_att,criterion_ctc)
         elif opt.model=='ctc_pretrain':
             loss = trainCTCPretrain(train_iter, encoder,
                                   ctc_decoder, encoder_optimizer, decoder_ctc_optimizer, criterion_ctc)
@@ -992,22 +998,21 @@ for epoch in range(opt.niter):
             history_errors.append([epoch, i, loss,word_error,char_error,accuracy])
 
             if opt.plot:
-                utils.savePlot(history_errors,opt.experiment)
-                # utils.showPlot(c_errors, 'cerr')
+                utils.savePlot(history_errors,model_rpath)
 
         # do checkpointing
         if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
-            print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
+            print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
 
             if opt.model=='attention':
-                torch.save(encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
-                torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(opt.experiment, epoch, i))
+                torch.save(encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
             elif opt.model=='ctc':
-                torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
+                torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
             elif opt.model=='attention+ctc':
-                torch.save(encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(opt.experiment, epoch, i))
-                torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(opt.experiment, epoch, i))
-                torch.save(ctc_decoder.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(opt.experiment, epoch, i))
+                torch.save(encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                torch.save(ctc_decoder.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
 
 
     if opt.test_icfhr:
