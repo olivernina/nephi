@@ -141,12 +141,7 @@ class EncoderRNN(nn.Module):
         self.cnn = cnn
 
     def forward(self, input):
-        # embedded = self.embedding(input).view(1, 1, -1)
-        # output = embedded
-        # # output, hidden = self.gru(output, hidden)
-        # return output, hidden
 
-        # conv features (cnn)
         conv = self.cnn(input)
         b, c, h, w = conv.size()
 
@@ -159,8 +154,6 @@ class EncoderRNN(nn.Module):
         conv = conv.squeeze(2)
         conv = conv.permute(2, 0, 1)  # [w, b, c]
 
-        # # rnn features
-        # output = self.rnn(conv)
         output = conv
 
         return output
@@ -212,43 +205,3 @@ class AttnDecoderRNN(nn.Module):
             return result.cuda()
         else:
             return result
-
-# class CTCDecoderRNN(nn.Module):
-#     def __init__(self, nh, output_size, dropout_p=0.1, max_length=MAX_LENGTH):
-#         super(CTCDecoderRNN, self).__init__()
-#         self.hidden_size = nh
-#         self.output_size = output_size
-#         self.dropout_p = dropout_p
-#         self.max_length = max_length
-#
-#         self.embedding = nn.Embedding(self.output_size, self.hidden_size)
-#         self.attn = nn.Linear(self.hidden_size * 2, self.max_length)
-#         self.attn_combine = nn.Linear(512 + self.hidden_size, self.hidden_size) #units from enconder + attn_applied
-#         self.dropout = nn.Dropout(self.dropout_p)
-#         self.gru = nn.GRU(self.hidden_size, self.hidden_size)
-#         self.out = nn.Linear(self.hidden_size, self.output_size)
-#
-#     def forward(self, input, hidden, encoder_outputs):
-#         embedded = self.embedding(input).view(1, 1, -1)
-#         embedded = self.dropout(embedded)
-#
-#         attn_weights = F.softmax(
-#             self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
-#         attn_applied = torch.bmm(attn_weights.unsqueeze(0),
-#                                  encoder_outputs.unsqueeze(0))
-#
-#         output = torch.cat((embedded[0], attn_applied[0]), 1)
-#         output = self.attn_combine(output).unsqueeze(0)
-#
-#         output = F.relu(output)
-#         output, hidden = self.gru(output, hidden)
-#
-#         output = F.log_softmax(self.out(output[0]), dim=1)
-#         return output, hidden, attn_weights
-#
-#     def initHidden(self):
-#         result = Variable(torch.zeros(1, 1, self.hidden_size))
-#         if use_cuda:
-#             return result.cuda()
-#         else:
-#             return result
