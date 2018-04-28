@@ -123,13 +123,14 @@ def simple_dataset_from_dir(image_dir, output_path):
 
 
 # read into LMDB dataset from ICFHR 2018
-def icfhr_dataset_read(data_dir, output_path, include_files=None, binarize = False, howe_dir = False, simplebin_dir = False):
+def icfhr_dataset_read(data_dir, output_path, include_files=None, binarize = False, howe_dir = False, simplebin_dir = False, test = False):
 
     env = lmdb.open(output_path, map_size=1099511627776)
     cache = {}
     cnt = 1
     
-    for img_file in glob(os.path.join(data_dir, "*/*/*.jpg")):
+    img_files = glob(os.path.join(data_dir, "*/*.jpg")) if test else glob(os.path.join(data_dir, "*/*/*.jpg"))
+    for img_file in img_files:
         img_c = cv2.imread(img_file)
         info_file = img_file + ".info"
         if include_files is not None:
@@ -137,18 +138,20 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None, binarize = Fal
                 include_files = [f + ".jpg" for f in include_files]
             if os.path.basename(img_file) not in include_files:
                 continue
-        
-        text_file = img_file + ".txt"
+        if not test:
+            text_file = img_file + ".txt"
         if binarize:
-            howe_img = cv2.imread(os.path.join(howe_dir, os.path.basename(file_image).lower().partition(".jpg")[0] + "_howe.jpg"))
-            simplebin_img = cv2.imread(os.path.join(simplebin_dir, os.path.basename(file_image).lower().partition(".jpg")[0] + "_simplebin.jpg"))
+            howe_img = cv2.imread(os.path.join(howe_dir, os.path.basename(img_file).lower().partition(".jpg")[0] + "_howe.jpg"))
+            simplebin_img = cv2.imread(os.path.join(simplebin_dir, os.path.basename(img_file).lower().partition(".jpg")[0] + "_simplebin.jpg"))
         
-        with open(info_file, "r") as i_f, io.open(text_file, "r", encoding=encoding) as t_f:
-            info = i_f.read()
-            gt = t_f.read()
-
+        with open(info_file, "r") as i_f:
+            if not test:
+                t_f = io.open(text_file, "r", encoding=encoding)
+                gt = t_f.read()
+                t_f.close()
+            
+            info = i_f.read()           
             mask = info.partition("MASK\n")[2]
-
 
             myre = re.compile(r"[0-9]+,[0-9]+")
             mask_p = myre.findall(mask)
@@ -156,8 +159,8 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None, binarize = Fal
             line_img = apply_mask(img_c, mask_pts)
             
             if binarize:
-                howe_line_img = apply_mask(howe_img, pts)     # Hopefully this works even though Howe binarization takes out a few pixels
-                simplebin_line_img = apply_mask(simplebin_img, pts)
+                howe_line_img = apply_mask(howe_img, mask_pts)     # Hopefully this works even though Howe binarization takes out a few pixels
+                simplebin_line_img = apply_mask(simplebin_img, mask_pts)
             
             imageBin = cv2.imencode('.png', line_img)[1].tostring()
             if binarize:
@@ -172,9 +175,9 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None, binarize = Fal
                 if not (checkImageIsValid(howe_imageBin) and checkImageIsValid(simplebin_imageBin)):
                     print('%s is not a valid image in howe or sauvola binarization' % image['image_file'])
                     continue
-
-            annotation = gt
-            label = annotation.encode('utf-8')
+            if not test:
+                annotation = gt
+                label = annotation.encode('utf-8')
             
             imageKey = 'image-%09d' % cnt
             labelKey = 'label-%09d' % cnt
@@ -193,7 +196,8 @@ def icfhr_dataset_read(data_dir, output_path, include_files=None, binarize = Fal
             if binarize:
                 cache[howe_imageKey] = howe_imageBin
                 cache[simplebin_imageKey] = simplebin_imageBin
-            cache[labelKey] = label
+            if not test:
+                cache[labelKey] = label
             cache[fileKey] = os.path.basename(img_file)
             
             if cnt % 1000 == 0:
@@ -384,6 +388,7 @@ if __name__ == '__main__':
     parser.add_argument('--binarize', action='store_true', help='whether to include binarized data in lmdb database')
     parser.add_argument('--howe_dir', help='path to howe binarized dataset')
     parser.add_argument('--simplebin_dir', help='path to sauvola binarized dataset')
+    parser.add_argument('--test', action='store_true', help='whether to data is a test dataset (includes no ground truth text)')
     opt = parser.parse_args()
     print("Running with options:", opt)
 
@@ -393,10 +398,10 @@ if __name__ == '__main__':
     if opt.xml:
         lmdb_dataset_read(opt.data_dir, opt.output_dir, binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir)
     elif opt.icfhr:
-        if files_include:
+        if opt.files_include:
             with open(opt.files_include, "r") as include_file:
-                icfhr_dataset_read(opt.data_dir, opt.output_dir, include_file.read().split(), binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir)
+                icfhr_dataset_read(opt.data_dir, opt.output_dir, include_file.read().split(), binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir, test=opt.test)
         else:
-            icfhr_dataset_read(opt.data_dir, opt.output_dir, binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir)
+            icfhr_dataset_read(opt.data_dir, opt.output_dir, binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir, test=opt.test)
     else:
         simple_dataset_from_dir(opt.data_dir, opt.output_dir) 
