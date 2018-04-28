@@ -375,7 +375,6 @@ def trainAttentionCTC(encoder_ctc,
 
     data = train_iter.next()
     cpu_images, cpu_texts,__ = data
-    # batch_size = cpu_images.size(0)
     utils.loadData(image, cpu_images)
     target, target_length = converter.encode(cpu_texts)
     utils.loadData(text, target)
@@ -383,45 +382,47 @@ def trainAttentionCTC(encoder_ctc,
 
     encoder_hidden = encoder_ctc.initHidden()
 
-    # encoder_optimizer.zero_grad()
     dec_att_optimizer.zero_grad()
 
     encoder_outputs = Variable(torch.zeros(max_length, 512))
     encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
 
     loss = 0
-    encoder_output = encoder_ctc(image)
+    encoder_ctc_out = encoder_ctc(image)
 
     target_variable = Variable(torch.LongTensor(target.cpu().numpy()).view(-1, 1)) #This is a hack. maybe there is a better way...
     target_variable = target_variable.cuda() if opt.cuda else target_variable
 
-    # encoder_output = decoder_ctc_input[:,0,:] #grab first image
-    input_length = len(encoder_output)
-    for ei in range(input_length):
-        encoder_outputs[ei] = encoder_output[ei,0]
+    if opt.batchSize>1:
+        encoder_output = encoder_ctc_out[:,0,:] #grab first image
+        input_length = len(encoder_output)
+        for ei in range(input_length):
+            encoder_outputs[ei] = encoder_output[ei]
+
+        target_att_length = target_length[0]
+
+    else:
+
+        encoder_output = encoder_ctc_out
+        input_length = len(encoder_output)
+        for ei in range(input_length):
+            encoder_outputs[ei] = encoder_output[ei, 0]
 
     decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))
     decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
     decoder_hidden = encoder_hidden
 
     # Teacher forcing: Feed the target as the next input
-    for di in range(target_length):
+    for di in range(target_att_length):
         decoder_output, decoder_hidden, decoder_attention = decoder_att(
             decoder_input, decoder_hidden, encoder_outputs)
 
         loss += criterion_att(decoder_output, target_variable[di])
         decoder_input = target_variable[di]  # Teacher forcing
 
-
 ###CTC
     batch_size = cpu_images.size(0)
-    # utils.loadData(image, cpu_images)
-    # t, l = converter.encode(cpu_texts)
-    # utils.loadData(text, t)
-    # utils.loadData(length, l)
-
-
-    decoder_output = decoder_ctc(encoder_output)
+    decoder_output = decoder_ctc(encoder_ctc_out)
     preds = decoder_output
     preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
     cost = criterion_ctc(preds, text, preds_size, length) / batch_size
@@ -782,7 +783,6 @@ def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, m
     for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts):
         print('CTC==>%-20s => %-20s, gt: %-20s' % (raw_pred, pred, gt))
 
-
     ##### Attention ####
 
     MAX_LENGTH = 100
@@ -865,35 +865,6 @@ def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, m
     for raw_pred, pred, gt in zip(raw_preds[:opt.n_test_disp], sim_preds, gts):
         print('Attention==>%-20s => %-20smmm, gt: %-20s' % (raw_pred, pred, gt))
 
-
-
-    # for pred, target in zip(sim_preds, gts):
-    #     if pred == target:
-    #         n_correct += 1
-    #
-    #     # Case-insensitive character and word error rates
-    #     char_error.append(cer(pred, target))
-    #     w_error.append(wer(pred, target))
-    #
-    # for raw_pred, pred, gt in zip(raw_preds[:opt.n_test_disp], sim_preds, gts):
-    #     print('%-20s => %-20smmm, gt: %-20s' % (raw_pred, pred, gt))
-    #
-    # print("Total number of images in validation set: %8d" % image_count)
-    #
-    # accuracy = n_correct / float(max_iter * opt.batchSize)
-    # print('Test loss: %f, accuracy: %f' % (loss_avg.val(), accuracy))
-    #
-    # char_arr = np.array(char_error)
-    # w_arr = np.array(w_error)
-    # char_mean_error = np.mean(char_arr)
-    # word_mean_error = np.mean(w_arr)
-    #
-    # print("Character error rate mean: %4.4f; Character error rate sd: %4.4f" % (
-    #     char_mean_error, np.std(char_arr, ddof=1)))
-    # print("Word error rate mean: %4.4f; Word error rate sd: %4.4f" % (word_mean_error, np.std(w_arr, ddof=1)))
-
-
-
     print("Total number of images in validation set: %8d" % image_count)
 
     accuracy = n_correct / float(max_iter * opt.batchSize)
@@ -908,7 +879,6 @@ def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, m
     char_mean_error, np.std(char_arr, ddof=1)))
     print("Word error rate mean: %4.4f; Word error rate sd: %4.4f" % (word_mean_error, np.std(w_arr, ddof=1)))
 
-
     return char_mean_error, word_mean_error, accuracy
 
 def valCTCPretrain(encoder_ctc, decoder_ctc, dataset, criterion, max_iter=1000):
@@ -921,7 +891,6 @@ def valCTCPretrain(encoder_ctc, decoder_ctc, dataset, criterion, max_iter=1000):
     for p in decoder_ctc.parameters():
         p.requires_grad = False
     decoder_ctc.eval()
-
 
     val_iter = iter(dataset)
 
@@ -949,7 +918,7 @@ def valCTCPretrain(encoder_ctc, decoder_ctc, dataset, criterion, max_iter=1000):
 
         encoder_out = encoder_ctc(image)
         preds = decoder_ctc(encoder_out)
-        # print(preds.size())
+
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
         cost = criterion(preds, text, preds_size, length) / batch_size
         loss_avg.add(cost)
@@ -1057,7 +1026,7 @@ for epoch in range(opt.niter):
                 char_error, word_error, accuracy = val(crnn, test_loader, criterion)
                 # val(crnn, train_loader, criterion)
             elif opt.model=='attention+ctc':
-                char_error, word_error, accuracy = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, train_loader, criterion_ctc)
+                char_error, word_error, accuracy = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc)
             elif opt.model=='ctc_pretrain':
                 char_error, word_error, accuracy = valCTCPretrain(encoder_ctc,decoder_ctc, test_loader, criterion)
 
