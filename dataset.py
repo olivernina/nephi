@@ -48,7 +48,9 @@ def pad_size(img, size):
         
 class lmdbDataset(Dataset):
 
-    def __init__(self, root=None, transform=None, target_transform=None, binarize=False, augment=False, scale = False, dataset='READ', test = False):
+
+    def __init__(self, root=None, transform=None, target_transform=None, binarize=False, augment=False, scale = False, dataset='READ', test = False, debug=False):
+
         self.env = lmdb.open(
             root,
             max_readers=1,
@@ -62,8 +64,11 @@ class lmdbDataset(Dataset):
             sys.exit(0)
 
         with self.env.begin(write=False) as txn:
-            nSamples = int(txn.get('num-samples'))
-            self.nSamples = nSamples
+            if debug:
+                self.nSamples = 1000
+            else:
+                nSamples = int(txn.get('num-samples'))
+                self.nSamples = nSamples
         
         self.scale = scale
         self.augment = augment
@@ -72,6 +77,7 @@ class lmdbDataset(Dataset):
         self.target_transform = target_transform
         self.dataset=dataset
         self.test = test
+        self.debug = debug
 
     def __len__(self):
         return self.nSamples
@@ -185,11 +191,11 @@ class lmdbDataset(Dataset):
             
             if self.transform is not None:
                 final_image = self.transform(final_image)
-            
-            # consider adding a small rotation too.
-            
-            #print("The image has shape:")
-            #print(np.array(final_image).shape)
+
+            DEBUG = self.debug
+            if DEBUG:
+                print("The image has shape:")
+                print(np.array(final_image).shape)
        
             return (final_image, label, file_name)
 

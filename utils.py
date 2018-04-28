@@ -6,6 +6,8 @@ import torch.nn as nn
 from torch.autograd import Variable
 import collections
 
+SOS_token = 1
+EOS_token = 2
 
 class strLabelConverter(object):
     """Convert between str and label.
@@ -18,16 +20,31 @@ class strLabelConverter(object):
         ignore_case (bool, default=True): whether or not to ignore all of the case.
     """
 
-    def __init__(self, alphabet, ignore_case=False):
+    def __init__(self, alphabet, ignore_case=False,attention=False):
+
         self._ignore_case = ignore_case
+        self.attention = attention
+
         if self._ignore_case:
             alphabet = alphabet.lower()
-        self.alphabet = alphabet + u'-'  # for `-1` index
+
+        if attention:
+            self.offset = 3
+            self.alphabet = alphabet + u'-@#'  # for `-3` index
+        else:
+            self.offset = 1
+            self.alphabet = alphabet + u'-'  # for `-1` index
+
+        self.num_classes = len(self.alphabet)
 
         self.dict = {}
         for i, char in enumerate(alphabet):
             # NOTE: 0 is reserved for 'blank' required by warp_ctc
-            self.dict[char] = i + 1
+            # Oliver: I am proposing to reserve 1 and 2 for SOS and EOS
+            self.dict[char] = i + self.offset
+
+        if attention:
+            self.dict['#']=EOS_token
 
     def encode(self, text):
         """Support batch or single str.
@@ -44,10 +61,18 @@ class strLabelConverter(object):
                 self.dict[char.lower() if self._ignore_case else char]
                 for char in text
             ]
+
             length = [len(text)]
         elif isinstance(text, collections.Iterable):
-            length = [len(s) for s in text]
-            text = ''.join(text)
+            if self.attention:
+                # length = [len(s) for s in text]
+                length = [len(s)+1 for s in text]
+                text = '#'.join(text)
+                text= text+'#'
+            else:
+                length = [len(s) for s in text]
+                text = ''.join(text)
+
             text, _ = self.encode(text)
         return (torch.IntTensor(text), torch.IntTensor(length))
 
@@ -68,12 +93,12 @@ class strLabelConverter(object):
             length = length[0]
             assert t.numel() == length, "text with length: {} does not match declared length: {}".format(t.numel(), length)
             if raw:
-                return ''.join([self.alphabet[i - 1] for i in t])
+                return ''.join([self.alphabet[i - self.offset] for i in t])
             else:
                 char_list = []
                 for i in range(length):
-                    if t[i] != 0 and (not (i > 0 and t[i - 1] == t[i])):
-                        char_list.append(self.alphabet[t[i] - 1])
+                    if t[i] != 0 and t[i] != EOS_token and (not (i > 0 and t[i - 1] == t[i])):
+                        char_list.append(self.alphabet[t[i] - self.offset])
                 return ''.join(char_list)
         else:
             # batch mode
@@ -96,12 +121,14 @@ class averager(object):
         self.reset()
 
     def add(self, v):
+
         if isinstance(v, Variable):
             count = v.data.numel()
             v = v.data.sum()
         elif isinstance(v, torch.Tensor):
             count = v.numel()
             v = v.sum()
+
 
         self.n_count += count
         self.sum += v
@@ -147,3 +174,30 @@ def assureRatio(img):
         main = nn.UpsamplingBilinear2d(size=(h, h), scale_factor=None)
         img = main(img)
     return img
+
+
+# import matplotlib.pyplot as plt
+# import matplotlib.ticker as ticker
+import datetime
+import os
+import numpy as np
+#
+# def showPlot(points,prefix):
+#     plt.interactive(False)
+#     plt.figure()
+#     fig, ax = plt.subplots()
+#     # this locator puts ticks at regular intervals
+#     loc = ticker.MultipleLocator(base=0.2)
+#     ax.yaxis.set_major_locator(loc)
+#     plt.plot(points)
+#
+#     if not os.path.exists('./plots'):
+#         os.mkdir('./plots')
+#
+#     plt.savefig('plots/' +prefix+'_'+ datetime.datetime.now().strftime("%m-%d-%y-%H-%M") + '.png')
+
+def savePlot(history, res_dir):
+    plot_path = os.path.join(res_dir, 'plot.txt')
+    np.savetxt(plot_path,
+                  history, fmt='%.3f')
+
