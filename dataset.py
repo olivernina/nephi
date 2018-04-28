@@ -28,10 +28,27 @@ encoding = 'utf-8'
 # RA 12 April 2018: With what I learned today about dataloaders in pytorch, I think I should stop calling randomsequential sampler and instead make shuffle=True so that images are dynamically loaded and batches dynamically made. I should make a class for the grid_distortion as a transform. Or as Curtis does, I can just add it in as a True/False parameter for now. Curtis has shuffle as False, but he also fixes the aspect ratio for everything. I guess doing what he does could help determine how to do things (perform well on the German data). When they fix the aspect ratio, then that gets everything. But what about in batches? Yes, they just fill in to the max size, though maybe in a different way than I do. It's about the same. It probably shouldn't matter. But I could go to his way if need be.
 
 # - I should also possibly take a small sample of images and practice loading them in and seeing what happens at different epochs, with the dataloader, but I think I know how it works now.
+def pad_size(img, size):
+    delta_w = size[0] - img.size[0]
+    delta_h = size[1] - img.size[1]
+    padding = (0 , 0 , delta_w, delta_h)
+    new_img = ImageOps.expand(img, padding, "white")
+    return(new_img)
 
+#o_size = img.size
+#        AR = o_size[0] / float(o_size[1])
+#        img = img.resize((int(round(AR * self.size[1])), self.size[1]), self.interpolation)
+#        
+#        # Now pad to new width, as target width is guaranteed to be larger than width if keep aspect ratio is true
+#        o_size = img.size
+#        delta_w = self.size[0] - o_size[0]
+#        delta_h = self.size[1] - o_size[1]
+#        padding = (delta_w//2, delta_h//2, delta_w-(delta_w//2), delta_h-(delta_h//2))
+#        new_im = ImageOps.expand(img, padding, "white")
+        
 class lmdbDataset(Dataset):
 
-    def __init__(self, root=None, transform=None, target_transform=None, binarize=False):
+    def __init__(self, root=None, transform=None, target_transform=None, binarize=False, augment=False, scale = False, dataset='READ', test = False):
         self.env = lmdb.open(
             root,
             max_readers=1,
@@ -48,9 +65,13 @@ class lmdbDataset(Dataset):
             nSamples = int(txn.get('num-samples'))
             self.nSamples = nSamples
         
+        self.scale = scale
+        self.augment = augment
         self.binarize = binarize
         self.transform = transform
         self.target_transform = target_transform
+        self.dataset=dataset
+        self.test = test
 
     def __len__(self):
         return self.nSamples
@@ -109,7 +130,7 @@ class lmdbDataset(Dataset):
             # Now I have to figure out how to combine the images...
             
             label_key = 'label-%09d' % index
-            label = unicode(txn.get(label_key), encoding=encoding)   # Hopefully this still works with unicode
+            label = unicode(txn.get(label_key), encoding=encoding) if not self.test else u''   # Hopefully this still works with unicode
             
             # I want the other thing not to have a problem with lmdb databases already here, okay, .get() should return None if there is nothing
             file_key = 'file-%09d' % index
@@ -117,12 +138,58 @@ class lmdbDataset(Dataset):
 
             if self.target_transform is not None:
                 label = self.target_transform(label)
+            if self.binarize:
+                if (img.size[0] != img_howe.size[0] or img.size[1] != img_howe.size[1]):    # need to resize the howe image
+                    img_howe = pad_size(img_howe, img.size)
             
+            #print("Size of base image")
+            #print(img.size)
+            #print("Size of how binarization")
+            #print(img_howe.size)
+            #print("Size of simple binarization")
+            #print(img_simplebin.size)
+            #final_image = Image.merge("RGB", (img, img, img))
             final_image = Image.merge("RGB", (img, img_howe, img_simplebin)) if self.binarize else img
+            if self.augment:
+                if self.dataset=='READ':
+                    #                        sets. We place
+                    #the control points on intervals of 26 pixels (slightly larger than
+                    #the average baseline height) and perturbed the points about a
+                    #normal distribution with a standard deviation of 1.7 pixels.
+                    #These parameters are for images with a height of 80 pixels
+                    # params chosen based on BYU Data Augmentation Paper by Wigington et al.
+                    _, h = final_image.size
+                    mesh_i = h / 80.0 * 26
+                    std = h / 80.0 * 1.7
+                    final_image = Image.fromarray(warp_image(np.array(final_image), w_mesh_interval=mesh_i, h_mesh_interval=mesh_i, w_mesh_std=std, h_mesh_std=std)) 
+                else:
+                    _, h = final_image.size
+                    mesh_i = h / 80.0 * 26
+                    std = h / 80.0 * 1.7
+                    final_image = Image.fromarray(warp_image(np.array(final_image), w_mesh_interval=mesh_i, h_mesh_interval=mesh_i, w_mesh_std=std, h_mesh_std=std))
+
+          
+            
+            # Randomly resize the image
+            # Method. Randomly choose to decrease size by 50% or increase size by 50% [don't want to make image too large]
+            # Keep the current aspect ratio
+            # resize image
+            
+            if self.scale:
+                s = random.uniform(1.0 / 3, 3)
+                w, h = final_image.size
+                ar = float(w) / h
+                new_h = int(round(s * h))
+                new_w = int(round(ar * new_h))
+                final_image = final_image.resize((new_w, new_h), resample=Image.BILINEAR)
+            
             if self.transform is not None:
                 final_image = self.transform(final_image)
-            print("The image has shape:")
-            print(np.array(final_image).shape)
+            
+            # consider adding a small rotation too.
+            
+            #print("The image has shape:")
+            #print(np.array(final_image).shape)
        
             return (final_image, label, file_name)
 

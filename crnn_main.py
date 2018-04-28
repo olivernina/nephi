@@ -6,12 +6,15 @@ import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
 from torch.autograd import Variable
+from torchvision.transforms import RandomAffine
 import numpy as np
 from warpctc_pytorch import CTCLoss
+import PIL
 import os
 import utils
 import dataset
 import io
+from collections import Counter
 encoding = 'utf-8'
 
 import models.crnn as crnn
@@ -49,7 +52,8 @@ parser.add_argument('--keep_ratio', action='store_true', help='whether to keep r
 parser.add_argument('--random_sample', action='store_true', help='whether to sample the dataset with random sampler')
 parser.add_argument('--test_icfhr', action='store_true', help='Whether to make predictions on the test set according to ICFHR format')
 parser.add_argument('--test_file', default='test_file', help='Path to file to store test set results')
-
+parser.add_argument('--test_aug', action="store_true", help='Whether to use data augmentation at validation/test time')
+parser.add_argument('--n_aug', type=int, default=20, help='Number of times to augment each image at validation/test time')
 parser.add_argument('--binarize', action="store_true", help='Whether to use howe and sauvola binarization as separate channels, requires these data to already be in the lmdb databases')
 
 opt = parser.parse_args()
@@ -71,10 +75,14 @@ cudnn.benchmark = True
 if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
-train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize)
+    # RA: The next augmentation should be just 5 degree rotation, 5 degree shear, the 60 is probably overkill; other publications use 5 for both
+
+lin_transform = RandomAffine(5, shear=(-20, 20), resample=PIL.Image.BILINEAR, fillcolor="white")
+train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=True, scale=True, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform)
 assert train_dataset
 
-test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize)
+test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize, test=opt.test_icfhr, augment=True if opt.test_aug else False,
+                                  transform = lin_transform if opt.test_aug else None, scale = True if opt.test_aug else False)
 assert test_dataset
 
 minn = min(len(test_dataset), len(train_dataset))
@@ -88,12 +96,12 @@ else:
     sampler = None
 
 train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=opt.batchSize, sampler=sampler,
+    train_dataset, batch_size=opt.batchSize, shuffle=True, #sampler=sampler,
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
 test_loader = torch.utils.data.DataLoader(
-    test_dataset, batch_size=opt.batchSize, sampler=dataset.randomSequentialSampler(test_dataset, opt.batchSize),
+    test_dataset, batch_size=opt.batchSize, shuffle=True,  #sampler=dataset.randomSequentialSampler(test_dataset, opt.batchSize),
     num_workers=int(opt.workers),
     collate_fn=dataset.alignCollate(imgH=opt.imgH, imgW=opt.imgW, keep_ratio=opt.keep_ratio))
 
@@ -170,7 +178,7 @@ elif opt.adadelta:
 else:
     optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr) # default
 
-def test(net, dataset, criterion):
+def test(net, dataset, criterion, n_aug=1):
     print('Start test set predictions')
 
     for p in crnn.parameters():
@@ -178,54 +186,62 @@ def test(net, dataset, criterion):
 
     net.eval()
 
-    test_iter = iter(dataset)
+    
     all_file_names = []
     all_preds = []
     image_count = 0
+    pred_dict = {}
+    
+    for epoch in range(n_aug):
+        test_iter = iter(dataset)
+        for i in range(len(dataset)):
+            data = test_iter.next()
+            #i += 1
+            cpu_images, __, file_names = data
+            batch_size = cpu_images.size(0)
+            image_count = image_count + batch_size
+            utils.loadData(image, cpu_images)
 
-    for i in range(len(dataset)):
-        data = test_iter.next()
-        #i += 1
-        cpu_images, __, file_names = data
-        batch_size = cpu_images.size(0)
-        image_count = image_count + batch_size
-        utils.loadData(image, cpu_images)
- 
-        preds = crnn(image)
-        #print(preds.size())
-        preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
+            preds = crnn(image)
+            #print(preds.size())
+            preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
+
+
+            # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
+            # Case is ignored in the accuracy, which is not ideal for an actual working system
+
+            _, preds = preds.max(2)     
+            if torch.__version__ < '0.2':
+              preds = preds.squeeze(2) # https://github.com/meijieru/crnn.pytorch/issues/31
+            preds = preds.transpose(1, 0).contiguous().view(-1)
+            sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
+
+            for pred, f in zip(sim_preds, file_names):
+                if f not in pred_dict:
+                    pred_dict[f] = [pred]
+                else:
+                    pred_dict[f].append(pred)
+
+    for f, final_preds in pred_dict.items():
+        all_preds.append(Counter(final_preds).most_common(1)[0][0])
+        all_file_names.append(f.partition(".jpg")[0])
         
-        
-        # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
-        # Case is ignored in the accuracy, which is not ideal for an actual working system
-        
-        _, preds = preds.max(2)     
-        if torch.__version__ < '0.2':
-          preds = preds.squeeze(2) # https://github.com/meijieru/crnn.pytorch/issues/31
-        preds = preds.transpose(1, 0).contiguous().view(-1)
-        sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
-        
-        all_preds.extend(sim_preds)
-        all_file_names.extend([f.partition(".jpg")[0] for f in file_names])
 
     
     print("Total number of images in test set: %8d" % image_count)
     
     return (all_file_names, all_preds)
 
-def val(net, dataset, criterion, max_iter=1000):
+
+def val(net, dataset, criterion, max_iter=1000, test_aug=False, n_aug=1):
     print('Start validation set')
 
     for p in crnn.parameters():
         p.requires_grad = False
 
     net.eval()
+
     
-    # RA: Testing out resizing 
-    #data_loader = torch.utils.data.DataLoader(
-    #    dataset, shuffle=True, batch_size=opt.batchSize, num_workers=int(opt.workers))
-    #val_iter = iter(data_loader)
-    val_iter = iter(dataset)
 
     i = 0
     n_correct = 0
@@ -235,42 +251,57 @@ def val(net, dataset, criterion, max_iter=1000):
     # Character and word error rate lists
     char_error = []
     w_error = []
-
-    max_iter = min(max_iter, len(dataset))
     
-    for i in range(max_iter):
-        data = val_iter.next()
-        i += 1
-        cpu_images, cpu_texts, __ = data
-        batch_size = cpu_images.size(0)
-        image_count = image_count + batch_size
-        utils.loadData(image, cpu_images)
-        t, l = converter.encode(cpu_texts)
-        utils.loadData(text, t)
-        utils.loadData(length, l)
+    pred_dict = {}
+    gt_dict = {}
+    
+    
 
-        preds = crnn(image)
-        #print(preds.size())
-        preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
-        cost = criterion(preds, text, preds_size, length) / batch_size
-        loss_avg.add(cost)
-        
-        
-        # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
-        # Case is ignored in the accuracy, which is not ideal for an actual working system
-        
-        _, preds = preds.max(2)
-        if torch.__version__ < '0.2':
-          preds = preds.squeeze(2) # https://github.com/meijieru/crnn.pytorch/issues/31
-        preds = preds.transpose(1, 0).contiguous().view(-1)
-        sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
-        for pred, target in zip(sim_preds, cpu_texts):
-            if pred == target:
-                n_correct += 1
+ 
+    for epoch in range(n_aug):
+        max_iter = len(dataset) if test_aug else min(max_iter, len(dataset))
+        val_iter = iter(dataset)
+   
+        for i in range(max_iter):
+            data = val_iter.next()
+            i += 1
+            cpu_images, cpu_texts, cpu_files = data
+            batch_size = cpu_images.size(0)
+            image_count = image_count + batch_size
+            utils.loadData(image, cpu_images)
+            t, l = converter.encode(cpu_texts)
+            utils.loadData(text, t)
+            utils.loadData(length, l)
+
+            preds = crnn(image)
+            #print(preds.size())
+            preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
+            cost = criterion(preds, text, preds_size, length) / batch_size
+            loss_avg.add(cost)
+
+            # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
+            # Case is ignored in the accuracy, which is not ideal for an actual working system
+
+            _, preds = preds.max(2)
+            if torch.__version__ < '0.2':
+              preds = preds.squeeze(2) # https://github.com/meijieru/crnn.pytorch/issues/31
+            preds = preds.transpose(1, 0).contiguous().view(-1)
+            sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
+
+            for pred, target, f in zip(sim_preds, cpu_texts, cpu_files):
+                if f not in gt_dict:
+                    gt_dict[f] = target
+                    pred_dict[f] = []
+                pred_dict[f].append(pred)
+                if pred == target:
+                    n_correct += 1
             
-            # Case-insensitive character and word error rates
-            char_error.append(cer(pred, target))
-            w_error.append(wer(pred, target))
+    # Case-sensitive character and word error rates
+    for f, target in gt_dict.items():
+        # Finds the most commonly predicted string for all the augmented images
+        best_pred = Counter(pred_dict[f]).most_common(1)[0][0]
+        char_error.append(cer(best_pred, target))
+        w_error.append(wer(best_pred, target))
 
     raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:opt.n_test_disp]
     for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts):
@@ -320,10 +351,10 @@ for epoch in range(opt.niter):
         
         # Start by running prediction on test set, doing nothing else
         if opt.test_icfhr:
-            files, predictions = test(crnn, test_loader, criterion)
+            files, predictions = test(crnn, test_loader, criterion, n_aug = opt.n_aug if opt.test_aug else 1)
             with io.open(opt.test_file, "w", encoding=encoding) as test_results:
-                for file, pred in zip(files, predictions):
-                    test_results.write(' '.join([file, pred]) + "\n")  # this should combine ascii text and unicode correctly
+                for f, pred in zip(files, predictions):
+                    test_results.write(' '.join([unicode(f, encoding=encoding), pred]) + u"\n")  # this should combine ascii text and unicode correctly
             break
         
         for p in crnn.parameters():
