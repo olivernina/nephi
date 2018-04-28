@@ -100,7 +100,8 @@ if not opt.random_sample:
 else:
     sampler = None
 
-if opt.model == 'attention' or opt.model == 'attention+ctc': #attention can only work with one sample at a time
+if opt.model == 'attention' :
+# if opt.model == 'attention' or opt.model == 'attention+ctc': #attention can only work with one sample at a time
     opt.batchSize = 1
 
 
@@ -156,6 +157,7 @@ elif opt.model=='attention+ctc':
 elif opt.model=='ctc_pretrain':
     criterion = CTCLoss()
 
+
 # custom weights initialization called on crnn
 def weights_init(m):
     classname = m.__class__.__name__
@@ -174,14 +176,14 @@ elif opt.model=='ctc':
     #print("Got to the weight initialization and loading pretrained model")
     crnn.apply(weights_init)
 elif opt.model=='attention+ctc':
-    ctc_encoder = models.crnn.EncoderRNN(nc,opt.nh)
-    attn_decoder = models.crnn.AttnDecoderRNN(opt.nh, nclass, dropout_p=0.1)
-    ctc_encoder.apply(weights_init)
-    ctc_decoder = nn.Sequential(models.crnn.BidirectionalLSTM(512, opt.nh, opt.nh),models.crnn.BidirectionalLSTM(opt.nh, opt.nh, nclass))
+    encoder_ctc = models.crnn.EncoderRNN(nc,opt.nh)
+    encoder_ctc.apply(weights_init)
+    decoder_att = models.crnn.AttnDecoderRNN(opt.nh, nclass, dropout_p=0.1)
+    decoder_ctc = nn.Sequential(models.crnn.BidirectionalLSTM(512, opt.nh, opt.nh),models.crnn.BidirectionalLSTM(opt.nh, opt.nh, nclass))
 elif opt.model=='ctc_pretrain':
     encoder_ctc = models.crnn.EncoderRNN(nc, opt.nh)
     encoder_ctc.apply(weights_init)
-    # decoder_att = models.crnn.AttnDecoderRNN(opt.nh, nclass, dropout_p=0.1)
+    decoder_att = models.crnn.AttnDecoderRNN(opt.nh, nclass, dropout_p=0.1)
     decoder_ctc = nn.Sequential(models.crnn.BidirectionalLSTM(512, opt.nh, opt.nh),
                                 models.crnn.BidirectionalLSTM(opt.nh, opt.nh, nclass))
 
@@ -200,9 +202,9 @@ if opt.cuda:
         crnn = torch.nn.DataParallel(crnn, device_ids=range(opt.ngpu))
         criterion = criterion.cuda()
     elif opt.model=='attention+ctc':
-        ctc_encoder.cuda()
-        attn_decoder.cuda()
-        ctc_decoder.cuda()
+        encoder_ctc.cuda()
+        decoder_att.cuda()
+        decoder_ctc.cuda()
         criterion_ctc = criterion_ctc.cuda()
         criterion_att = criterion_att.cuda()
     elif opt.model=='ctc_pretrain':
@@ -224,13 +226,13 @@ if opt.model=='attention':
 elif opt.model=='ctc':
     print("Your neural network:", crnn)
 elif opt.model=='attention+ctc':
-    print("Your encoder network:", ctc_encoder)
-    print("Your att decoder network:", attn_decoder)
-    print("Your ctc decoder network:", ctc_decoder)
+    print("Your encoder network:", encoder_ctc)
+    print("Your att decoder network:", decoder_att)
+    print("Your ctc decoder network:", decoder_ctc)
 elif opt.model=='ctc_pretrain':
     print("Your neural network:", encoder_ctc)
-    # print("Your ctc decoder network:", ctc_decoder)
     print("Your neural network:", decoder_ctc)
+    print("Your att decoder network:", decoder_att)
 
 image = Variable(image)
 text = Variable(text)
@@ -251,13 +253,13 @@ elif opt.model=='ctc':
     else:
         optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)  # default
 elif opt.model=='attention+ctc':
-    ctc_encoder_optimizer = optim.RMSprop(ctc_encoder.parameters(), lr=opt.lr)
-    att_decoder_optimizer = optim.SGD(attn_decoder.parameters(), lr=opt.lr)
-    ctc_decoder_optimizer = optim.RMSprop(ctc_decoder.parameters(), lr=opt.lr)
+    enc_ctc_optimizer = optim.RMSprop(encoder_ctc.parameters(), lr=opt.lr)
+    dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr)
+    dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
 elif opt.model=='ctc_pretrain':
-    # optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)  # default
     enc_ctc_optimizer = optim.RMSprop(encoder_ctc.parameters(), lr=opt.lr)
     dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
+    dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr)
 
 def test(net, dataset):
     print('Start test set predictions')
@@ -281,7 +283,6 @@ def test(net, dataset):
         utils.loadData(image, cpu_images)
  
         preds = crnn(image)
-        #print(preds.size())
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
         
         # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
@@ -344,8 +345,10 @@ def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, 
     target_variable = Variable(torch.LongTensor(target.cpu().numpy()).view(-1, 1)) #This is a hack. maybe there is a better way...
     target_variable = target_variable.cuda() if opt.cuda else target_variable
 
-    for ei in range(length):
-        encoder_outputs[ei] = encoder_output[0][0]
+    input_length = len(encoder_output)
+
+    for ei in range(input_length):
+        encoder_outputs[ei] = encoder_output[ei][0]
 
     decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))
     decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
@@ -367,7 +370,8 @@ def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, 
 
     return loss.data[0] / target_length.float()
 
-def trainAttentionCTC( train_iter, enc_ctc, dec_att,dec_ctc, enc_ctc_optimizer, dec_att_optimizer, dec_ctc_optimizer, criterion_att,criterion_ctc, max_length=MAX_LENGTH):
+def trainAttentionCTC(encoder_ctc,
+                                  decoder_att,decoder_ctc, enc_ctc_optimizer, dec_att_optimizer, dec_ctc_optimizer, criterion_att,criterion_ctc,max_length=MAX_LENGTH):
 
     data = train_iter.next()
     cpu_images, cpu_texts,__ = data
@@ -377,7 +381,7 @@ def trainAttentionCTC( train_iter, enc_ctc, dec_att,dec_ctc, enc_ctc_optimizer, 
     utils.loadData(text, target)
     utils.loadData(length, target_length)
 
-    encoder_hidden = enc_ctc.initHidden()
+    encoder_hidden = encoder_ctc.initHidden()
 
     # encoder_optimizer.zero_grad()
     dec_att_optimizer.zero_grad()
@@ -386,13 +390,15 @@ def trainAttentionCTC( train_iter, enc_ctc, dec_att,dec_ctc, enc_ctc_optimizer, 
     encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
 
     loss = 0
-    encoder_output = enc_ctc(image)
+    encoder_output = encoder_ctc(image)
 
     target_variable = Variable(torch.LongTensor(target.cpu().numpy()).view(-1, 1)) #This is a hack. maybe there is a better way...
     target_variable = target_variable.cuda() if opt.cuda else target_variable
 
-    for ei in range(length):
-        encoder_outputs[ei] = encoder_output[0][0]
+    # encoder_output = decoder_ctc_input[:,0,:] #grab first image
+    input_length = len(encoder_output)
+    for ei in range(input_length):
+        encoder_outputs[ei] = encoder_output[ei,0]
 
     decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))
     decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
@@ -400,7 +406,7 @@ def trainAttentionCTC( train_iter, enc_ctc, dec_att,dec_ctc, enc_ctc_optimizer, 
 
     # Teacher forcing: Feed the target as the next input
     for di in range(target_length):
-        decoder_output, decoder_hidden, decoder_attention = dec_att(
+        decoder_output, decoder_hidden, decoder_attention = decoder_att(
             decoder_input, decoder_hidden, encoder_outputs)
 
         loss += criterion_att(decoder_output, target_variable[di])
@@ -415,12 +421,12 @@ def trainAttentionCTC( train_iter, enc_ctc, dec_att,dec_ctc, enc_ctc_optimizer, 
     # utils.loadData(length, l)
 
 
-    decoder_output = dec_ctc(encoder_output)
+    decoder_output = decoder_ctc(encoder_output)
     preds = decoder_output
     preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
     cost = criterion_ctc(preds, text, preds_size, length) / batch_size
-    enc_ctc.zero_grad()
-    dec_ctc.zero_grad()
+    encoder_ctc.zero_grad()
+    decoder_ctc.zero_grad()
 
     if opt.cuda:
         ctc_cost = cost.cuda()  #For some reason cost is on CPU and has to be explicitly specified on cuda before adding it with the other cost
@@ -458,7 +464,6 @@ def trainCTCPretrain(encoder_ctc,decoder_ctc, criterion, enc_ctc_optimizer,dec_c
     enc_ctc_optimizer.step()
     dec_ctc_optimizer.step()
     return cost
-
 
 def val(net, dataset, criterion, max_iter=1000):
     print('Start validation set')
@@ -713,20 +718,20 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
 
     return char_mean_error, word_mean_error, accuracy
 
-def valAttentionCTC(enc, dec_att, dec_ctc, dataset, criterion, max_iter=100):
+def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, max_iter=100):
 
     print('Start validation set')
 
     ####### CTC ######
-    for p in enc.parameters():
+    for p in encoder_ctc.parameters():
         p.requires_grad = False
 
-    for p in dec_ctc.parameters():
+    for p in decoder_ctc.parameters():
         p.requires_grad = False
 
-    enc.eval()
+    encoder_ctc.eval()
     # dec_att.eval()
-    dec_ctc.eval()
+    decoder_ctc.eval()
 
 
     val_iter = iter(dataset)
@@ -753,8 +758,8 @@ def valAttentionCTC(enc, dec_att, dec_ctc, dataset, criterion, max_iter=100):
         utils.loadData(text, t)
         utils.loadData(length, l)
 
-        enc_output = enc(image)
-        preds = dec_ctc(enc_output)
+        enc_output = encoder_ctc(image)
+        preds = decoder_ctc(enc_output)
         # print(preds.size())
         preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
         cost = criterion(preds, text, preds_size, length) / batch_size
@@ -790,9 +795,6 @@ def valAttentionCTC(enc, dec_att, dec_ctc, dataset, criterion, max_iter=100):
 
     image_count = 0
 
-    # Character and word error rate lists
-    # char_error = []
-    # w_error = []
 
     sim_preds = []
     raw_preds = []
@@ -811,14 +813,16 @@ def valAttentionCTC(enc, dec_att, dec_ctc, dataset, criterion, max_iter=100):
         utils.loadData(text, t)
         utils.loadData(length, l)
 
-        encoder_hidden = enc.initHidden()
-        encoder_output = enc(image)
+        encoder_hidden = encoder_ctc.initHidden()
+        encoder_output = encoder_ctc(image)
 
         encoder_outputs = Variable(torch.zeros(max_length, 512))
         encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
 
-        for ei in range(length):
-            encoder_outputs[ei] = encoder_output[0][0]
+        input_length = len(encoder_output)
+
+        for ei in range(input_length):
+            encoder_outputs[ei] = encoder_output[ei][0]
 
         decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))  # SOS
         decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
@@ -831,7 +835,7 @@ def valAttentionCTC(enc, dec_att, dec_ctc, dataset, criterion, max_iter=100):
         pred_chars_size = 0
 
         for di in range(max_length):
-            decoder_output, decoder_hidden, decoder_attention = dec_att(
+            decoder_output, decoder_hidden, decoder_attention = decoder_att(
                 decoder_input, decoder_hidden, encoder_outputs)
             decoder_attentions[di] = decoder_attention.data
             topv, topi = decoder_output.data.topk(1)
@@ -889,7 +893,6 @@ def valAttentionCTC(enc, dec_att, dec_ctc, dataset, criterion, max_iter=100):
     # print("Word error rate mean: %4.4f; Word error rate sd: %4.4f" % (word_mean_error, np.std(w_arr, ddof=1)))
 
 
-##CTC###
 
     print("Total number of images in validation set: %8d" % image_count)
 
@@ -987,6 +990,11 @@ def valCTCPretrain(encoder_ctc, decoder_ctc, dataset, criterion, max_iter=1000):
 
     return char_mean_error, word_mean_error, accuracy
 
+def setupTrain(net):
+    for p in net.parameters():
+        p.requires_grad = True
+        net.train()
+
 print("Starting training...")
 
 history_errors = []
@@ -1016,17 +1024,16 @@ for epoch in range(opt.niter):
 
             loss = trainBatch(crnn, criterion, optimizer) # it trains/backpropagates once/batch, each batch is made up of "batchSize" images
         elif opt.model=='attention+ctc':
-            loss = trainAttentionCTC(train_iter, ctc_encoder,
-                                  attn_decoder,ctc_decoder, ctc_encoder_optimizer, att_decoder_optimizer, ctc_decoder_optimizer, criterion_att,criterion_ctc)
+
+            setupTrain(encoder_ctc)
+            setupTrain(decoder_ctc)
+
+            loss = trainAttentionCTC( encoder_ctc,
+                                  decoder_att,decoder_ctc, enc_ctc_optimizer, dec_att_optimizer, dec_ctc_optimizer, criterion_att,criterion_ctc)
         elif opt.model=='ctc_pretrain':
 
-            for p in encoder_ctc.parameters():
-                p.requires_grad = True
-            encoder_ctc.train()
-
-            for p in decoder_ctc.parameters():
-                p.requires_grad = True
-            decoder_ctc.train()
+            setupTrain(encoder_ctc)
+            setupTrain(decoder_ctc)
 
             loss = trainCTCPretrain(encoder_ctc,decoder_ctc, criterion, enc_ctc_optimizer, dec_ctc_optimizer)
 
@@ -1050,7 +1057,7 @@ for epoch in range(opt.niter):
                 char_error, word_error, accuracy = val(crnn, test_loader, criterion)
                 # val(crnn, train_loader, criterion)
             elif opt.model=='attention+ctc':
-                char_error, word_error, accuracy = valAttentionCTC(ctc_encoder,attn_decoder,ctc_decoder, train_loader, criterion_ctc)
+                char_error, word_error, accuracy = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, train_loader, criterion_ctc)
             elif opt.model=='ctc_pretrain':
                 char_error, word_error, accuracy = valCTCPretrain(encoder_ctc,decoder_ctc, test_loader, criterion)
 
@@ -1069,9 +1076,9 @@ for epoch in range(opt.niter):
             elif opt.model=='ctc':
                 torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
             elif opt.model=='attention+ctc':
-                torch.save(ctc_encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
-                torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
-                torch.save(ctc_decoder.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                torch.save(encoder_ctc.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                torch.save(decoder_att.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                torch.save(decoder_ctc.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
             elif opt.model=='ctc_pretrain':
                 torch.save(encoder_ctc.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
                 torch.save(decoder_ctc.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
