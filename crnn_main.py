@@ -6,7 +6,6 @@ import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
 from torch.autograd import Variable
-from torchvision.transforms import RandomAffine
 import numpy as np
 from warpctc_pytorch import CTCLoss
 import PIL
@@ -60,7 +59,7 @@ parser.add_argument('--plot', action='store_true', help='Save plots')
 parser.add_argument('--model', type=str, default='ctc', help='type of model used i.e. ctc, attention, attention+ctc')
 parser.add_argument('--debug', action='store_true', help='Runs debug mode with 1000 samples of training')
 parser.add_argument('--rdir', default='results', help='Where to store samples, models and plots (model save directory)')
-
+parser.add_argument('--transform', action="store_true", help='Allow transformation of images')
 
 opt = parser.parse_args()
 print("Running with options:", opt)
@@ -92,7 +91,12 @@ if torch.cuda.is_available() and not opt.cuda:
 
     # RA: The next augmentation should be just 5 degree rotation, 5 degree shear, the 60 is probably overkill; other publications use 5 for both
 
-lin_transform = RandomAffine(5, shear=(-20, 20), resample=PIL.Image.BILINEAR, fillcolor="white")
+if opt.transform:
+    from torchvision.transforms import RandomAffine
+    lin_transform = RandomAffine(5, shear=(-20, 20), resample=PIL.Image.BILINEAR, fillcolor="white")
+else:
+    lin_transform = None
+
 train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=True, scale=True, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug)
 
 assert train_dataset
@@ -112,9 +116,7 @@ else:
     sampler = None
 
 if opt.model == 'attention' :
-# if opt.model == 'attention' or opt.model == 'attention+ctc': #attention can only work with one sample at a time
     opt.batchSize = 1
-
 
 train_loader = torch.utils.data.DataLoader(
     train_dataset, batch_size=opt.batchSize, shuffle=True, #sampler=sampler,
@@ -271,7 +273,6 @@ elif opt.model=='ctc_pretrain':
     enc_ctc_optimizer = optim.RMSprop(encoder_ctc.parameters(), lr=opt.lr)
     dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
     dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr)
-
 
 def test(net, dataset, criterion, n_aug=1):
     print('Start test set predictions')
