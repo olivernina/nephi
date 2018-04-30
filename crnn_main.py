@@ -1056,16 +1056,20 @@ for epoch in range(opt.niter):
         # Evaluate performance on validation and training sets periodically
         if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
             if opt.model=='attention':
-                char_error, word_error, accuracy = valAttention(encoder,attn_decoder, test_loader, criterion)
+                val_CER, val_WER, val_ACC = valAttention(encoder,attn_decoder, test_loader, criterion)
+                train_CER, train_WER, train_ACC = valAttention(encoder, attn_decoder, train_loader, criterion)
             elif opt.model=='ctc':
-                char_error, word_error, accuracy = val(crnn, test_loader, criterion)
-                val(crnn, train_loader, criterion)
+                val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion)
+                train_CER, train_WER, train_ACC = val(crnn, train_loader, criterion)
             elif opt.model=='attention+ctc':
-                char_error, word_error, accuracy = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc)
+                val_CER, val_WER, val_ACC = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc)
+                train_CER, train_WER, train_ACC = valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, train_loader,
+                                                            criterion_ctc)
             elif opt.model=='ctc_pretrain':
-                char_error, word_error, accuracy = valCTCPretrain(encoder_ctc,decoder_ctc, test_loader, criterion)
+                val_CER, val_WER, val_ACC = valCTCPretrain(encoder_ctc,decoder_ctc, test_loader, criterion)
+                train_CER, train_WER, train_ACC = valCTCPretrain(encoder_ctc, decoder_ctc, train_loader, criterion)
 
-            history_errors.append([epoch, i, loss,word_error,char_error,accuracy])
+            history_errors.append([epoch, i, loss,val_ACC,val_WER,val_CER,val_ACC,val_WER,val_CER])
 
             if opt.plot:
                 utils.savePlot(history_errors,model_rpath)
