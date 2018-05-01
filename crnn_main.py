@@ -51,7 +51,7 @@ parser.add_argument('--adadelta', action='store_true', help='Whether to use adad
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
 parser.add_argument('--random_sample', action='store_true', help='whether to sample the dataset with random sampler')
 parser.add_argument('--test_icfhr', action='store_true', help='Whether to make predictions on the test set according to ICFHR format')
-parser.add_argument('--test_file', default='test_file', help='Path to file to store test set results')
+parser.add_argument('--test_file', default='results/results.txt', help='Path to file to store test set results')
 parser.add_argument('--test_aug', action="store_true", help='Whether to use data augmentation at validation/test time')
 parser.add_argument('--n_aug', type=int, default=20, help='Number of times to augment each image at validation/test time')
 parser.add_argument('--binarize', action="store_true", help='Whether to use howe and sauvola binarization as separate channels, requires these data to already be in the lmdb databases')
@@ -60,6 +60,7 @@ parser.add_argument('--model', type=str, default='ctc', help='type of model used
 parser.add_argument('--debug', action='store_true', help='Runs debug mode with 1000 samples of training')
 parser.add_argument('--rdir', default='results', help='Where to store samples, models and plots (model save directory)')
 parser.add_argument('--transform', action="store_true", help='Allow transformation of images')
+parser.add_argument('--mode', type=str, default='train', help='i.e train, test. Mode of executing code')
 
 opt = parser.parse_args()
 print("Running with options:", opt)
@@ -999,98 +1000,108 @@ def setupTrain(net):
         p.requires_grad = True
         net.train()
 
-print("Starting training...")
-
-history_errors = []
-loss = 0
 
 
-for epoch in range(opt.niter):
-    train_iter = iter(train_loader)
-    i = 1
+if opt.mode =='train':
 
-    while i < len(train_loader):
-        # Start by running prediction on test set, doing nothing else
-        if opt.test_icfhr:
-            files, predictions = test(crnn, test_loader, criterion, n_aug = opt.n_aug if opt.test_aug else 1)
+    print("Starting training...")
+
+    history_errors = []
+    loss = 0
+
+
+    for epoch in range(opt.niter):
+        train_iter = iter(train_loader)
+        i = 1
+
+        while i < len(train_loader):
+
+            if opt.model=='attention':
+                loss = trainAttention(train_iter, encoder,
+                             attn_decoder, encoder_optimizer, decoder_optimizer, criterion)
+            elif opt.model=='ctc':
+                for p in crnn.parameters():
+                    p.requires_grad = True
+                crnn.train()
+
+                loss = trainBatch(crnn, criterion, optimizer) # it trains/backpropagates once/batch, each batch is made up of "batchSize" images
+            elif opt.model=='attention+ctc':
+
+                setupTrain(encoder_ctc)
+                setupTrain(decoder_ctc)
+
+                loss = trainAttentionCTC( encoder_ctc,
+                                      decoder_att,decoder_ctc, enc_ctc_optimizer, dec_att_optimizer, dec_ctc_optimizer, criterion_att,criterion_ctc)
+            elif opt.model=='ctc_pretrain':
+
+                setupTrain(encoder_ctc)
+                setupTrain(decoder_ctc)
+
+                loss = trainCTCPretrain(encoder_ctc,decoder_ctc, criterion, enc_ctc_optimizer, dec_ctc_optimizer)
+
+            # once you're done with all batches that's the end of one "epoch"
+            loss_avg.add(loss)
+            i += 1
+
+            # Display the loss
+            if i % opt.displayInterval == 0:
+                print('[%d/%d][%d/%d] Loss: %f' % (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
+                if loss_avg.val() <100000000:
+                    loss = loss_avg.val()
+
+                loss_avg.reset()
+
+            # Evaluate performance on validation and training sets periodically
+            if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
+                if opt.model=='attention':
+                    val_CER, val_WER, val_ACC = valAttention(encoder,attn_decoder, test_loader, criterion)
+                    train_CER, train_WER, train_ACC = valAttention(encoder, attn_decoder, train_loader, criterion)
+                elif opt.model=='ctc':
+                    val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion)
+                    train_CER, train_WER, train_ACC = val(crnn, train_loader, criterion)
+                elif opt.model=='attention+ctc':
+                    val_CER, val_WER, val_ACC = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc)
+                    train_CER, train_WER, train_ACC = valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, train_loader,
+                                                                criterion_ctc)
+                elif opt.model=='ctc_pretrain':
+                    val_CER, val_WER, val_ACC = valCTCPretrain(encoder_ctc,decoder_ctc, test_loader, criterion)
+                    train_CER, train_WER, train_ACC = valCTCPretrain(encoder_ctc, decoder_ctc, train_loader, criterion)
+
+                history_errors.append([epoch, i, loss,train_ACC,train_WER,train_CER,val_ACC,val_WER,val_CER])
+
+                if opt.plot:
+                    utils.savePlot(history_errors,model_rpath)
+
+            # do checkpointing
+            if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
+                print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
+
+                if opt.model=='attention':
+                    torch.save(encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                    torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                elif opt.model=='ctc':
+                    torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                elif opt.model=='attention+ctc':
+                    torch.save(encoder_ctc.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                    torch.save(decoder_att.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                    torch.save(decoder_ctc.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                elif opt.model=='ctc_pretrain':
+                    torch.save(encoder_ctc.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                    torch.save(decoder_ctc.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
+
+elif opt.mode=='test':
+    if opt.dataset=='ICFHR':
+        files, predictions = test(crnn, test_loader, criterion, n_aug=opt.n_aug if opt.test_aug else 1)
+        with io.open(opt.test_file, "w", encoding=encoding) as test_results:
+            for f, pred in zip(files, predictions):
+                test_results.write(' '.join([unicode(f, encoding=encoding),
+                                             pred]) + u"\n")  # this should combine ascii text and unicode correctly
+    elif opt.dataset=='READ':
+        if opt.model=='ctc':
+            files, predictions = test(crnn, test_loader, criterion, n_aug=opt.n_aug if opt.test_aug else 1)
             with io.open(opt.test_file, "w", encoding=encoding) as test_results:
                 for f, pred in zip(files, predictions):
-                    test_results.write(' '.join([unicode(f, encoding=encoding), pred]) + u"\n")  # this should combine ascii text and unicode correctly
-            break
-
-        if opt.model=='attention':
-            loss = trainAttention(train_iter, encoder,
-                         attn_decoder, encoder_optimizer, decoder_optimizer, criterion)
-        elif opt.model=='ctc':
-            for p in crnn.parameters():
-                p.requires_grad = True
-            crnn.train()
-
-            loss = trainBatch(crnn, criterion, optimizer) # it trains/backpropagates once/batch, each batch is made up of "batchSize" images
-        elif opt.model=='attention+ctc':
-
-            setupTrain(encoder_ctc)
-            setupTrain(decoder_ctc)
-
-            loss = trainAttentionCTC( encoder_ctc,
-                                  decoder_att,decoder_ctc, enc_ctc_optimizer, dec_att_optimizer, dec_ctc_optimizer, criterion_att,criterion_ctc)
-        elif opt.model=='ctc_pretrain':
-
-            setupTrain(encoder_ctc)
-            setupTrain(decoder_ctc)
-
-            loss = trainCTCPretrain(encoder_ctc,decoder_ctc, criterion, enc_ctc_optimizer, dec_ctc_optimizer)
-
-        # once you're done with all batches that's the end of one "epoch"
-        loss_avg.add(loss)
-        i += 1
-        
-        # Display the loss
-        if i % opt.displayInterval == 0:
-            print('[%d/%d][%d/%d] Loss: %f' % (epoch, opt.niter, i, len(train_loader), loss_avg.val()))
-            if loss_avg.val() <100000000:
-                loss = loss_avg.val()
-
-            loss_avg.reset()
-        
-        # Evaluate performance on validation and training sets periodically
-        if (epoch % opt.valEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
-            if opt.model=='attention':
-                val_CER, val_WER, val_ACC = valAttention(encoder,attn_decoder, test_loader, criterion)
-                train_CER, train_WER, train_ACC = valAttention(encoder, attn_decoder, train_loader, criterion)
-            elif opt.model=='ctc':
-                val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion)
-                train_CER, train_WER, train_ACC = val(crnn, train_loader, criterion)
-            elif opt.model=='attention+ctc':
-                val_CER, val_WER, val_ACC = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc)
-                train_CER, train_WER, train_ACC = valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, train_loader,
-                                                            criterion_ctc)
-            elif opt.model=='ctc_pretrain':
-                val_CER, val_WER, val_ACC = valCTCPretrain(encoder_ctc,decoder_ctc, test_loader, criterion)
-                train_CER, train_WER, train_ACC = valCTCPretrain(encoder_ctc, decoder_ctc, train_loader, criterion)
-
-            history_errors.append([epoch, i, loss,train_ACC,train_WER,train_CER,val_ACC,val_WER,val_CER])
-
-            if opt.plot:
-                utils.savePlot(history_errors,model_rpath)
-
-        # do checkpointing
-        if (epoch % opt.saveEpoch == 0) and (i >= len(train_loader)):      # Runs at end of some epochs
-            print("Saving epoch",  '{0}/netCRNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
-
-            if opt.model=='attention':
-                torch.save(encoder.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
-                torch.save(attn_decoder.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
-            elif opt.model=='ctc':
-                torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
-            elif opt.model=='attention+ctc':
-                torch.save(encoder_ctc.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
-                torch.save(decoder_att.state_dict(), '{0}/netAttnDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
-                torch.save(decoder_ctc.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
-            elif opt.model=='ctc_pretrain':
-                torch.save(encoder_ctc.state_dict(), '{0}/netCNN_{1}_{2}.pth'.format(model_rpath, epoch, i))
-                torch.save(decoder_ctc.state_dict(), '{0}/netCTCDec_{1}_{2}.pth'.format(model_rpath, epoch, i))
+                    test_results.write(' '.join([unicode(f, encoding=encoding),
+                                                 pred]) + u"\n")  # this should combine ascii text and unicode correctly
 
 
-    if opt.test_icfhr:
-        break
