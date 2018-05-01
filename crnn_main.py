@@ -1069,7 +1069,7 @@ for epoch in range(opt.niter):
                 val_CER, val_WER, val_ACC = valCTCPretrain(encoder_ctc,decoder_ctc, test_loader, criterion)
                 train_CER, train_WER, train_ACC = valCTCPretrain(encoder_ctc, decoder_ctc, train_loader, criterion)
 
-            history_errors.append([epoch, i, loss,val_ACC,val_WER,val_CER,val_ACC,val_WER,val_CER])
+            history_errors.append([epoch, i, loss,train_ACC,train_WER,train_CER,val_ACC,val_WER,val_CER])
 
             if opt.plot:
                 utils.savePlot(history_errors,model_rpath)
