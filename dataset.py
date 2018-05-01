@@ -10,9 +10,8 @@ import lmdb
 import six
 import sys
 from PIL import Image, ImageOps
-#import cv2
 import numpy as np
-from grid_distortion import warp_image
+
 encoding = 'utf-8'
 
 # This link has good tutorial for understanding data loaders for pytorch.
@@ -157,6 +156,7 @@ class lmdbDataset(Dataset):
             #final_image = Image.merge("RGB", (img, img, img))
             final_image = Image.merge("RGB", (img, img_howe, img_simplebin)) if self.binarize else img
             if self.augment:
+                from grid_distortion import warp_image
                 if self.dataset=='READ':
                     #                        sets. We place
                     #the control points on intervals of 26 pixels (slightly larger than
@@ -192,7 +192,7 @@ class lmdbDataset(Dataset):
             if self.transform is not None:
                 final_image = self.transform(final_image)
 
-            DEBUG = self.debug
+            DEBUG = False #self.debug
             if DEBUG:
                 print("The image has shape:")
                 print(np.array(final_image).shape)
