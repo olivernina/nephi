@@ -61,6 +61,7 @@ parser.add_argument('--debug', action='store_true', help='Runs debug mode with 1
 parser.add_argument('--rdir', default='results', help='Where to store samples, models and plots (model save directory)')
 parser.add_argument('--transform', action="store_true", help='Allow transformation of images')
 parser.add_argument('--mode', type=str, default='train', help='i.e train, test. Mode of executing code')
+parser.add_argument('--data_aug', action="store_true", help='Whether to use data augmentation')
 
 opt = parser.parse_args()
 print("Running with options:", opt)
@@ -98,11 +99,11 @@ if opt.transform:
 else:
     lin_transform = None
 
-train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=True, scale=True, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug)
+train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=opt.data_aug, scale=True, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug)
 
 assert train_dataset
 
-test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize, test=opt.test_icfhr, augment=True if opt.test_aug else False,
+test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize, test=opt.test_icfhr, augment=opt.data_aug if opt.test_aug else False,
                                   transform = lin_transform if opt.test_aug else None, scale = True if opt.test_aug else False)
 assert test_dataset
 
