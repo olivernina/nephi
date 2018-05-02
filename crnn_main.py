@@ -91,19 +91,32 @@ if torch.cuda.is_available() and not opt.cuda:
 
 
     # RA: The next augmentation should be just 5 degree rotation, 5 degree shear, the 60 is probably overkill; other publications use 5 for both
+deg = 5
+shear = (-5, 5)
+print("Used degree for rotation of images")
+print(deg)
+print("Used shear on images")
+print(shear)
+
+augment = False
+rescale= False
+print("Use Grid Distortion augmentation?")
+print(augment)
+print("Rescale images randomly?")
+print(rescale)
 
 if opt.transform:
     from torchvision.transforms import RandomAffine
-    lin_transform = RandomAffine(5, shear=(-20, 20), resample=PIL.Image.BILINEAR, fillcolor="white")
+    lin_transform = RandomAffine(deg, shear=shear, resample=PIL.Image.BILINEAR, fillcolor="white")
 else:
     lin_transform = None
 
-train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=True, scale=True, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug)
+train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=augment, scale=rescale, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug)
 
 assert train_dataset
 
-test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize, test=opt.test_icfhr, augment=True if opt.test_aug else False,
-                                  transform = lin_transform if opt.test_aug else None, scale = True if opt.test_aug else False)
+test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize, test=opt.test_icfhr, augment=augment if opt.test_aug else False,
+                                  transform = lin_transform if opt.test_aug else None, scale = rescale if opt.test_aug else False)
 assert test_dataset
 
 minn = min(len(test_dataset), len(train_dataset))
