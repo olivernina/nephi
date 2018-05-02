@@ -44,8 +44,8 @@ parser.add_argument('--crnn', default='', help="path to start crnn file (to cont
 parser.add_argument('--dataset', type=str, default='READ', help='type of dataset to use such as READ or ICFHR default is READ')
 parser.add_argument('--displayInterval', type=int, default=100, help='Interval number of batches to display progress')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
-parser.add_argument('--valEpoch', type=int, default=5, help='Epoch to display validation and training error rates')
-parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
+parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
+parser.add_argument('--saveEpoch', type=int, default=20, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is false, rmsprop)')
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is false, use rmsprop)')
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
@@ -61,6 +61,7 @@ parser.add_argument('--debug', action='store_true', help='Runs debug mode with 1
 parser.add_argument('--rdir', default='results', help='Where to store samples, models and plots (model save directory)')
 parser.add_argument('--transform', action="store_true", help='Allow transformation of images')
 parser.add_argument('--mode', type=str, default='train', help='i.e train, test. Mode of executing code')
+parser.add_argument('--data_aug', action="store_true", help='Whether to use data augmentation')
 
 opt = parser.parse_args()
 print("Running with options:", opt)
