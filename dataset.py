@@ -48,7 +48,7 @@ def pad_size(img, size):
 class lmdbDataset(Dataset):
 
 
-    def __init__(self, root=None, transform=None, target_transform=None, binarize=False, augment=False, scale = False, dataset='READ', test = False, debug=False):
+    def __init__(self, root=None, transform=None, target_transform=None, binarize=False, augment=False, scale = False, dataset='READ', test = False, debug=False, scale_dim = 1.0):
 
         self.env = lmdb.open(
             root,
@@ -69,6 +69,7 @@ class lmdbDataset(Dataset):
                 nSamples = int(txn.get('num-samples'))
                 self.nSamples = nSamples
         
+        self.scale_dim = scale_dim
         self.scale = scale
         self.augment = augment
         self.binarize = binarize
@@ -182,7 +183,7 @@ class lmdbDataset(Dataset):
             # resize image
             
             if self.scale:
-                s = random.uniform(1.0 / 3, 3)
+                s = random.uniform(1.0 / self.scale_dim, self.scale_dim)
                 w, h = final_image.size
                 ar = float(w) / h
                 new_h = int(round(s * h))
