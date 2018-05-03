@@ -168,7 +168,7 @@ class EncoderRNN(nn.Module):
         else:
             return result
 
-MAX_LENGTH = 100
+MAX_LENGTH = 500 #Usually 100 is find for small images. For bigger images, this parameter should be calibrated
 class AttnDecoderRNN(nn.Module):
     def __init__(self, nh, output_size, dropout_p=0.1, max_length=MAX_LENGTH):
         super(AttnDecoderRNN, self).__init__()
