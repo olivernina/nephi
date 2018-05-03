@@ -27,23 +27,24 @@ for name, rgb in six.iteritems(colors.ColorConverter.colors):
 # Transform to hex color values.
 hex_ = [color[1] for color in colors_]
 # shuffle(hex_)
-hex_ = hex_[0:-1:2]
+hex_ = hex_[2:-1:2]
 
 
 def plot(column, metric, smoothing, work_dir):
 
-    # pretty_colors = ['#FC474C','#8DE047','#FFDD50','#53A3D7']
+    pretty_colors = ['#FC474C','#8DE047','#FFDD50','#53A3D7']
+    hex_ = pretty_colors
 
     max_x = 0
     max_y = 0
 
     column_num = column #cider_val = -8, blue4_val=11, ..., ROUGE= 10,METEOR=11
 
-    # files = os.listdir(work_dir)
-    # dirs = []
-    # res_files = [os.path.join(work_dir,file,'train_valid_test.txt') for file in files if os.path.exists(os.path.join(work_dir,file,'train_valid_test.txt'))]
+    files = os.listdir(work_dir)
+    dirs = []
+    res_files = [os.path.join(work_dir,file,'plot.txt') for file in files if os.path.exists(os.path.join(work_dir,file,'plot.txt'))]
 
-    res_files = [os.path.join(work_dir,'plot.txt')]
+    # res_files = [os.path.join(work_dir,'plot.txt')]
     init_val = 0
 
     max_y = -9999
@@ -81,8 +82,8 @@ def plot(column, metric, smoothing, work_dir):
     pyplot.grid()
 
     bufferx = 0.25 * max_x
-    buffery = 0.25 * max_y
-    axes.set_ylim([0, max_y + buffery])
+    buffery = 0.75 * max_y
+    axes.set_ylim([0, max_y - buffery])
     # axes.set_ylim([0,0.01])
     axes.set_xlim([1, max_x + bufferx])
     # axes.set_xlim([0, 100])
@@ -96,13 +97,13 @@ def plot(column, metric, smoothing, work_dir):
             pyplot.plot(x, y, linewidth=2, label=name, color=hex_[enum])
         except IndexError as e:
             print("EXCEPTION: " + e.message)
-            print 'Failed to create plot for {}.\nIs there only 1 epoch?'.format(name)
+            print('Failed to create plot for {}.\nIs there only 1 epoch?'.format(name))
             continue
 
     pyplot.legend(loc='lower right', shadow=True, fontsize='medium')
     # pyplot.savefig(os.path.join(work_dir, '{}.eps'.format(metric)))
     pyplot.savefig(os.path.join(work_dir, '{}.png'.format(metric)))
-    print "Plotted {} series".format(len(data_x_y_enum_name))
+    print("Plotted {} series".format(len(data_x_y_enum_name)))
 
 
 
@@ -134,9 +135,10 @@ if __name__=="__main__":
         plot(-1, 'accu', smoothing, work_dir)
 
     elif plot_type == 'all':
-        plot(-4, 'loss', smoothing, work_dir)
-        plot(-3, 'WER', smoothing, work_dir)
-        plot(-2, 'CER', smoothing, work_dir)
-        plot(-1, 'accu', smoothing, work_dir)
+        plot(-7, 'loss', smoothing, work_dir)
+        plot(-2, 'WER', smoothing, work_dir)
+        plot(-1, 'CER', smoothing, work_dir)
+        plot(-3, 'accu', smoothing, work_dir)
+        plot(-4, 'CER_train', smoothing, work_dir)
     else:
-    	print plot_type+" metric not supported"
+    	print(plot_type+" metric not supported")

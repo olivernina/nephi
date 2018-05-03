@@ -26,7 +26,7 @@ sys.setdefaultencoding('utf-8')
 sys.stdout = stdout
 from model_error import cer, wer
 
-MAX_LENGTH = 100
+# MAX_LENGTH = 300
 parser = argparse.ArgumentParser()
 parser.add_argument('--trainroot', required=True, help='path to dataset')
 parser.add_argument('--valroot', required=True, help='path to dataset')
@@ -44,8 +44,8 @@ parser.add_argument('--crnn', default='', help="path to start crnn file (to cont
 parser.add_argument('--dataset', type=str, default='READ', help='type of dataset to use such as READ or ICFHR default is READ')
 parser.add_argument('--displayInterval', type=int, default=100, help='Interval number of batches to display progress')
 parser.add_argument('--n_test_disp', type=int, default=10, help='Number of samples to display to console when test')
-parser.add_argument('--valEpoch', type=int, default=10, help='Epoch to display validation and training error rates')
-parser.add_argument('--saveEpoch', type=int, default=20, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
+parser.add_argument('--valEpoch', type=int, default=5, help='Epoch to display validation and training error rates')
+parser.add_argument('--saveEpoch', type=int, default=5, help='Epochs at which to save snapshot of model to experiment directory, ex: netCRNN_{1}_{2}.pth')
 parser.add_argument('--adam', action='store_true', help='Whether to use adam (default is false, rmsprop)')
 parser.add_argument('--adadelta', action='store_true', help='Whether to use adadelta (default is false, use rmsprop)')
 parser.add_argument('--keep_ratio', action='store_true', help='whether to keep ratio for image resize')
@@ -62,6 +62,7 @@ parser.add_argument('--rdir', default='results', help='Where to store samples, m
 parser.add_argument('--transform', action="store_true", help='Allow transformation of images')
 parser.add_argument('--mode', type=str, default='train', help='i.e train, test. Mode of executing code')
 parser.add_argument('--data_aug', action="store_true", help='Whether to use data augmentation')
+parser.add_argument('--pre_model', default='', help="path to pretrained model (to continue training between invocations)")
 
 opt = parser.parse_args()
 print("Running with options:", opt)
@@ -251,6 +252,12 @@ if opt.crnn != '':
     print('loading pretrained model from %s' % opt.crnn)
     crnn.load_state_dict(torch.load(opt.crnn))
 
+if opt.mode =='test':
+    if opt.pre_model != '':
+        print('loading pretrained model from %s' % opt.pre_model)
+        pre_model= torch.load(opt.pre_model)
+        crnn.load_state_dict(pre_model, strict=True)
+
 if opt.model=='attention':
     print("Your encoder network:", encoder)
     print("Your decoder network:", attn_decoder)
@@ -365,7 +372,7 @@ def trainBatch(net, criterion, optimizer):
     optimizer.step()
     return cost
 
-def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, criterion, max_length=MAX_LENGTH):
+def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, criterion, max_length=models.crnn.MAX_LENGTH):
 
     data = train_iter.next()
     cpu_images, cpu_texts,__ = data
@@ -415,7 +422,7 @@ def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, 
     return loss.data[0] / target_length.float()
 
 def trainAttentionCTC(encoder_ctc,
-                                  decoder_att,decoder_ctc, enc_ctc_optimizer, dec_att_optimizer, dec_ctc_optimizer, criterion_att,criterion_ctc,max_length=MAX_LENGTH):
+                                  decoder_att,decoder_ctc, enc_ctc_optimizer, dec_att_optimizer, dec_ctc_optimizer, criterion_att,criterion_ctc,max_length=models.crnn.MAX_LENGTH):
 
     data = train_iter.next()
     cpu_images, cpu_texts,__ = data
@@ -428,18 +435,23 @@ def trainAttentionCTC(encoder_ctc,
 
     dec_att_optimizer.zero_grad()
 
-    encoder_outputs = Variable(torch.zeros(max_length, 512))
-    encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
-
     loss = 0
     encoder_ctc_out = encoder_ctc(image)
+    input_length = len(encoder_ctc_out)
+
+    if input_length > models.crnn.MAX_LENGTH:
+        print(input_length)
+        print("Need to increase MAX_LENGTH to at least: "+str(input_length))
+
+    encoder_outputs = Variable(torch.zeros(max_length, 512))
+    encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
 
     target_variable = Variable(torch.LongTensor(target.cpu().numpy()).view(-1, 1)) #This is a hack. maybe there is a better way...
     target_variable = target_variable.cuda() if opt.cuda else target_variable
 
     if opt.batchSize>1:
         encoder_output = encoder_ctc_out[:,0,:] #grab first image
-        input_length = len(encoder_output)
+
         for ei in range(input_length):
             encoder_outputs[ei] = encoder_output[ei]
 
@@ -838,8 +850,8 @@ def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, m
 
     ##### Attention ####
 
-    MAX_LENGTH = 100
-    max_length = MAX_LENGTH
+
+    max_length = models.crnn.MAX_LENGTH
 
     val_iter = iter(dataset)
 
