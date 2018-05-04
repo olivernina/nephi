@@ -64,6 +64,10 @@ parser.add_argument('--mode', type=str, default='train', help='i.e train, test. 
 parser.add_argument('--data_aug', action="store_true", help='Whether to use data augmentation')
 parser.add_argument('--pre_model', default='', help="path to pretrained model (to continue training between invocations)")
 
+parser.add_argument('--grid_distort', action="store_true", help='Whether to use grid distortion data augmentation')
+parser.add_argument('--rescale', action="store_true", help='Whether to use rescaling data augmentation')
+parser.add_argument('--rescale_dim', type=float, default=1.0, help='rescaling dimension for data augmentation')
+
 opt = parser.parse_args()
 print("Running with options:", opt)
 
@@ -100,13 +104,13 @@ print(deg)
 print("Used shear on images")
 print(shear)
 
-augment = False
-rescale= False
+augment = opt.grid_distory
+rescale= opt.rescale
 print("Use Grid Distortion augmentation?")
 print(augment)
 print("Rescale images randomly?")
 print(rescale)
-scale = 1.0
+scale = opt.rescale_dim
 print("Scale multiplication used:")
 print(scale)
 
