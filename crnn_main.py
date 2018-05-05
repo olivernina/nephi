@@ -106,7 +106,7 @@ print(deg)
 print("Used shear on images")
 print(shear)
 
-augment = opt.grid_distory
+augment = opt.grid_distort
 rescale= opt.rescale
 print("Use Grid Distortion augmentation?")
 print(augment)
