@@ -1,0 +1,41 @@
+Running with options: Namespace(adadelta=False, adam=False, batchSize=2, beta1=0.5, binarize=True, crnn='', cuda=True, dataset='ICFHR', debug=False, displayInterval=120, imgH=40, imgW=180, keep_ratio=True, lr=0.0001, mode='train', model='attention', n_aug=20, n_test_disp=10, ngpu=1, nh=256, niter=200, plot=False, random_sample=False, rdir='experiments/expr_ICFHR_1May_binarization_distortion_testingattention', saveEpoch=3, test_aug=False, test_file='results/results.txt', test_icfhr=False, trainroot='data/lmdb_ICFHR_bin/general_data', transform=False, valEpoch=3, valroot='data/lmdb_ICFHR_bin/specific_data', workers=10)
+result directory experiments/expr_ICFHR_1May_binarization_distortion_testingattention/attention already exists
+Random Seed:  9398
+This is the alphabet:
+eniratsdholcugmv.wbf,zkpySDA-MEjGBIHVßCWP1N¬TJFKRO"ʒLæx2:’q08ZU;–3'4·ø7!5?6)9(—/=┌YQ&X«»[│]§°ειν”τ|ασ 
+Your encoder network: EncoderRNN (
+  (attn): Linear (256 -> 100)
+  (attn_combine): Linear (512 -> 256)
+  (cnn): Sequential (
+    (conv0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (relu0): LeakyReLU (0.2, inplace)
+    (pooling0): MaxPool2d (size=(2, 2), stride=(2, 2), dilation=(1, 1))
+    (conv1): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (relu1): LeakyReLU (0.2, inplace)
+    (pooling1): MaxPool2d (size=(2, 2), stride=(2, 2), dilation=(1, 1))
+    (conv2): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (batchnorm2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True)
+    (relu2): LeakyReLU (0.2, inplace)
+    (conv3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (relu3): LeakyReLU (0.2, inplace)
+    (pooling2): MaxPool2d (size=(2, 2), stride=(2, 1), dilation=(1, 1))
+    (conv4): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (batchnorm4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True)
+    (relu4): LeakyReLU (0.2, inplace)
+    (conv5): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (relu5): LeakyReLU (0.2, inplace)
+    (pooling3): MaxPool2d (size=(2, 2), stride=(2, 1), dilation=(1, 1))
+    (conv6): Conv2d(512, 512, kernel_size=(2, 2), stride=(1, 1))
+    (batchnorm6): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True)
+    (relu6): LeakyReLU (0.2, inplace)
+  )
+)
+Your decoder network: AttnDecoderRNN (
+  (embedding): Embedding(105, 256)
+  (attn): Linear (512 -> 100)
+  (attn_combine): Linear (768 -> 256)
+  (dropout): Dropout (p = 0.1)
+  (gru): GRU(256, 256)
+  (out): Linear (256 -> 105)
+)
+Starting training...

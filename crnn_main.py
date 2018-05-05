@@ -66,6 +66,10 @@ parser.add_argument('--pre_model', default='', help="path to the pretrained mode
 # parser.add_argument('--pre_model_epoch', default='', help="epoch and iteration of pretrained model i.e. 10,2000 for epoch 10 iteration 2000")
 
 
+parser.add_argument('--grid_distort', action="store_true", help='Whether to use grid distortion data augmentation')
+parser.add_argument('--rescale', action="store_true", help='Whether to use rescaling data augmentation')
+parser.add_argument('--rescale_dim', type=float, default=1.0, help='rescaling dimension for data augmentation')
+
 opt = parser.parse_args()
 print("Running with options:", opt)
 
@@ -96,18 +100,21 @@ if torch.cuda.is_available() and not opt.cuda:
 
     # RA: The next augmentation should be just 5 degree rotation, 5 degree shear, the 60 is probably overkill; other publications use 5 for both
 deg = 5
-shear = (-5, 5)
+shear = (-20, 20)
 print("Used degree for rotation of images")
 print(deg)
 print("Used shear on images")
 print(shear)
 
-augment = False
-rescale= False
+augment = opt.grid_distory
+rescale= opt.rescale
 print("Use Grid Distortion augmentation?")
 print(augment)
 print("Rescale images randomly?")
 print(rescale)
+scale = opt.rescale_dim
+print("Scale multiplication used:")
+print(scale)
 
 if opt.transform:
     from torchvision.transforms import RandomAffine
@@ -115,12 +122,12 @@ if opt.transform:
 else:
     lin_transform = None
 
-train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=augment, scale=rescale, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug)
+train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=augment, scale=rescale, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug, scale_dim = scale)
 
 assert train_dataset
 
 test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize, test=opt.test_icfhr, augment=augment if opt.test_aug else False,
-                                  transform = lin_transform if opt.test_aug else None, scale = rescale if opt.test_aug else False)
+                                  transform = lin_transform if opt.test_aug else None, scale = rescale if opt.test_aug else False, scale_dim = scale if opt.test_aug else 1.0)
 assert test_dataset
 
 minn = min(len(test_dataset), len(train_dataset))
@@ -219,7 +226,7 @@ elif opt.model=='ctc_pretrain':
                                 models.crnn.BidirectionalLSTM(opt.nh, opt.nh, nclass))
 
 
-image = torch.FloatTensor(opt.batchSize, 3, opt.imgW, opt.imgH)   #
+image = torch.FloatTensor(opt.batchSize, 3 if opt.binarize else 1, opt.imgW, opt.imgH)   #
 text = torch.IntTensor(opt.batchSize * 5)          # RA: I don't understand why the text has this size
 length = torch.IntTensor(opt.batchSize)
 
