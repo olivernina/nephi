@@ -62,7 +62,9 @@ parser.add_argument('--rdir', default='results', help='Where to store samples, m
 parser.add_argument('--transform', action="store_true", help='Allow transformation of images')
 parser.add_argument('--mode', type=str, default='train', help='i.e train, test. Mode of executing code')
 parser.add_argument('--data_aug', action="store_true", help='Whether to use data augmentation')
-parser.add_argument('--pre_model', default='', help="path to pretrained model (to continue training between invocations)")
+parser.add_argument('--pre_model', default='', help="path to the pretrained model. For other models besides ctc just include one of the pretrained models")
+# parser.add_argument('--pre_model_epoch', default='', help="epoch and iteration of pretrained model i.e. 10,2000 for epoch 10 iteration 2000")
+
 
 opt = parser.parse_args()
 print("Running with options:", opt)
@@ -245,15 +247,51 @@ if opt.cuda:
 
     image = image.cuda()
 
-if opt.crnn != '':
-    print('loading pretrained model from %s' % opt.crnn)
-    crnn.load_state_dict(torch.load(opt.crnn))
 
 if opt.mode =='test':
     if opt.pre_model != '':
-        print('loading pretrained model from %s' % opt.pre_model)
-        pre_model= torch.load(opt.pre_model)
-        crnn.load_state_dict(pre_model, strict=True)
+        if opt.model=='ctc':
+            print('loading pretrained model from %s' % opt.pre_model)
+            pre_model = torch.load(opt.pre_model)
+            crnn.load_state_dict(pre_model)
+
+        elif opt.model=='ctc_pretrain':
+            epoch = opt.pre_model.split('_')[-2]
+            i = opt.pre_model.split('_')[-1].split('.')[0]
+            pre_dir = opt.pre_model.split('net')[0]
+            encoder_path = os.path.join(pre_dir,'netCNN_{0}_{1}.pth'.format(epoch,i))
+            decoder_path = os.path.join(pre_dir, 'netCTCDec_{0}_{1}.pth'.format(epoch, i))
+
+            print('loading pretrained model from %s' % encoder_path)
+            pre_encoder = torch.load(encoder_path)
+            encoder_ctc.load_state_dict(pre_encoder)
+
+            print('loading pretrained model from %s' % decoder_path)
+            pre_decoder = torch.load(decoder_path)
+            decoder_ctc.load_state_dict(pre_decoder)
+
+        elif opt.model=='attention+ctc':
+            epoch = opt.pre_model.split('_')[-2]
+            i = opt.pre_model.split('_')[-1].split('.')[0]
+            pre_dir = opt.pre_model.split('net')[0]
+            encoder_path = os.path.join(pre_dir,'netCNN_{0}_{1}.pth'.format(epoch,i))
+            decoder_ctc_path = os.path.join(pre_dir, 'netCTCDec_{0}_{1}.pth'.format(epoch, i))
+            decoder_att_path = os.path.join(pre_dir, 'netAttnDec_{0}_{1}.pth'.format(epoch, i))
+
+            print('loading pretrained model from %s' % encoder_path)
+            pre_encoder = torch.load(encoder_path)
+            encoder_ctc.load_state_dict(pre_encoder)
+
+            print('loading pretrained model from %s' % decoder_ctc_path)
+            pre_decoder_ctc = torch.load(decoder_ctc_path)
+            decoder_ctc.load_state_dict(pre_decoder_ctc)
+
+            print('loading pretrained model from %s' % decoder_att_path)
+            pre_decoder_att = torch.load(decoder_att_path)
+            decoder_att.load_state_dict(pre_decoder_att)
+    else:
+        print("Pretrained model directory should be provided for testing mode.")
+        os.exit(0)
 
 if opt.model=='attention':
     print("Your encoder network:", encoder)
@@ -350,6 +388,113 @@ def test(net, dataset, criterion, n_aug=1):
     return (all_file_names, all_preds)
 
 
+def testCTCPretrain(encoder_ctc, decoder_ctc, dataset, criterion, n_aug=1):
+    print('Start test set predictions')
+
+    for p in encoder_ctc.parameters():
+        p.requires_grad = False
+    encoder_ctc.eval()
+
+    for p in decoder_ctc.parameters():
+        p.requires_grad = False
+    decoder_ctc.eval()
+
+    all_file_names = []
+    all_preds = []
+    image_count = 0
+    pred_dict = {}
+
+    for epoch in range(n_aug):
+        test_iter = iter(dataset)
+        for i in range(len(dataset)):
+            data = test_iter.next()
+            # i += 1
+            cpu_images, __, file_names = data
+            batch_size = cpu_images.size(0)
+            image_count = image_count + batch_size
+            utils.loadData(image, cpu_images)
+
+            encoder_out = encoder_ctc(image)
+            preds = decoder_ctc(encoder_out)
+            # print(preds.size())
+            preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
+
+            # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
+            # Case is ignored in the accuracy, which is not ideal for an actual working system
+
+            _, preds = preds.max(2)
+            if torch.__version__ < '0.2':
+                preds = preds.squeeze(2)  # https://github.com/meijieru/crnn.pytorch/issues/31
+            preds = preds.transpose(1, 0).contiguous().view(-1)
+            sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
+
+            for pred, f in zip(sim_preds, file_names):
+                if f not in pred_dict:
+                    pred_dict[f] = [pred]
+                else:
+                    pred_dict[f].append(pred)
+
+    for f, final_preds in pred_dict.items():
+        all_preds.append(Counter(final_preds).most_common(1)[0][0])
+        all_file_names.append(f.partition(".jpg")[0])
+
+    print("Total number of images in test set: %8d" % image_count)
+
+    return (all_file_names, all_preds)
+
+def testAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, n_aug=1):
+    print('Start test set predictions')
+
+    for p in encoder_ctc.parameters():
+        p.requires_grad = False
+    encoder_ctc.eval()
+
+    for p in decoder_ctc.parameters():
+        p.requires_grad = False
+    decoder_ctc.eval()
+
+    all_file_names = []
+    all_preds = []
+    image_count = 0
+    pred_dict = {}
+
+    for epoch in range(n_aug):
+        test_iter = iter(dataset)
+        for i in range(len(dataset)):
+            data = test_iter.next()
+            # i += 1
+            cpu_images, __, file_names = data
+            batch_size = cpu_images.size(0)
+            image_count = image_count + batch_size
+            utils.loadData(image, cpu_images)
+
+            encoder_out = encoder_ctc(image)
+            preds = decoder_ctc(encoder_out)
+            # print(preds.size())
+            preds_size = Variable(torch.IntTensor([preds.size(0)] * batch_size))
+
+            # RA: While I am not sure yet, it looks like a greedy decoder and not beam search is being used here
+            # Case is ignored in the accuracy, which is not ideal for an actual working system
+
+            _, preds = preds.max(2)
+            if torch.__version__ < '0.2':
+                preds = preds.squeeze(2)  # https://github.com/meijieru/crnn.pytorch/issues/31
+            preds = preds.transpose(1, 0).contiguous().view(-1)
+            sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
+
+            for pred, f in zip(sim_preds, file_names):
+                if f not in pred_dict:
+                    pred_dict[f] = [pred]
+                else:
+                    pred_dict[f].append(pred)
+
+    for f, final_preds in pred_dict.items():
+        all_preds.append(Counter(final_preds).most_common(1)[0][0])
+        all_file_names.append(f.partition(".jpg")[0])
+
+    print("Total number of images in test set: %8d" % image_count)
+
+    return (all_file_names, all_preds)
 
 def trainBatch(net, criterion, optimizer):
     data = train_iter.next()
@@ -1117,7 +1262,12 @@ if opt.mode =='train':
 
 elif opt.mode=='test':
     if opt.dataset=='ICFHR':
-        files, predictions = test(crnn, test_loader, criterion, n_aug=opt.n_aug if opt.test_aug else 1)
+        if opt.model=='ctc':
+            files, predictions = test(crnn, test_loader, criterion, n_aug=opt.n_aug if opt.test_aug else 1)
+        elif opt.model=='ctc_pretrain':
+            files, predictions = testCTCPretrain(encoder_ctc,decoder_ctc, test_loader, criterion, n_aug=opt.n_aug if opt.test_aug else 1)
+        elif opt.model=='attention+ctc':
+            files, predictions = testAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc, n_aug=opt.n_aug if opt.test_aug else 1)
         with io.open(opt.test_file, "w", encoding=encoding) as test_results:
             for f, pred in zip(files, predictions):
                 test_results.write(' '.join([unicode(f, encoding=encoding),
