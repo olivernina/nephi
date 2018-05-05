@@ -82,8 +82,8 @@ def plot(column, metric, smoothing, work_dir):
     pyplot.grid()
 
     bufferx = 0.25 * max_x
-    buffery = 0.75 * max_y
-    axes.set_ylim([0, max_y - buffery])
+    buffery = 0.25 * max_y
+    axes.set_ylim([0, max_y + buffery])
     # axes.set_ylim([0,0.01])
     axes.set_xlim([1, max_x + bufferx])
     # axes.set_xlim([0, 100])
