@@ -29,7 +29,7 @@ def create_qsub_file(name, bash_command):
     return filename
 
 def submit_qsub(filename):
-    os.system("cd pbs/icfhr/finetune")
+    os.system("cd ../pbs/icfhr/finetune")
     command = 'qsub ' + filename
     print(command)
     print(filename)
