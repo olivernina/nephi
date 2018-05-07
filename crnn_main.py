@@ -255,50 +255,49 @@ if opt.cuda:
     image = image.cuda()
 
 
-if opt.mode =='test':
-    if opt.pre_model != '':
-        if opt.model=='ctc':
-            print('loading pretrained model from %s' % opt.pre_model)
-            pre_model = torch.load(opt.pre_model)
-            crnn.load_state_dict(pre_model)
+if opt.pre_model != '':
+    if opt.model=='ctc':
+        print('loading pretrained model from %s' % opt.pre_model)
+        pre_model = torch.load(opt.pre_model)
+        crnn.load_state_dict(pre_model)
 
-        elif opt.model=='ctc_pretrain':
-            epoch = opt.pre_model.split('_')[-2]
-            i = opt.pre_model.split('_')[-1].split('.')[0]
-            pre_dir = opt.pre_model.split('net')[0]
-            encoder_path = os.path.join(pre_dir,'netCNN_{0}_{1}.pth'.format(epoch,i))
-            decoder_path = os.path.join(pre_dir, 'netCTCDec_{0}_{1}.pth'.format(epoch, i))
+    elif opt.model=='ctc_pretrain':
+        epoch = opt.pre_model.split('_')[-2]
+        i = opt.pre_model.split('_')[-1].split('.')[0]
+        pre_dir = opt.pre_model.split('net')[0]
+        encoder_path = os.path.join(pre_dir,'netCNN_{0}_{1}.pth'.format(epoch,i))
+        decoder_path = os.path.join(pre_dir, 'netCTCDec_{0}_{1}.pth'.format(epoch, i))
 
-            print('loading pretrained model from %s' % encoder_path)
-            pre_encoder = torch.load(encoder_path)
-            encoder_ctc.load_state_dict(pre_encoder)
+        print('loading pretrained model from %s' % encoder_path)
+        pre_encoder = torch.load(encoder_path)
+        encoder_ctc.load_state_dict(pre_encoder)
 
-            print('loading pretrained model from %s' % decoder_path)
-            pre_decoder = torch.load(decoder_path)
-            decoder_ctc.load_state_dict(pre_decoder)
+        print('loading pretrained model from %s' % decoder_path)
+        pre_decoder = torch.load(decoder_path)
+        decoder_ctc.load_state_dict(pre_decoder)
 
-        elif opt.model=='attention+ctc':
-            epoch = opt.pre_model.split('_')[-2]
-            i = opt.pre_model.split('_')[-1].split('.')[0]
-            pre_dir = opt.pre_model.split('net')[0]
-            encoder_path = os.path.join(pre_dir,'netCNN_{0}_{1}.pth'.format(epoch,i))
-            decoder_ctc_path = os.path.join(pre_dir, 'netCTCDec_{0}_{1}.pth'.format(epoch, i))
-            decoder_att_path = os.path.join(pre_dir, 'netAttnDec_{0}_{1}.pth'.format(epoch, i))
+    elif opt.model=='attention+ctc':
+        epoch = opt.pre_model.split('_')[-2]
+        i = opt.pre_model.split('_')[-1].split('.')[0]
+        pre_dir = opt.pre_model.split('net')[0]
+        encoder_path = os.path.join(pre_dir,'netCNN_{0}_{1}.pth'.format(epoch,i))
+        decoder_ctc_path = os.path.join(pre_dir, 'netCTCDec_{0}_{1}.pth'.format(epoch, i))
+        decoder_att_path = os.path.join(pre_dir, 'netAttnDec_{0}_{1}.pth'.format(epoch, i))
 
-            print('loading pretrained model from %s' % encoder_path)
-            pre_encoder = torch.load(encoder_path)
-            encoder_ctc.load_state_dict(pre_encoder)
+        print('loading pretrained model from %s' % encoder_path)
+        pre_encoder = torch.load(encoder_path)
+        encoder_ctc.load_state_dict(pre_encoder)
 
-            print('loading pretrained model from %s' % decoder_ctc_path)
-            pre_decoder_ctc = torch.load(decoder_ctc_path)
-            decoder_ctc.load_state_dict(pre_decoder_ctc)
+        print('loading pretrained model from %s' % decoder_ctc_path)
+        pre_decoder_ctc = torch.load(decoder_ctc_path)
+        decoder_ctc.load_state_dict(pre_decoder_ctc)
 
-            print('loading pretrained model from %s' % decoder_att_path)
-            pre_decoder_att = torch.load(decoder_att_path)
-            decoder_att.load_state_dict(pre_decoder_att)
-    else:
-        print("Pretrained model directory should be provided for testing mode.")
-        os.exit(0)
+        print('loading pretrained model from %s' % decoder_att_path)
+        pre_decoder_att = torch.load(decoder_att_path)
+        decoder_att.load_state_dict(pre_decoder_att)
+elif opt.mode == "test":
+    print("Pretrained model directory should be provided for testing mode.")
+    os.exit(0)
 
 if opt.model=='attention':
     print("Your encoder network:", encoder)
@@ -933,7 +932,7 @@ def valAttention(enc, dec,dataset,criterion, max_iter=1000):
 
     return char_mean_error, word_mean_error, accuracy
 
-def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, max_iter=100):
+def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, max_iter=1000):
 
     print('Start validation set')
 
@@ -1005,7 +1004,7 @@ def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, m
     val_iter = iter(dataset)
 
     n_correct = 0
-    loss_avg = utils.averager()
+    #loss_avg = utils.averager()
 
     image_count = 0
 
