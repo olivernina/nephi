@@ -274,7 +274,6 @@ if opt.pre_model != '':
         pre_decoder = torch.load(decoder_path)
         decoder_ctc.load_state_dict(pre_decoder)
 
-<<<<<<< HEAD
     elif opt.model=='attention+ctc':
         epoch = opt.pre_model.split('_')[-2]
         i = opt.pre_model.split('_')[-1].split('.')[0]
@@ -297,6 +296,7 @@ if opt.pre_model != '':
 elif opt.mode == "test":
     print("Pretrained model directory should be provided for testing mode.")
     os.exit(0)
+
 
 if opt.model=='attention':
     print("Your encoder network:", encoder)
