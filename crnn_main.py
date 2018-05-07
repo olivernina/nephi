@@ -298,7 +298,7 @@ if opt.mode =='test':
             decoder_att.load_state_dict(pre_decoder_att)
     else:
         print("Pretrained model directory should be provided for testing mode.")
-        os.exit(0)
+        sys.exit(0)
 
 if opt.model=='attention':
     print("Your encoder network:", encoder)
