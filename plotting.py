@@ -81,8 +81,9 @@ def plot(column, metric, smoothing, work_dir):
     axes = pyplot.gca()
     pyplot.grid()
 
-    bufferx = 0.25 * max_x
-    buffery = 0.25 * max_y
+    BUFFER = 0 #defaul 0.25
+    bufferx = BUFFER * max_x
+    buffery = BUFFER * max_y
     axes.set_ylim([0, max_y + buffery])
     # axes.set_ylim([0,0.01])
     axes.set_xlim([1, max_x + bufferx])
@@ -100,7 +101,7 @@ def plot(column, metric, smoothing, work_dir):
             print('Failed to create plot for {}.\nIs there only 1 epoch?'.format(name))
             continue
 
-    pyplot.legend(loc='lower right', shadow=True, fontsize='medium')
+    pyplot.legend(loc='upper right', shadow=True, fontsize='medium')
     # pyplot.savefig(os.path.join(work_dir, '{}.eps'.format(metric)))
     pyplot.savefig(os.path.join(work_dir, '{}.png'.format(metric)))
     print("Plotted {} series".format(len(data_x_y_enum_name)))
