@@ -26,7 +26,7 @@ sys.setdefaultencoding('utf-8')
 sys.stdout = stdout
 from model_error import cer, wer
 
-# MAX_LENGTH = 300
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--trainroot', required=True, help='path to dataset')
 parser.add_argument('--valroot', required=True, help='path to dataset')
@@ -63,8 +63,6 @@ parser.add_argument('--transform', action="store_true", help='Allow transformati
 parser.add_argument('--mode', type=str, default='train', help='i.e train, test. Mode of executing code')
 parser.add_argument('--data_aug', action="store_true", help='Whether to use data augmentation')
 parser.add_argument('--pre_model', default='', help="path to the pretrained model. For other models besides ctc just include one of the pretrained models")
-# parser.add_argument('--pre_model_epoch', default='', help="epoch and iteration of pretrained model i.e. 10,2000 for epoch 10 iteration 2000")
-
 
 parser.add_argument('--grid_distort', action="store_true", help='Whether to use grid distortion data augmentation')
 parser.add_argument('--rescale', action="store_true", help='Whether to use rescaling data augmentation')
