@@ -26,6 +26,10 @@ def find_models(work_dir,model):
                 if os.path.exists(plt_path):
                     res_files.append(plt_path)
 
+    if len(res_files)==0:
+        print('no models found in dir: '+work_dir )
+        sys.exit(0)
+
     column_num = -1 # CER test
 
     best_models = []
