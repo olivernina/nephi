@@ -10,6 +10,11 @@ import sys
 from glob import glob
 import shutil
 import subprocess
+from numpy import genfromtxt
+
+DEBUG = 0
+res_dir = ""
+model = ""
 
 def find_models(work_dir,model):
 
@@ -29,6 +34,9 @@ def find_models(work_dir,model):
     if len(res_files)==0:
         print('no models found in dir: '+work_dir )
         sys.exit(0)
+
+    if DEBUG:
+        print(res_files)
 
     column_num = -1 # CER test
 
@@ -66,7 +74,7 @@ def create_qsub_file(name, bash_command):
     f.write("#PBS -j oe\n")
     f.write("source /home/oliver/.personal.bashrc\n")
     f.write("cd /p/home/oliver/projects/nephi\n")
-    f.write(bash_command)
+    f.write(bash_command+"\n")
     f.write("exit\n")
     f.close()
 
@@ -85,23 +93,24 @@ def main(argv):
     DEBUG = int(argv[1])
     res_dir = argv[2]
     model = argv[3]
+    job_id = int(argv[4])
 
 
-    lmdb_database_base = "data/lmdb_ICFHR_bin/specific_data_each_doc/"
+    lmdb_database_base = "data/lmdb_ICFHR_bin/test_data_each_doc/"
     spec_tr_lists_dir = "data/datasets/read_ICFHR/specific_data_train_list/"
 
     spec_lists_files = glob(os.path.join(spec_tr_lists_dir, "*"))
     
     dirs = [os.path.basename(f).partition(".lst")[0] for f in spec_lists_files]
 
-    lmdb_database_base = "data/lmdb_ICFHR_bin/specific_data_each_doc/"
-    # pre_model = "results_icfhr_aug/attention+ctc/netCNN_24_2982.pth"
 
     tuned_models = find_models(res_dir,model)
 
-    job_id = 0
-    task_idx=0
-    for num in set([d.partition("_train_")[0] for d in dirs]):
+    task_idx = 0
+    pages = set([d.partition("_train_")[0] for d in dirs])
+    pages = list(pages)
+    pages.sort()
+    for num in pages:
         for s in ["0", "1", "16", "4"]:
             if s == "0":
                 bash_command = ' '.join(["python crnn_main.py", "--trainroot", os.path.join(lmdb_database_base, num),
@@ -111,10 +120,11 @@ def main(argv):
                                    "--transform --rescale --rescale_dim 3 --grid_distort",
                                    "--pre_model",
                                    "best_models/"+model+"/netCNN_24_2982.pth",
+                                   "--model",model,
                                    "--test_icfhr --test_file",
                                    os.path.join("test_results/7May_firstfinetune_submission", num + "_" + s + ".txt"),
                                    ">",
-                                   "logs/test/"+model +"/log_7May_test_results_" + num + "_" + s + ".txt"])
+                                   "logs/icfhr/test/"+model +"/log_7May_test_results_" + num + "_" + s + ".txt"])
 
             else:
                 bash_command = ' '.join(["python crnn_main.py", "--trainroot", os.path.join(lmdb_database_base, num),
@@ -122,11 +132,12 @@ def main(argv):
                                    "--dataset ICFHR --cuda --lr 0.0001 --displayInterval 4 --valEpoch 1 --saveEpoch 1 --workers 3",
                                    "--niter 60 --keep_ratio --imgH 60 --imgW 240 --batchSize 4",
                                    "--transform --rescale --rescale_dim 3 --grid_distort",
+                                   "--model",model,
                                    "--pre_model", tuned_models[task_idx],
                                    "--test_icfhr --test_file",
                                    os.path.join("test_results/7May_firstfinetune_submission", num + "_" + s + ".txt"),
                                    ">",
-                                    "logs/test/"+model +"/log_7May_test_results_" + num + "_" + s + ".txt"])
+                                    "logs/icfhr/test/"+model +"/log_7May_test_results_" + num + "_" + s + ".txt"])
                 task_idx+=1
 
 
@@ -138,7 +149,7 @@ def main(argv):
 
             else:
                 filename = create_qsub_file(str(job_id),bash_command)
-                submit_qsub(filename)
+                # submit_qsub(filename)
 
             job_id+=1
 
