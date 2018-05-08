@@ -10,7 +10,45 @@ import sys
 from glob import glob
 import shutil
 import subprocess
-from nbs.choose_models import find_models
+
+def find_models(work_dir,model):
+
+
+    files = os.listdir(work_dir)
+    dirs = [os.path.join(work_dir,file) for file in files if os.path.isdir(os.path.join(work_dir,file))]
+
+    res_files = []
+    for dir in dirs:
+        files = os.listdir(dir)
+        for file in files:
+            if file == model:
+                plt_path = os.path.join(dir, file, 'plot.txt')
+                if os.path.exists(plt_path):
+                    res_files.append(plt_path)
+
+    column_num = -1 # CER test
+
+    best_models = []
+    for i, filename in enumerate(sorted(res_files)):
+
+        data = genfromtxt(filename, delimiter=' ')
+
+        CERs = data[:, column_num]
+
+        min_idx = CERs.argmin()
+        epoch = int(data[min_idx, 0])
+        i = int(data[min_idx, 1])
+        best_model_name = 'netCNN_'+str(epoch)+'_'+str(i)+'.pth'
+
+        bm_path = os.path.join(filename.split('plot.txt')[0],best_model_name)
+        if os.path.exists(bm_path):
+            best_models.append(bm_path)
+            print(bm_path)
+        else:
+            print('Model file not found '+bm_path)
+            sys.exit(0)
+
+    return best_models
 
 def create_qsub_file(name, bash_command):
     filename =  "pbs/icfhr/test/"+name + '.pbs'
