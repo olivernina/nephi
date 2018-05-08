@@ -6,7 +6,7 @@ import os
 import sys
 
 
-def find_models(work_dir):
+def find_models(work_dir,model):
 
 
     files = os.listdir(work_dir)
@@ -16,13 +16,14 @@ def find_models(work_dir):
     for dir in dirs:
         files = os.listdir(dir)
         for file in files:
-            plt_path = os.path.join(dir, file, 'plot.txt')
-            if os.path.exists(plt_path):
-                res_files.append(plt_path)
+            if file == model:
+                plt_path = os.path.join(dir, file, 'plot.txt')
+                if os.path.exists(plt_path):
+                    res_files.append(plt_path)
 
     column_num = -1 # CER test
 
-    # Do one pass to get max value
+    best_models = []
     for i, filename in enumerate(sorted(res_files)):
 
         data = genfromtxt(filename, delimiter=' ')
@@ -36,14 +37,18 @@ def find_models(work_dir):
 
         bm_path = os.path.join(filename.split('plot.txt')[0],best_model_name)
         if os.path.exists(bm_path):
+            best_models.append(bm_path)
             print(bm_path)
         else:
             print('Model file not found '+bm_path)
             sys.exit(0)
 
+    return best_models
+
 if __name__=="__main__":
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('-w', dest='work_dir', type=str)
+    arg_parser.add_argument('-m', dest='model', type=str)
 
     if not len(sys.argv) > 1:
         arg_parser.print_help()
@@ -52,9 +57,9 @@ if __name__=="__main__":
     args = arg_parser.parse_args()
 
     work_dir = args.work_dir
+    model = args.model
 
-
-    find_models( work_dir)
+    find_models( work_dir,model)
 
 
 
