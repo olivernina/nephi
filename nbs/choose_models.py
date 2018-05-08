@@ -1,33 +1,9 @@
 __author__ = 'oliver'
 
-
-import matplotlib
-# matplotlib.use('Agg') # Or any other X11 back-end
-
-
-import matplotlib.pyplot as pyplot
-from matplotlib import colors
+from numpy import genfromtxt
 import argparse
-
-import sys
-from numpy import genfromtxt, linspace
-from scipy.interpolate import Akima1DInterpolator
 import os
-import six
-
-xmin = 20000
-
-colors_ = list(six.iteritems(colors.cnames))
-
-# Add the single letter colors.
-for name, rgb in six.iteritems(colors.ColorConverter.colors):
-    hex_ = colors.rgb2hex(rgb)
-    colors_.append((name, hex_))
-
-# Transform to hex color values.
-hex_ = [color[1] for color in colors_]
-# shuffle(hex_)
-hex_ = hex_[2:-1:2]
+import sys
 
 
 def find_models(work_dir):
