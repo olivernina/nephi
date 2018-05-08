@@ -10,7 +10,15 @@ def find_models(work_dir):
 
 
     files = os.listdir(work_dir)
-    res_files = [os.path.join(work_dir,file,'plot.txt') for file in files if os.path.exists(os.path.join(work_dir,file,'plot.txt'))]
+    dirs = [os.path.join(work_dir,file) for file in files if os.path.isdir(os.path.join(work_dir,file))]
+
+    res_files = []
+    for dir in dirs:
+        files = os.listdir(dir)
+        for file in files:
+            plt_path = os.path.join(dir, file, 'plot.txt')
+            if os.path.exists(plt_path):
+                res_files.append(plt_path)
 
     column_num = -1 # CER test
 
