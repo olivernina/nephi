@@ -119,8 +119,9 @@ def main(argv):
                                    "--niter 60 --keep_ratio --imgH 60 --imgW 240 --batchSize 4",
                                    "--transform --rescale --rescale_dim 3 --grid_distort",
                                    "--pre_model",
-                                   "best_models/"+model+"/netCNN_24_2982.pth",
+                                   "best_models/"+model+"/netCNN_28_2982.pth",
                                    "--model",model,
+                                   "--mode test",
                                    "--test_icfhr --test_file",
                                    os.path.join("test_results/7May_firstfinetune_submission", num + "_" + s + ".txt"),
                                    ">",
@@ -133,6 +134,7 @@ def main(argv):
                                    "--niter 60 --keep_ratio --imgH 60 --imgW 240 --batchSize 4",
                                    "--transform --rescale --rescale_dim 3 --grid_distort",
                                    "--model",model,
+                                   "--mode test",
                                    "--pre_model", tuned_models[task_idx],
                                    "--test_icfhr --test_file",
                                    os.path.join("test_results/7May_firstfinetune_submission", num + "_" + s + ".txt"),
@@ -149,7 +151,7 @@ def main(argv):
 
             else:
                 filename = create_qsub_file(str(job_id),bash_command)
-                # submit_qsub(filename)
+                submit_qsub(filename)
 
             job_id+=1
 
