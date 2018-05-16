@@ -534,7 +534,7 @@ def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, 
     encoder_optimizer.zero_grad()
     decoder_optimizer.zero_grad()
 
-    encoder_outputs = Variable(torch.zeros(max_length, 512))
+    encoder_outputs = Variable(torch.zeros(max_length, 512)) # This 512 might have to change when the max-pool is changed.
     encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
 
     loss = 0
