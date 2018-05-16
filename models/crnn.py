@@ -208,3 +208,15 @@ class AttnDecoderRNN(nn.Module):
             return result.cuda()
         else:
             return result
+
+class MTLM(nn.Module):
+    def __init__(self):
+        super(MTLM, self).__init__()
+        self.task_combine = nn.Linear(2, 1) #units from enconder + attn_applied
+
+    def forward(self, loss1, loss2):
+
+        output = torch.cat((loss1, loss2), 0)
+        output = self.task_combine(output).unsqueeze(0)
+        return output
+
