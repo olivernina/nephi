@@ -1,0 +1,8 @@
+Next steps for getting attention to work:
+Do not max-pool the last convolutional layer. Do what is necessary to allow attention to work with the result
+Make a toy model using just a small subset of the easiest ICFHR data. Just get attention to be able to learn this data easily. IAM dataset could also be something to try
+
+Train attention and train attention CTC look pretty much the same for the attention part.
+
+I could start training on the small subset of data using the CTC-attention model, to see how far attention can go on that data. Then I need to debug just the attention alone, probably picking it apart piece by piece in a jupyter notebook to see what it is doing.
+
