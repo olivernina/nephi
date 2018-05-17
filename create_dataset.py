@@ -254,6 +254,9 @@ def lmdb_dataset_read(data_dir, output_path, binarize = False, howe_dir = False,
                         howe_line_img = apply_mask(howe_img, pts)     # Hopefully this works even though Howe binarization takes out a few pixels
                         simplebin_line_img = apply_mask(simplebin_img, pts)
                     
+                    line_file_name = '_'.join([os.path.basename(file_image), line.get('id')])
+                    print 'line_file_name: ' + line_file_name
+                    
                     imageBin = cv2.imencode('.png', line_img)[1].tostring()
                     if binarize:
                         howe_imageBin = cv2.imencode('.png', howe_line_img)[1].tostring()
@@ -284,6 +287,7 @@ def lmdb_dataset_read(data_dir, output_path, binarize = False, howe_dir = False,
                             alphabet.append(c)
 
                     imageKey = 'image-%09d' % cnt
+                    fileKey = 'file-%09d' % cnt
                     if binarize:
                         howe_imageKey = 'howe-image-%09d' % cnt
                         simplebin_imageKey = 'simplebin-image-%09d' % cnt
@@ -295,6 +299,7 @@ def lmdb_dataset_read(data_dir, output_path, binarize = False, howe_dir = False,
                         print simplebin_imageKey
 
                     cache[imageKey] = imageBin
+                    cache[fileKey] = line_file_name
                     if binarize:
                         cache[howe_imageKey] = howe_imageBin
                         cache[simplebin_imageKey] = simplebin_imageBin
@@ -393,7 +398,7 @@ if __name__ == '__main__':
     print("Running with options:", opt)
 
     if not os.path.isdir(opt.output_dir):
-        os.system('mkdir {0}'.format(opt.output_dir))
+        os.system('mkdir -p {0}'.format(opt.output_dir))
 
     if opt.xml:
         lmdb_dataset_read(opt.data_dir, opt.output_dir, binarize = opt.binarize, howe_dir = opt.howe_dir, simplebin_dir = opt.simplebin_dir)
