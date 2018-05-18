@@ -97,7 +97,7 @@ class strLabelConverter(object):
             else:
                 char_list = []
                 for i in range(length):
-                    if t[i] != 0 and t[i] != EOS_token and (not (i > 0 and t[i - 1] == t[i])):
+                    if t[i] != 0 and (t[i] != EOS_token if self.attention else True) and (not (i > 0 and t[i - 1] == t[i])):
                         char_list.append(self.alphabet[t[i] - self.offset])
                 return ''.join(char_list)
         else:
