@@ -538,6 +538,7 @@ def trainBatch(net, criterion, optimizer):
 
 def trainAttention( train_iter, enc, dec, encoder_optimizer, decoder_optimizer, criterion, max_length=models.crnn.MAX_LENGTH):
 
+
     data = train_iter.next()
     cpu_images, cpu_texts,__ = data
     # batch_size = cpu_images.size(0)
