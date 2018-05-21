@@ -626,8 +626,9 @@ def trainAttentionCTC(encoder_ctc,
     target_variable = Variable(torch.LongTensor(target.cpu().numpy()).view(-1, 1)) #This is a hack. maybe there is a better way...
     target_variable = target_variable.cuda() if opt.cuda else target_variable
 
+    sample_idx =0
     if opt.batchSize>1:
-        encoder_output = encoder_ctc_out[:,0,:] #grab first image
+        encoder_output = encoder_ctc_out[:,sample_idx,:] #grab first image
 
         for ei in range(input_length):
             encoder_outputs[ei] = encoder_output[ei]
@@ -653,6 +654,7 @@ def trainAttentionCTC(encoder_ctc,
         loss += criterion_att(decoder_output, target_variable[di])
         decoder_input = target_variable[di]  # Teacher forcing
 
+    att_cost = loss.data[0] / target_length[sample_idx]
 ###CTC
     batch_size = cpu_images.size(0)
     decoder_output = decoder_ctc(encoder_ctc_out)
@@ -671,13 +673,13 @@ def trainAttentionCTC(encoder_ctc,
         alpha = .25
         # mtlm.zero_grad()
         # total_loss = mtlm(loss, ctc_cost)
-        total_loss = alpha*loss + (1-alpha)*ctc_cost
+        total_loss = alpha*att_cost + (1-alpha)*ctc_cost
         # out_loss = mtlm(loss,ctc_cost)
 
         # target_loss= torch.zeros(1)
         # total_loss = criterion_mtlm(out_loss, target_loss)
     else:
-        total_loss = loss + ctc_cost
+        total_loss = att_cost + ctc_cost
 
     total_loss.backward() # Note : We need to calculate the step size before we step
 
@@ -689,7 +691,7 @@ def trainAttentionCTC(encoder_ctc,
     #     mtlm_optimizer.step()
     #     print('mtlm under construction')
 
-    # return total_loss.data[0] / target_length.float()
+
     return total_loss
 
 def trainCTCPretrain(encoder_ctc,decoder_ctc, criterion, enc_ctc_optimizer,dec_ctc_optimizer):
