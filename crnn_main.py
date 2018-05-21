@@ -1129,6 +1129,8 @@ def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, m
 
             if ni == utils.EOS_token:
                 # decoded_words.append('<EOS>') # This line is for debugging purposes. It is better to remove it for metrics
+                pred_chars.append(ni)
+                pred_chars_size += 1
                 break
             else:
 
