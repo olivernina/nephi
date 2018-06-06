@@ -679,6 +679,7 @@ def trainAttentionCTC(encoder_ctc,
         # total_loss = criterion_mtlm(out_loss, target_loss)
 
     else:
+
         alpha = .2
         total_loss = (1-alpha)*torch.log(att_cost) + alpha*torch.log(ctc_cost)
 
