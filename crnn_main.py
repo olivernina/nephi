@@ -1263,7 +1263,7 @@ if opt.mode =='train':
                     val_CER, val_WER, val_ACC = valAttention(encoder,attn_decoder, test_loader, criterion)
                     train_CER, train_WER, train_ACC = valAttention(encoder, attn_decoder, train_loader, criterion)
                 elif opt.model=='ctc':
-                    val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion)
+                    val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion, test_aug = opt.test_aug, n_aug = opt.n_aug if opt.test_aug else 1)
                     train_CER, train_WER, train_ACC = val(crnn, train_loader, criterion)
                 elif opt.model=='attention+ctc':
                     val_CER, val_WER, val_ACC = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc)

@@ -149,9 +149,9 @@ class EncoderRNN(nn.Module):
         b, c, h, w = conv.size()
 
         # Max Pool Height Dimension for variable height inputs
-        # f_pool = nn.MaxPool2d((h, 1), (1, 1))
-        # conv = f_pool(conv)
-        # b, c, h, w = conv.size()
+        f_pool = nn.MaxPool2d((h, 1), (1, 1))
+        conv = f_pool(conv)
+        b, c, h, w = conv.size()
 
         assert h == 1, "the height of conv must be 1"
         conv = conv.squeeze(2)
