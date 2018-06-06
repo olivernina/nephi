@@ -37,6 +37,7 @@ parser.add_argument('--imgW', type=int, default=100, help='the width of the inpu
 parser.add_argument('--nh', type=int, default=256, help='size of the lstm hidden state')
 parser.add_argument('--niter', type=int, default=200, help='number of epochs to train for, default 25')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Critic, default=0.00005')
+parser.add_argument('--lr_att', type=float, default=0.1, help='learning rate for Attention model, default=0.00005')
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
@@ -356,8 +357,7 @@ elif opt.model=='ctc':
         optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)  # default
 elif opt.model=='attention+ctc':
     enc_ctc_optimizer = optim.RMSprop(encoder_ctc.parameters(), lr=opt.lr)
-    dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr)
-    dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
+    dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr_att)
     dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
 
     if opt.mtlm:
@@ -654,7 +654,8 @@ def trainAttentionCTC(encoder_ctc,
         loss += criterion_att(decoder_output, target_variable[di])
         decoder_input = target_variable[di]  # Teacher forcing
 
-    att_cost = loss.data[0] / target_length[sample_idx]
+    # att_cost = loss.data[0] / target_length[sample_idx]
+    att_cost = loss / target_length[sample_idx]
 ###CTC
     batch_size = cpu_images.size(0)
     decoder_output = decoder_ctc(encoder_ctc_out)
@@ -671,15 +672,16 @@ def trainAttentionCTC(encoder_ctc,
 
     if opt.mtlm:
         alpha = .25
-        # mtlm.zero_grad()
-        # total_loss = mtlm(loss, ctc_cost)
-        total_loss = alpha*att_cost + (1-alpha)*ctc_cost
+        mtlm.zero_grad()
+        total_loss = mtlm(att_cost, ctc_cost)
+        # total_loss = (1 - alpha) * torch.log(att_cost) + alpha * torch.log(ctc_cost)
         # out_loss = mtlm(loss,ctc_cost)
 
         # target_loss= torch.zeros(1)
         # total_loss = criterion_mtlm(out_loss, target_loss)
     else:
-        total_loss = att_cost + ctc_cost
+        alpha = .2
+        total_loss = (1-alpha)*torch.log(att_cost) + alpha*torch.log(ctc_cost)
 
     total_loss.backward() # Note : We need to calculate the step size before we step
 
