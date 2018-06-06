@@ -361,7 +361,7 @@ elif opt.model=='attention+ctc':
     dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
 
     if opt.mtlm:
-        mtlm_optimizer = optim.SGD(mtlm.parameters(), lr=opt.lr)
+        mtlm_optimizer = optim.RMSprop(mtlm.parameters(), lr=0.0001)
 
 elif opt.model=='ctc_pretrain':
     enc_ctc_optimizer = optim.RMSprop(encoder_ctc.parameters(), lr=opt.lr)
@@ -686,12 +686,15 @@ def trainAttentionCTC(encoder_ctc,
     dec_att_optimizer.step()
     dec_ctc_optimizer.step()
 
-    # if opt.mtlm:
-    #     mtlm_optimizer.step()
-    #     print('mtlm under construction')
+    if opt.mtlm:
+        mtlm_optimizer.step()
+        # print('mtlm under construction')
+        return total_loss[0]
+    else:
+        return total_loss
 
 
-    return total_loss
+
 
 def trainCTCPretrain(encoder_ctc,decoder_ctc, criterion, enc_ctc_optimizer,dec_ctc_optimizer):
     data = train_iter.next()
