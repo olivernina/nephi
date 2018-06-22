@@ -31,7 +31,7 @@ def pad_size(img, size):
 class lmdbDataset(Dataset):
 
 
-    def __init__(self, root=None, transform=None, target_transform=None, binarize=False, augment=False, scale = False, dataset='READ', test = False, debug=False, scale_dim = 1.0):
+    def __init__(self, root=None, transform=None, target_transform=None, binarize=False, augment=False, scale = False, dataset='READ', test = False, debug=False, scale_dim = 1.0, thresh = 1.0):
 
         self.env = lmdb.open(
             root,
@@ -61,6 +61,7 @@ class lmdbDataset(Dataset):
         self.dataset=dataset
         self.test = test
         self.debug = debug
+        self.thresh = thresh
 
     def __len__(self):
         return self.nSamples
@@ -116,7 +117,8 @@ class lmdbDataset(Dataset):
                     img_howe = pad_size(img_howe, img.size)
             
             final_image = Image.merge("RGB", (img, img_howe, img_simplebin)) if self.binarize else img
-            if self.augment:
+            j = random.uniform(0.0,1.0)
+            if self.augment and j < self.thresh:
                 from grid_distortion import warp_image
                 if self.dataset=='READ':
                     #                        sets. We place
@@ -137,17 +139,20 @@ class lmdbDataset(Dataset):
 
           
             
-            # Randomly resize the image
-            
-            if self.scale:
-                s = random.uniform(1.0 / self.scale_dim, self.scale_dim)
+            # Randomly resize the image half the time (otherwise keep same size)
+            j = random.uniform(0.0,1.0)
+            if self.scale and j < self.thresh:
+                
+                # Log scale to sample shrinking and expanding with equal likelihood
+                s = np.power(10, random.uniform(np.log10(1.0 / self.scale_dim[0]), np.log10(self.scale_dim[1])))
                 w, h = final_image.size
                 ar = float(w) / h
                 new_h = int(round(s * h))
                 new_w = int(round(ar * new_h))
                 final_image = final_image.resize((new_w, new_h), resample=Image.BILINEAR)
             
-            if self.transform is not None:
+            j = random.uniform(0.0,1.0)
+            if self.transform is not None and j < self.thresh:
                 final_image = self.transform(final_image)
 
             DEBUG = False #self.debug

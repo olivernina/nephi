@@ -1,6 +1,24 @@
 import torch.nn as nn
 import torch as torch
 
+class MaxPooling(nn.Module):
+    def __init__(self):
+        super(MaxPooling, self).__init__()
+    
+    def forward(self, input):
+        b, c, h , w = input.size()
+        
+        # Max Pool Height Dimension for variable height inputs
+        f_pool = nn.MaxPool2d((h, 1), (1,1))
+        conv = f_pool(input)
+        b, c, h , w = conv.size()
+        
+        assert h == 1, "the height of conv must be 1"
+        conv = conv.squeeze(2)
+        conv = conv.permute(2, 0, 1)  # [w, b, c]
+        
+        return conv
+
 class BidirectionalLSTM(nn.Module):
 
     def __init__(self, nIn, nHidden, nOut):
@@ -20,7 +38,6 @@ class BidirectionalLSTM(nn.Module):
 
         return output
 
-
 class CRNN(nn.Module):
 
     def __init__(self, imgH, nc, nclass, nh, n_rnn=2, leakyRelu=False):
@@ -30,6 +47,7 @@ class CRNN(nn.Module):
         ps = [1, 1, 1, 1, 1, 1, 0]
         ss = [1, 1, 1, 1, 1, 1, 1]
         nm = [64, 128, 256, 256, 512, 512, 512] # size of each layer
+        # nm = [64, 128, 256, 256, 512]
 
         cnn = nn.Sequential()
 
@@ -64,6 +82,8 @@ class CRNN(nn.Module):
         convRelu(6, True)  # 512x1x16
         
         self.cnn = cnn
+        
+        self.maxp = nn.Sequential(MaxPooling())
         self.rnn = nn.Sequential(
             BidirectionalLSTM(512, nh, nh),
             
@@ -72,19 +92,11 @@ class CRNN(nn.Module):
     def forward(self, input):
         # conv features (cnn)
         conv = self.cnn(input)
-        b, c, h , w = conv.size()
         
-        # Max Pool Height Dimension for variable height inputs
-        f_pool = nn.MaxPool2d((h, 1), (1,1))
-        conv = f_pool(conv)
-        b, c, h , w = conv.size()
-        
-        assert h == 1, "the height of conv must be 1"
-        conv = conv.squeeze(2)
-        conv = conv.permute(2, 0, 1)  # [w, b, c]
+        pooled = self.maxp(conv)
 
         # rnn features
-        output = self.rnn(conv)
+        output = self.rnn(pooled)
 
         return output
 
