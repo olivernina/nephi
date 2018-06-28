@@ -64,8 +64,10 @@ parser.add_argument('--mode', type=str, default='train', help='i.e train, test. 
 parser.add_argument('--data_aug', action="store_true", help='Whether to use data augmentation')
 parser.add_argument('--pre_model', default='', help="path to the pretrained model. For other models besides ctc just include one of the pretrained models")
 parser.add_argument('--grid_distort', action="store_true", help='Whether to use grid distortion data augmentation')
+parser.add_argument('--aug_thresh', type=float, default=1.0, help='Percent of samples to augment if any data augmentation is selected')
 parser.add_argument('--rescale', action="store_true", help='Whether to use rescaling data augmentation')
-parser.add_argument('--rescale_dim', type=float, default=1.0, help='rescaling dimension for data augmentation')
+parser.add_argument('--rescale_dim_up', type=float, default=1.0, help='increasing rescaling dimension for data augmentation')
+parser.add_argument('--rescale_dim_down', type=float, default=1.0, help='decreasing rescaling dimension for data augmentation')
 parser.add_argument('--mtlm', action='store_true', help='learning loss weights')
 
 opt = parser.parse_args()
@@ -96,23 +98,28 @@ if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
 
-    # RA: The next augmentation should be just 5 degree rotation, 5 degree shear, the 60 is probably overkill; other publications use 5 for both
-deg = 5
-shear = (-20, 20)
-print("Used degree for rotation of images")
-print(deg)
-print("Used shear on images")
-print(shear)
+print("Used rotation and shearing of training images?")
+print(opt.transform)
+
+deg = 10
+shear = (-5, 5)
+if opt.transform:
+    print("Used degree for rotation of images")
+    print(deg)
+    print("Used shear on images")
+    print(shear)
 
 augment = opt.grid_distort
 rescale= opt.rescale
-print("Use Grid Distortion augmentation?")
+print("Used Grid Distortion augmentation?")
 print(augment)
 print("Rescale images randomly?")
 print(rescale)
-scale = opt.rescale_dim
-print("Scale multiplication used:")
-print(scale)
+scale = (opt.rescale_dim_down, opt.rescale_dim_up)
+if rescale:
+    print("Scale multiplication used: (down x, up x)")
+    print(scale)
+
 
 if opt.transform:
     from torchvision.transforms import RandomAffine
@@ -120,12 +127,12 @@ if opt.transform:
 else:
     lin_transform = None
 
-train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=augment, scale=rescale, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug, scale_dim = scale)
+train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=augment, scale=rescale, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug, scale_dim = scale, thresh = opt.aug_thresh)
 
 assert train_dataset
 
 test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize, test=opt.test_icfhr, augment=augment if opt.test_aug else False,
-                                  transform = lin_transform if opt.test_aug else None, scale = rescale if opt.test_aug else False, scale_dim = scale if opt.test_aug else 1.0)
+                                  transform = lin_transform if opt.test_aug else None, scale = rescale if opt.test_aug else False, scale_dim = scale if opt.test_aug else 1.0, thresh = opt.aug_thresh)
 assert test_dataset
 
 minn = min(len(test_dataset), len(train_dataset))
@@ -157,6 +164,12 @@ if opt.dataset == 'READ':
     dataset_alphabet = 'alphabets/READ_alphabet.txt'
 elif opt.dataset =='ICFHR':
     dataset_alphabet = 'alphabets/ICFHR_alphabet.txt'
+elif opt.dataset == 'JOURNAL_ICFHR':
+    dataset_alphabet = 'alphabets/JOURNAL_ICFHR_alphabet.txt'
+elif opt.dataset == "JOURNAL_ICFHR_IAM":
+    dataset_alphabet = 'alphabets/JOURNAL_ICFHR_IAM_alphabet.txt'
+elif opt.dataset == "JOURNAL_WHOLE":
+    dataset_alphabet = 'alphabets/JOURNAL_WHOLE_alphabet.txt'
 else:
     print('dataset '+opt.dataset+' not supported')
     sys.exit(0)
@@ -166,6 +179,7 @@ if os.path.exists(dataset_alphabet):
     with io.open(dataset_alphabet, 'r', encoding=encoding) as myfile:
         alphabet = myfile.read().split()
         alphabet.append(u' ')
+        alphabet = set(alphabet)
         alphabet = ''.join(alphabet)
 
     if len(alphabet)>1:
@@ -269,9 +283,7 @@ if opt.pre_model != '':
         crnn.load_state_dict(pre_model)
 
     elif opt.model=='ctc_pretrain':
-        epoch = opt.pre_model.split('_')[-2]
-        i = opt.pre_model.split('_')[-1].split('.')[0]
-        pre_dir = opt.pre_model.split('net')[0]
+        epoch, i, pre_dir = utils.parse_model_name(opt)
         encoder_path = os.path.join(pre_dir,'netCNN_{0}_{1}.pth'.format(epoch,i))
         decoder_path = os.path.join(pre_dir, 'netCTCDec_{0}_{1}.pth'.format(epoch, i))
 
@@ -302,6 +314,20 @@ if opt.pre_model != '':
         print('loading pretrained model from %s' % decoder_att_path)
         pre_decoder_att = torch.load(decoder_att_path)
         decoder_att.load_state_dict(pre_decoder_att)
+
+    elif opt.model=='attention':
+        epoch, i, pre_dir = utils.parse_model_name(opt)
+        encoder_path = os.path.join(pre_dir, 'netCNN_{0}_{1}.pth'.format(epoch, i))
+        decoder_att_path = os.path.join(pre_dir, 'netAttnDec_{0}_{1}.pth'.format(epoch, i))
+
+        print('loading pretrained model from %s' % encoder_path)
+        pre_encoder = torch.load(encoder_path)
+        encoder.load_state_dict(pre_encoder)
+
+        print('loading pretrained model from %s' % decoder_att_path)
+        pre_decoder_att = torch.load(decoder_att_path)
+        attn_decoder.load_state_dict(pre_decoder_att)
+
 elif opt.mode == "test":
     print("Pretrained model directory should be provided for testing mode.")
     os.exit(0)
@@ -344,12 +370,11 @@ elif opt.model=='ctc':
         optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)  # default
 elif opt.model=='attention+ctc':
     enc_ctc_optimizer = optim.RMSprop(encoder_ctc.parameters(), lr=opt.lr)
-    dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr)
-    dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
+    dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr_att)
     dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
 
     if opt.mtlm:
-        mtlm_optimizer = optim.SGD(mtlm.parameters(), lr=opt.lr)
+        mtlm_optimizer = optim.RMSprop(mtlm.parameters(), lr=0.0001)
 
 elif opt.model=='ctc_pretrain':
     enc_ctc_optimizer = optim.RMSprop(encoder_ctc.parameters(), lr=opt.lr)
@@ -614,8 +639,9 @@ def trainAttentionCTC(encoder_ctc,
     target_variable = Variable(torch.LongTensor(target.cpu().numpy()).view(-1, 1)) #This is a hack. maybe there is a better way...
     target_variable = target_variable.cuda() if opt.cuda else target_variable
 
+    sample_idx =0
     if opt.batchSize>1:
-        encoder_output = encoder_ctc_out[:,0,:] #grab first image
+        encoder_output = encoder_ctc_out[:,sample_idx,:] #grab first image
 
         for ei in range(input_length):
             encoder_outputs[ei] = encoder_output[ei]
@@ -623,7 +649,7 @@ def trainAttentionCTC(encoder_ctc,
         target_att_length = target_length[0]
 
     else:
-
+        target_att_length = target_length
         encoder_output = encoder_ctc_out
         input_length = len(encoder_output)
         for ei in range(input_length):
@@ -641,6 +667,8 @@ def trainAttentionCTC(encoder_ctc,
         loss += criterion_att(decoder_output, target_variable[di])
         decoder_input = target_variable[di]  # Teacher forcing
 
+    # att_cost = loss.data[0] / target_length[sample_idx]
+    att_cost = loss / target_length[sample_idx]
 ###CTC
     batch_size = cpu_images.size(0)
     decoder_output = decoder_ctc(encoder_ctc_out)
@@ -657,12 +685,13 @@ def trainAttentionCTC(encoder_ctc,
 
     if opt.mtlm:
         mtlm.zero_grad()
-        total_loss = mtlm(loss, ctc_cost)
-        # out_loss = mtlm(loss,ctc_cost)
+        total_loss = mtlm(att_cost, ctc_cost)
         # target_loss= torch.zeros(1)
         # total_loss = criterion_mtlm(out_loss, target_loss)
     else:
-        total_loss = loss + ctc_cost
+
+        alpha = .2
+        total_loss = (1-alpha)*torch.log(att_cost) + alpha*torch.log(ctc_cost)
 
     total_loss.backward() # Note : We need to calculate the step size before we step
 
@@ -672,9 +701,13 @@ def trainAttentionCTC(encoder_ctc,
 
     if opt.mtlm:
         mtlm_optimizer.step()
+        # print('mtlm under construction')
+        return total_loss[0]
+    else:
+        return total_loss
 
-    # return total_loss.data[0] / target_length.float()
-    return total_loss
+
+
 
 def trainCTCPretrain(encoder_ctc,decoder_ctc, criterion, enc_ctc_optimizer,dec_ctc_optimizer):
     data = train_iter.next()
@@ -783,68 +816,96 @@ def val(net, dataset, criterion, max_iter=1000, test_aug=False, n_aug=1):
 
     return char_mean_error, word_mean_error, accuracy
 
-def evaluate(enc, dec, data):
-    MAX_LENGTH = 100
-    max_length = MAX_LENGTH
+def evaluateAtt(encoder_att, decoder_att, data, max_iter=1000):
+    max_length = models.crnn.MAX_LENGTH
+
+    # val_iter = iter(dataset)
+
+
+
+    sim_preds = []
+    raw_preds = []
+    # max_iter = min(max_iter, len(dataset))
+    gts = []
+    # for i in range(max_iter):
+        # data = val_iter.next()
+        # i += 1
     cpu_images, cpu_texts, __ = data
+    gts.append(cpu_texts[0])
+    # target, target_length = converter.encode(cpu_texts)
     batch_size = cpu_images.size(0)
-
+    # image_count = image_count + batch_size
     utils.loadData(image, cpu_images)
-    target, target_length = converter.encode(cpu_texts)
-    utils.loadData(text, target)
-    utils.loadData(length, target_length)
+    t, l = converter.encode(cpu_texts)
+    utils.loadData(text, t)
+    utils.loadData(length, l)
 
-    encoder_hidden = enc.initHidden()
-
-    encoder_output = enc(image)
+    encoder_hidden = encoder_att.initHidden()
+    encoder_output = encoder_att(image)
 
     encoder_outputs = Variable(torch.zeros(max_length, 512))
     encoder_outputs = encoder_outputs.cuda() if opt.cuda else encoder_outputs
 
-    target_variable = Variable(
-        torch.LongTensor(target.cpu().numpy()).view(-1, 1))  # This is a hack. maybe there is a better way...
+    input_length = len(encoder_output)
 
-    target_variable = target_variable.cuda() if opt.cuda else target_variable
-
-    for ei in range(length):
-        encoder_outputs[ei] = encoder_output[0][0]
+    for ei in range(input_length):
+        encoder_outputs[ei] = encoder_output[ei][0]
 
     decoder_input = Variable(torch.LongTensor([[utils.SOS_token]]))  # SOS
     decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
 
     decoder_hidden = encoder_hidden
-
     decoder_attentions = torch.zeros(max_length, max_length)
 
     decoded_words = []
+    pred_chars = []
+    pred_chars_size = 0
 
     for di in range(max_length):
-        decoder_output, decoder_hidden, decoder_attention = dec(
+        decoder_output, decoder_hidden, decoder_attention = decoder_att(
             decoder_input, decoder_hidden, encoder_outputs)
         decoder_attentions[di] = decoder_attention.data
         topv, topi = decoder_output.data.topk(1)
         ni = topi[0][0]
-        preds_size = Variable(torch.IntTensor([1]))
-        preds = Variable(torch.IntTensor([ni]))
 
         if ni == utils.EOS_token:
-            decoded_words.append('<EOS>')
+            # decoded_words.append('<EOS>') # This line is for debugging purposes. It is better to remove it for metrics
             break
         else:
-            sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
-            decoded_words.append(sim_preds)
+
+            pred_chars.append(ni)
+            pred_chars_size += 1
 
         decoder_input = Variable(torch.LongTensor([[ni]]))
         decoder_input = decoder_input.cuda() if opt.cuda else decoder_input
 
-    return decoded_words, cpu_texts, decoder_attentions[:di + 1]
+    # sim_preds = decoded_words
+    pc = torch.IntTensor(np.array(pred_chars))
+    pcs = torch.IntTensor(np.array([pred_chars_size]))
 
-def evaluateRandomly(enc, dec,test_loader,criterion, n=30):
+    sim_pred = converter.decode(pc, pcs, raw=False)
+    raw_pred = converter.decode(pc, pcs, raw=True)
+
+    sim_preds.append(sim_pred)
+    raw_preds.append(raw_pred)
+
+    # return char_mean_error, word_mean_error, accuracy
+
+    return sim_preds, cpu_texts, decoder_attentions[:di + 1], cpu_images[0,0]
+
+def evaluateRandomly(enc, dec,test_loader,criterion, n=10):
+    from matplotlib import pyplot as plt
     val_iter = iter(test_loader)
     for i in range(n):
         data = val_iter.next()
-        output_words, target, attentions = evaluate(enc, dec, data)
-        output_sentence = ''.join(output_words)
+        output_sentence, target, attentions,image = evaluateAtt(enc, dec, data)
+
+        fig = plt.figure()
+        plt.subplot(211)
+        plt.imshow(image)
+        plt.subplot(212)
+        plt.matshow(attentions.numpy())
+        plt.savefig('results/'+str(i)+'.png')
         print('{0}<{1}'.format(target, output_sentence))
         print('')
 
@@ -1083,6 +1144,8 @@ def valAttentionCTC(encoder_ctc, decoder_att, decoder_ctc, dataset, criterion, m
 
             if ni == utils.EOS_token:
                 # decoded_words.append('<EOS>') # This line is for debugging purposes. It is better to remove it for metrics
+                pred_chars.append(ni)
+                pred_chars_size += 1
                 break
             else:
 
@@ -1264,7 +1327,7 @@ if opt.mode =='train':
                     val_CER, val_WER, val_ACC = valAttention(encoder,attn_decoder, test_loader, criterion)
                     train_CER, train_WER, train_ACC = valAttention(encoder, attn_decoder, train_loader, criterion)
                 elif opt.model=='ctc':
-                    val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion)
+                    val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion, test_aug = opt.test_aug, n_aug = opt.n_aug if opt.test_aug else 1)
                     train_CER, train_WER, train_ACC = val(crnn, train_loader, criterion)
                 elif opt.model=='attention+ctc':
                     val_CER, val_WER, val_ACC = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc)
@@ -1315,5 +1378,11 @@ elif opt.mode=='test':
                 for f, pred in zip(files, predictions):
                     test_results.write(' '.join([unicode(f, encoding=encoding),
                                                  pred]) + u"\n")  # this should combine ascii text and unicode correctly
+
+elif opt.mode=='random-test':
+    evaluateRandomly(encoder,attn_decoder,test_loader,criterion)
+
+
+
 
 
