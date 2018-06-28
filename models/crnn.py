@@ -38,7 +38,6 @@ class BidirectionalLSTM(nn.Module):
 
         return output
 
-
 class CRNN(nn.Module):
 
     def __init__(self, imgH, nc, nclass, nh, n_rnn=2, leakyRelu=False):

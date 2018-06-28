@@ -201,3 +201,8 @@ def savePlot(history, res_dir):
     np.savetxt(plot_path,
                   history, fmt='%.3f')
 
+def parse_model_name(opt):
+    epoch = opt.pre_model.split('_')[-2]
+    i = opt.pre_model.split('_')[-1].split('.')[0]
+    pre_dir = opt.pre_model.split('net')[0]
+    return epoch,i,pre_dir

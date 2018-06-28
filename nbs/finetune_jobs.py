@@ -1,7 +1,8 @@
 __author__ = 'onina'
 
 # execute this script from the home directory i.e. python nps/finetune.py 0 0 
-
+# Given the best trained mode, this script will submit jobs to the queue and finetune such models
+# based on the tasks and pages. Right now it is manually switched to the models, todo: add variable for different models
 import os
 import sys
 from time import gmtime, strftime
@@ -18,7 +19,7 @@ def create_qsub_file(name, bash_command):
     f.write("#PBS -A AFSNW35489ANO\n")
     f.write("#PBS -l select=1:ncpus=28:ompthreads=8:ngpus=2\n")
     f.write("#PBS -q GPU_RD\n")
-    f.write("#PBS -l walltime=05:00:00\n")
+    f.write("#PBS -l walltime=01:00:00\n")
     f.write("#PBS -N " + name + "\n")
     f.write("#PBS -j oe\n")
     f.write("source /home/oliver/.personal.bashrc\n")
