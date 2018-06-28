@@ -179,7 +179,7 @@ if os.path.exists(dataset_alphabet):
     with io.open(dataset_alphabet, 'r', encoding=encoding) as myfile:
         alphabet = myfile.read().split()
         alphabet.append(u' ')
-        alphabet = set(alphabet)
+        # alphabet = set(alphabet) # This was a lazy line for not providing unique characters in an alphabet for the russell private dataset. if present, it makes all our previous models not work.
         alphabet = ''.join(alphabet)
 
     if len(alphabet)>1:
