@@ -192,7 +192,7 @@ elif opt.model=='attention+ctc':
     criterion_ctc = CTCLoss()
     criterion_att = torch.nn.NLLLoss()
     if opt.mtlm:
-        criterion_mtlm =torch.nn.MSELoss()
+        criterion_mtlm =torch.nn.MSELoss(size_average=False)
 elif opt.model=='ctc_pretrain':
     criterion = CTCLoss()
 
@@ -654,8 +654,12 @@ def trainAttentionCTC(encoder_ctc,
         loss += criterion_att(decoder_output, target_variable[di])
         decoder_input = target_variable[di]  # Teacher forcing
 
+
     # att_cost = loss.data[0] / target_length[sample_idx]
-    att_cost = loss / target_length[sample_idx]
+    if opt.cuda:
+        att_cost = loss / target_length[sample_idx]
+    else:
+        att_cost = torch.Tensor([loss / (target_length[sample_idx]).type(torch.FloatTensor)])
 ###CTC
     batch_size = cpu_images.size(0)
     decoder_output = decoder_ctc(encoder_ctc_out)
@@ -671,8 +675,10 @@ def trainAttentionCTC(encoder_ctc,
         ctc_cost = cost
 
     if opt.mtlm:
+
+        y_predict = mtlm(att_cost, ctc_cost)
+        total_loss = criterion_mtlm(y_predict,torch.zeros(1))
         mtlm.zero_grad()
-        total_loss = mtlm(att_cost, ctc_cost)
         # target_loss= torch.zeros(1)
         # total_loss = criterion_mtlm(out_loss, target_loss)
     else:
