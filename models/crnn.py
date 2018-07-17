@@ -231,7 +231,7 @@ class MTLM(nn.Module):
 
     def forward(self, loss1, loss2):
 
-        output = torch.cat((loss1, loss2), 0)
-        output = self.task_combine(output).unsqueeze(0)
-        return output
+        input = torch.cat((loss1, loss2), 0)
+        y_predict = self.task_combine(input) #.unsqueeze(0)
+        return y_predict
 
