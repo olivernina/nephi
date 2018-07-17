@@ -370,7 +370,7 @@ elif opt.model=='ctc':
         optimizer = optim.RMSprop(crnn.parameters(), lr=opt.lr)  # default
 elif opt.model=='attention+ctc':
     enc_ctc_optimizer = optim.RMSprop(encoder_ctc.parameters(), lr=opt.lr)
-    dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr_att)
+    dec_att_optimizer = optim.SGD(decoder_att.parameters(), lr=opt.lr) #lr=opt.lr_att
     dec_ctc_optimizer = optim.RMSprop(decoder_ctc.parameters(), lr=opt.lr)
 
     if opt.mtlm:
