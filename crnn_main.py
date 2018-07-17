@@ -37,7 +37,6 @@ parser.add_argument('--imgW', type=int, default=100, help='the width of the inpu
 parser.add_argument('--nh', type=int, default=256, help='size of the lstm hidden state')
 parser.add_argument('--niter', type=int, default=200, help='number of epochs to train for, default 25')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate for Critic, default=0.00005')
-parser.add_argument('--lr_att', type=float, default=0.1, help='learning rate for Attention model, default=0.00005')
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
@@ -65,8 +64,10 @@ parser.add_argument('--mode', type=str, default='train', help='i.e train, test. 
 parser.add_argument('--data_aug', action="store_true", help='Whether to use data augmentation')
 parser.add_argument('--pre_model', default='', help="path to the pretrained model. For other models besides ctc just include one of the pretrained models")
 parser.add_argument('--grid_distort', action="store_true", help='Whether to use grid distortion data augmentation')
+parser.add_argument('--aug_thresh', type=float, default=1.0, help='Percent of samples to augment if any data augmentation is selected')
 parser.add_argument('--rescale', action="store_true", help='Whether to use rescaling data augmentation')
-parser.add_argument('--rescale_dim', type=float, default=1.0, help='rescaling dimension for data augmentation')
+parser.add_argument('--rescale_dim_up', type=float, default=1.0, help='increasing rescaling dimension for data augmentation')
+parser.add_argument('--rescale_dim_down', type=float, default=1.0, help='decreasing rescaling dimension for data augmentation')
 parser.add_argument('--mtlm', action='store_true', help='learning loss weights')
 
 opt = parser.parse_args()
@@ -97,23 +98,28 @@ if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
 
-    # RA: The next augmentation should be just 5 degree rotation, 5 degree shear, the 60 is probably overkill; other publications use 5 for both
-deg = 5
-shear = (-20, 20)
-print("Used degree for rotation of images")
-print(deg)
-print("Used shear on images")
-print(shear)
+print("Used rotation and shearing of training images?")
+print(opt.transform)
+
+deg = 10
+shear = (-5, 5)
+if opt.transform:
+    print("Used degree for rotation of images")
+    print(deg)
+    print("Used shear on images")
+    print(shear)
 
 augment = opt.grid_distort
 rescale= opt.rescale
-print("Use Grid Distortion augmentation?")
+print("Used Grid Distortion augmentation?")
 print(augment)
 print("Rescale images randomly?")
 print(rescale)
-scale = opt.rescale_dim
-print("Scale multiplication used:")
-print(scale)
+scale = (opt.rescale_dim_down, opt.rescale_dim_up)
+if rescale:
+    print("Scale multiplication used: (down x, up x)")
+    print(scale)
+
 
 if opt.transform:
     from torchvision.transforms import RandomAffine
@@ -121,12 +127,12 @@ if opt.transform:
 else:
     lin_transform = None
 
-train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=augment, scale=rescale, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug, scale_dim = scale)
+train_dataset = dataset.lmdbDataset(root=opt.trainroot, binarize = opt.binarize, augment=augment, scale=rescale, dataset=opt.dataset, test=opt.test_icfhr, transform= lin_transform, debug=opt.debug, scale_dim = scale, thresh = opt.aug_thresh)
 
 assert train_dataset
 
 test_dataset = dataset.lmdbDataset(root=opt.valroot, binarize=opt.binarize, test=opt.test_icfhr, augment=augment if opt.test_aug else False,
-                                  transform = lin_transform if opt.test_aug else None, scale = rescale if opt.test_aug else False, scale_dim = scale if opt.test_aug else 1.0)
+                                  transform = lin_transform if opt.test_aug else None, scale = rescale if opt.test_aug else False, scale_dim = scale if opt.test_aug else 1.0, thresh = opt.aug_thresh)
 assert test_dataset
 
 minn = min(len(test_dataset), len(train_dataset))
@@ -158,6 +164,12 @@ if opt.dataset == 'READ':
     dataset_alphabet = 'alphabets/READ_alphabet.txt'
 elif opt.dataset =='ICFHR':
     dataset_alphabet = 'alphabets/ICFHR_alphabet.txt'
+elif opt.dataset == 'JOURNAL_ICFHR':
+    dataset_alphabet = 'alphabets/JOURNAL_ICFHR_alphabet.txt'
+elif opt.dataset == "JOURNAL_ICFHR_IAM":
+    dataset_alphabet = 'alphabets/JOURNAL_ICFHR_IAM_alphabet.txt'
+elif opt.dataset == "JOURNAL_WHOLE":
+    dataset_alphabet = 'alphabets/JOURNAL_WHOLE_alphabet.txt'
 else:
     print('dataset '+opt.dataset+' not supported')
     sys.exit(0)
@@ -167,6 +179,7 @@ if os.path.exists(dataset_alphabet):
     with io.open(dataset_alphabet, 'r', encoding=encoding) as myfile:
         alphabet = myfile.read().split()
         alphabet.append(u' ')
+        # alphabet = set(alphabet) # This was a lazy line for not providing unique characters in an alphabet for the russell private dataset. if present, it makes all our previous models not work.
         alphabet = ''.join(alphabet)
 
     if len(alphabet)>1:
@@ -636,7 +649,7 @@ def trainAttentionCTC(encoder_ctc,
         target_att_length = target_length[0]
 
     else:
-
+        target_att_length = target_length
         encoder_output = encoder_ctc_out
         input_length = len(encoder_output)
         for ei in range(input_length):
@@ -1320,7 +1333,7 @@ if opt.mode =='train':
                     val_CER, val_WER, val_ACC = valAttention(encoder,attn_decoder, test_loader, criterion)
                     train_CER, train_WER, train_ACC = valAttention(encoder, attn_decoder, train_loader, criterion)
                 elif opt.model=='ctc':
-                    val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion)
+                    val_CER, val_WER, val_ACC = val(crnn, test_loader, criterion, test_aug = opt.test_aug, n_aug = opt.n_aug if opt.test_aug else 1)
                     train_CER, train_WER, train_ACC = val(crnn, train_loader, criterion)
                 elif opt.model=='attention+ctc':
                     val_CER, val_WER, val_ACC = valAttentionCTC(encoder_ctc,decoder_att,decoder_ctc, test_loader, criterion_ctc)

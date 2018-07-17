@@ -1,0 +1,8 @@
+python crnn_main.py --trainroot /home/ubuntu/russell/nephi/data/lmdb_ICFHR_JOURNAL/train --valroot /home/ubuntu/russell/nephi/data/lmdb_ICFHR_JOURNAL/val --dataset JOURNAL_ICFHR --cuda --lr 0.0001 --displayInterval 120 --valEpoch 2 --saveEpoch 2 --workers 8 --niter 200 --rdir experiments/JOURNAL_8June_warpdistortion_rot10_deg5_resizelo5hi2_finetune_ICFHR --keep_ratio --imgH 60 --imgW 2400 --batchSize 8 --model ctc --plot --aug_thresh 0.67 --transform --grid_distort --rescale --rescale_dim_down 5 --rescale_dim_up 2 --pre_model experiments/JOURNAL_7June_warpdistortion_rot10_deg5_resizelo5hi2_transferlearn_ICFHR_2ndround/ctc/netCRNN_18_3701.pth >> log_files/JOURNAL_8June_warpdistortion_rot10_deg5_resizelo5hi2_finetune_ICFHR.txt
+
+# Next time I can test augment the validation set.
+
+# Maybe putting my training data in could help learn the accents (and help generalize the features to my dataset from the start). But hopefully fine-tuning will get the accents
+
+
+# python crnn_main.py --trainroot /deep_data/current_nephi/nephi/data/lmdb_russell/train --valroot /deep_data/current_nephi/nephi/data/lmdb_russell/val  --cuda --lr 0.0001 --displayInterval 100 --valEpoch 2 --saveEpoch 2 --workers 3 --niter 200 --rdir /home/remi10001/deep_data/experiments/JOURNAL_6June_20pixelsadded_griddistort_rot10_shear5_thresh67_round2 --grid_distort --keep_ratio --imgH 60 --imgW 2400 --batchSize 3 --model ctc --plot --dataset JOURNAL --aug_thresh 0.67 --transform --pre_model /home/remi10001/deep_data/experiments/JOURNAL_6June_20pixelsadded_griddistort_rot10_shear5_thresh67/ctc/netCRNN_92_643.pth >> log_files/log_JOURNAL_JOURNAL_6June_20pixelsadded_griddistort_rot10_shear5_thresh67.txt
