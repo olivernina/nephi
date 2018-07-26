@@ -1,7 +1,7 @@
 # Nephi OCR project
 
 
-User-friendly trainable neural networks for handwriting recognition. A hackable OCR template for the 21st century.
+User-friendly trainable neural networks for handwriting recognition.
 
 
 ## Installation
