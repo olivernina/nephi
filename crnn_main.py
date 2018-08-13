@@ -335,6 +335,7 @@ def trainBatch(net, criterion, optimizer):
     return cost
 
 
+
 def val(net, dataset, criterion, max_iter=1000, test_aug=False, n_aug=1):
 
     print('Start validation set')

@@ -1,7 +1,7 @@
 # Nephi OCR project
 
 
-User-friendly trainable neural networks for handwriting recognition. A hackable OCR template for the 21st century.
+User-friendly trainable neural networks for handwriting recognition.
 
 
 ## Installation
@@ -99,5 +99,5 @@ For more help with argument structure, use `nephi$ python crnn_main.py -h`.
 
 ## Acknowledgments
 Big thanks to the people that contributed with our library. Lead developer, Russell Ault from OSU who collaborated in the development of significant portion of the code and added some key features that helped improve our original baseline significantly. 
-Also thanks to Roger Pack from FamilySearch who presented our work at the annual Family History Technology Workshop and who gave us good feedback during the development of the library. Other people worth to mention for their feedback and input are Dr. William Barrett from BYU, Dr. Doug Kennard and Seth Stwart.  
+Also thanks to Roger Pack from FamilySearch who presented our work at the annual Family History Technology Workshop and who gave us good feedback during the development of the library. Other people worth to mention for their feedback and input are Dr. William Barrett from BYU, Dr. Doug Kennard and Seth Stewart.  
 
