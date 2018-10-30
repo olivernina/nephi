@@ -1,7 +1,7 @@
-# Nephi OCR project
+# Nephi project
 
 
-User-friendly trainable neural networks for handwriting recognition.
+CRNN-CTC framework for handwriting recognition. Our library was used to win the [ICFHR2018 competition](https://scriptnet.iit.demokritos.gr/competitions/10/) on automated text recognition on the READ Dataset.  
 
 
 ## Installation
