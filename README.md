@@ -97,7 +97,7 @@ Be sure to **provide a valid alphabet.txt file** for your dataset (either pass o
 
 For more help with argument structure, use `nephi$ python crnn_main.py -h`.
 
-##Known Issues
+### Known Issues
 UnicodeEncodeError: 'ascii' codec can't encode character u'\u016b' in position 10: ordinal not in range(128)
 
 To solve this issue do 
