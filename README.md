@@ -97,6 +97,13 @@ Be sure to **provide a valid alphabet.txt file** for your dataset (either pass o
 
 For more help with argument structure, use `nephi$ python crnn_main.py -h`.
 
+###Known Issues
+UnicodeEncodeError: 'ascii' codec can't encode character u'\u016b' in position 10: ordinal not in range(128)
+
+To solve this issue do 
+
+export PYTHONIOENCODING=utf8
+
 ## Acknowledgments
 Big thanks to the people that contributed with our library. Lead developer, Russell Ault from OSU who collaborated in the development of significant portion of the code and added some key features that helped improve our original baseline significantly. 
 Also thanks to Roger Pack from FamilySearch who presented our work at the annual Family History Technology Workshop and who gave us good feedback during the development of the library. Other people worth to mention for their feedback and input are Dr. William Barrett from BYU, Dr. Doug Kennard and Seth Stewart.  
